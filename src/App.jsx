@@ -1,5 +1,5 @@
-import Sidebar from "@/components/Sidebar"
-import MainContent from "@/components/MainContent"
+import Sidebar from "@/components/Sidebar";
+import MainContent from "@/components/MainContent";
 
 function App() {
   return (
@@ -7,7 +7,7 @@ function App() {
       <Sidebar />
       <MainContent />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
