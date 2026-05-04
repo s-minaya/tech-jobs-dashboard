@@ -1,7 +1,11 @@
+import Sidebar from "@/components/Sidebar"
+import MainContent from "@/components/MainContent"
+
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <h1 className="text-2xl font-bold p-4">Tech Jobs Dashboard</h1>
+    <div className="flex min-h-screen bg-background">
+      <Sidebar />
+      <MainContent />
     </div>
   )
 }
