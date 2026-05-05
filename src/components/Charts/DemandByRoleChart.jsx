@@ -12,7 +12,10 @@ import { ROLE_LABELS } from "@/lib/roleLabels";
 // Cada rol tiene su propia variable CSS de color de shadcn
 const chartConfig = {
   data_engineer: { label: ROLE_LABELS.data_engineer, color: "var(--chart-1)" },
-  data_scientist: { label: ROLE_LABELS.data_scientist, color: "var(--chart-2)" },
+  data_scientist: {
+    label: ROLE_LABELS.data_scientist,
+    color: "var(--chart-2)",
+  },
   data_analyst: { label: ROLE_LABELS.data_analyst, color: "var(--chart-3)" },
   ml_engineer: { label: ROLE_LABELS.ml_engineer, color: "var(--chart-4)" },
 };
