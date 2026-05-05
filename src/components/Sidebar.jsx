@@ -10,13 +10,12 @@ function Sidebar({ filters, onFilterChange }) {
   return (
     <aside className="w-64 shrink-0 border-r border-border p-4">
       <h2 className="mb-4 text-lg font-semibold">Filtros</h2>
-      {FILTERS.map((filter) => (
-        // key={filter.title} porque los títulos son únicos en FILTERS
+      {FILTERS.map(({ key, ...rest }) => (
         <FilterSection
-          key={filter.title}
-          {...filter}
-          selected={filters[filter.key]}
-          onSelect={(value) => onFilterChange(filter.key, value)}
+          key={rest.title}
+          {...rest} // rest ya no contiene key
+          selected={filters[key]}
+          onSelect={(value) => onFilterChange(key, value)}
         />
       ))}
     </aside>
