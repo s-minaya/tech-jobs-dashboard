@@ -13,7 +13,7 @@ function Sidebar({ filters, onFilterChange }) {
       {FILTERS.map(({ key, ...rest }) => (
         <FilterSection
           key={rest.title}
-          {...rest} // rest ya no contiene key
+          {...rest} 
           selected={filters[key]}
           onSelect={(value) => onFilterChange(key, value)}
         />

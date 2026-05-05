@@ -11,7 +11,7 @@ export const FILTERS = [
   {
     key: "pais",
     title: "País",
-    options: ["Todos", "GB", "DE", "FR", "ES", "NL", "PL", "IT", "AT", "BE"],
+    options: ["Todos", "DE", "FR", "ES", "NL", "PL", "IT", "AT", "BE"],
   },
   {
     key: "periodo",
