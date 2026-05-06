@@ -3,6 +3,7 @@
 import TopSkillsChart from "./Charts/TopSkillsChart";
 import DemandByRoleChart from "./Charts/DemandByRoleChart";
 import SalaryChart from "./Charts/SalaryChart";
+import EuropeMap from "./Charts/EuropeMap";
 
 function MainContent({ filters }) {
   return (
@@ -11,6 +12,7 @@ function MainContent({ filters }) {
       <TopSkillsChart />
       <DemandByRoleChart />
       <SalaryChart />
+      <EuropeMap />
     </main>
   );
 }
