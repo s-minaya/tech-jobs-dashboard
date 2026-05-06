@@ -4,7 +4,7 @@ import TopSkillsChart from "./Charts/TopSkillsChart";
 import DemandByRoleChart from "./Charts/DemandByRoleChart";
 import SalaryChart from "./Charts/SalaryChart";
 import EuropeMap from "./Charts/EuropeMap";
-import SkillCoOccurrenceTable from "./Charts/SkillCoOccurrenceTable";
+import SkillHeatmap from "./Charts/SkillHeatmap";
 
 function MainContent({ filters }) {
   return (
@@ -15,7 +15,7 @@ function MainContent({ filters }) {
         <DemandByRoleChart filters={filters} />
         <SalaryChart filters={filters} />
         <EuropeMap filters={filters} />
-        <SkillCoOccurrenceTable />
+        <SkillHeatmap />
       </div>
     </main>
   );
