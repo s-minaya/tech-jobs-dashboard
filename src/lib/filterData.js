@@ -1,5 +1,9 @@
 import { skillCategories } from "@/data/mockData";
 
+// PENDIENTE: filterTopSkills y filterDemandByRole no filtran por país
+// porque el mock no tiene granularidad por país.
+// Cuando lleguen datos de Supabase, añadir { pais } como parámetro de filtrado.
+
 // Filtra el array de top skills según la categoría seleccionada.
 // Si la categoría es "Todas" devuelve todos los datos sin filtrar.
 export function filterTopSkills(data, { skillCategoria }) {
