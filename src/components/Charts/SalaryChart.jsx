@@ -8,6 +8,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { salaryByRoleAndCountry } from "@/data/mockData";
 import { ROLE_LABELS } from "@/lib/roleLabels";
+import { filterSalary } from "@/lib/filterData";
 
 const chartConfig = {
   data_engineer: { label: ROLE_LABELS.data_engineer, color: "var(--chart-1)" },
@@ -29,14 +30,17 @@ function formatSalary(value) {
 
 // Gráfica de barras agrupadas que muestra el salario medio por rol en cada país.
 // Cada grupo de barras representa un país, y cada barra un rol.
-function SalaryChart() {
+// Reacciona al filtro de país mostrando uno o todos los países.
+function SalaryChart({ filters }) {
+  const data = filterSalary(salaryByRoleAndCountry, filters);
+
   return (
     <div className="rounded-lg border border-border p-4">
       <h2 className="mb-4 text-sm font-semibold">
         Salario medio por rol y país (€)
       </h2>
       <ChartContainer config={chartConfig} className="h-72 w-full">
-        <BarChart data={salaryByRoleAndCountry} margin={{ left: 8, right: 8 }}>
+        <BarChart data={data} margin={{ left: 8, right: 8 }}>
           <CartesianGrid vertical={false} />
           <XAxis dataKey="country" tick={{ fontSize: 12 }} />
           <YAxis

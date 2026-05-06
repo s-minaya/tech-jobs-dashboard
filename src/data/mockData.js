@@ -146,3 +146,17 @@ export const skillCoOccurrence = [
   { skill: "Docker", coSkill: "Kubernetes", count: 1876 },
   { skill: "AWS", coSkill: "Docker", count: 1432 },
 ];
+
+// Categoría de cada skill — necesario para el filtro de skillCategoria
+export const skillCategories = {
+  Python: "Language",
+  SQL: "Language",
+  JavaScript: "Language",
+  TypeScript: "Language",
+  React: "Framework",
+  Docker: "Tool",
+  Kubernetes: "Tool",
+  Git: "Tool",
+  AWS: "Cloud",
+  PostgreSQL: "Database",
+};
