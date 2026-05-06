@@ -6,7 +6,7 @@ import {
   ChartLegendContent,
 } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
-import { demandByRole } from "@/data/mockData";
+import { getDemandByRole } from "@/services/jobServices";
 import { ROLE_LABELS } from "@/lib/roleLabels";
 import { filterDemandByRole } from "@/lib/filterData";
 
@@ -27,7 +27,7 @@ const ROLES = Object.keys(chartConfig);
 // Cada línea representa un rol, con color y etiqueta definidos en chartConfig.
 // Reacciona al filtro de periodo mostrando más o menos meses.
 function DemandByRoleChart({ filters }) {
-  const data = filterDemandByRole(demandByRole, filters);
+  const data = filterDemandByRole(getDemandByRole(), filters);
 
   return (
     <div className="rounded-lg border border-border p-4">

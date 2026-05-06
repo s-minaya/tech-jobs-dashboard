@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { offersByCountry } from "@/data/mockData";
+import { getOffersByCountry } from "@/services/jobServices";
 
 // URL del dataset mundial en formato TopoJSON (110m = baja resolución, suficiente para este zoom)
 export const GEO_URL =
@@ -34,11 +34,11 @@ export const ISO3_TO_NUMERIC = {
 // Lookup { codigoNumerico: nOfertas } para acceso O(1) al pintar cada país.
 // Se calcula una vez aquí para no recalcularlo en cada render del componente.
 export const offersByNumeric = Object.fromEntries(
-  offersByCountry.map(({ iso, offers }) => [ISO3_TO_NUMERIC[iso], offers]),
+  getOffersByCountry().map(({ iso, offers }) => [ISO3_TO_NUMERIC[iso], offers]),
 );
 
 // Valor máximo de ofertas, usado como techo de la escala de color.
-export const maxOffers = Math.max(...offersByCountry.map((d) => d.offers));
+export const maxOffers = Math.max(...getOffersByCountry().map((d) => d.offers));
 
 // Escala de color continua: países con pocas ofertas → azul claro, muchas → azul oscuro.
 // d3.scaleSequential mapea un valor numérico [0, maxOffers] a un color interpolado.

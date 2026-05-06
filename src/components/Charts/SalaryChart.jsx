@@ -6,7 +6,7 @@ import {
   ChartLegendContent,
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
-import { salaryByRoleAndCountry } from "@/data/mockData";
+import { getSalaryByRoleAndCountry } from "@/services/jobServices";
 import { ROLE_LABELS } from "@/lib/roleLabels";
 import { filterSalary } from "@/lib/filterData";
 
@@ -32,7 +32,7 @@ function formatSalary(value) {
 // Cada grupo de barras representa un país, y cada barra un rol.
 // Reacciona al filtro de país mostrando uno o todos los países.
 function SalaryChart({ filters }) {
-  const data = filterSalary(salaryByRoleAndCountry, filters);
+  const data = filterSalary(getSalaryByRoleAndCountry(), filters);
 
   return (
     <div className="rounded-lg border border-border p-4">

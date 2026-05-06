@@ -4,7 +4,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
-import { topSkills } from "@/data/mockData";
+import { getTopSkills } from "@/services/jobServices";
 import { filterTopSkills } from "@/lib/filterData";
 
 // Configuración de colores y etiquetas para la gráfica.
@@ -21,7 +21,7 @@ const chartConfig = {
 // y el nombre de la skill quede legible en el eje Y.
 // Reacciona al filtro de categoría de skills.
 function TopSkillsChart({ filters }) {
-  const data = filterTopSkills(topSkills, filters);
+  const data = filterTopSkills(getTopSkills(), filters);
 
   // Si no hay skills en la categoría seleccionada mostramos un mensaje
   if (data.length === 0) {
