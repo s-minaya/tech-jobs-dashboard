@@ -37,3 +37,18 @@ app.listen(port, () => {
 app.get("/", (req, res) => {
   res.send("Está todo ok");
 });
+
+// GET /api/jobs/offers-by-country
+// Total de ofertas activas por país — alimenta el mapa coroplético.
+app.get("/api/jobs/offers-by-country", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT country_code, country_name, total_jobs
+       FROM v_offers_by_country`,
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al obtener ofertas por país" });
+  }
+});
