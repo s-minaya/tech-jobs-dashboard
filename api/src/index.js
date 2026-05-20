@@ -1,12 +1,35 @@
 import express from "express";
 import cors from "cors";
+import pg from "pg";
+import dotenv from "dotenv";
 
+// Cargamos las variables de entorno desde .env.local
+dotenv.config({ path: ".env.local" });
+
+const { Pool } = pg;
 const app = express();
 
 app.use(cors());
 app.use(express.json({ limit: "25Mb" }));
 
-const port = 3000;
+// Pool de conexiones a PostgreSQL.
+// Reutiliza conexiones en lugar de abrir una nueva por cada query.
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }, // requerido por Supabase
+});
+
+// Verificamos que la conexión funciona al arrancar el servidor
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error("Error conectando a la base de datos:", err.message);
+    return;
+  }
+  console.log("Conectado a PostgreSQL");
+  release();
+});
+
+const port = process.env.PORT ?? 3000;
 app.listen(port, () => {
   console.log(`Servidor arrancado en http://localhost:${port}`);
 });
