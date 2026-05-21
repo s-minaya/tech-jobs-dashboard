@@ -90,7 +90,7 @@ app.get("/api/skills/cooccurrence", async (req, res) => {
       `SELECT skill, co_skill, role_category, co_count
        FROM v_skill_cooccurrence
        ORDER BY co_count DESC
-       LIMIT 50`,
+       LIMIT 500`,
     );
     res.json(result.rows);
   } catch (err) {

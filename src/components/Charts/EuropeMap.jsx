@@ -4,10 +4,9 @@ import * as topojson from "topojson-client";
 import {
   GEO_URL,
   INCLUDED_ISO_NUMERIC,
-  offersByNumeric,
-  maxOffers,
-  colorScale,
+  COUNTRY_CODE_TO_NUMERIC,
 } from "@/lib/mapConfig";
+import { getOffersByCountry } from "@/services/jobServices";
 
 // Mapa coroplético de Europa renderizado con D3 + SVG.
 // D3 se usa solo para calcular la proyección geográfica y convertir
@@ -15,10 +14,12 @@ import {
 function EuropeMap() {
   // Array de features GeoJSON, uno por país. Se carga una sola vez desde la CDN.
   const [geographies, setGeographies] = useState([]);
+  const [offersData, setOffersData] = useState([]);
 
   // Datos del tooltip: posición del ratón + datos del país bajo el cursor.
   // null cuando no hay ningún país en hover.
   const [tooltip, setTooltip] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const svgRef = useRef(null);
 
@@ -37,17 +38,43 @@ function EuropeMap() {
   // Convierte las coordenadas GeoJSON de cada país en un string de path SVG
   const pathGenerator = d3.geoPath().projection(projection);
 
-  // Descarga el TopoJSON mundial y extrae los países como features GeoJSON.
-  // Solo se ejecuta al montar el componente (array de dependencias vacío).
+  // Cargamos el GeoJSON y los datos de ofertas en paralelo
   useEffect(() => {
-    fetch(GEO_URL)
-      .then((res) => res.json())
-      .then((world) => {
-        // topojson.feature convierte el formato TopoJSON a GeoJSON estándar
+    Promise.all([
+      fetch(GEO_URL).then((res) => res.json()),
+      getOffersByCountry(),
+    ])
+      .then(([world, offers]) => {
         const countries = topojson.feature(world, world.objects.countries);
         setGeographies(countries.features);
-      });
+        setOffersData(offers);
+      })
+      .finally(() => setLoading(false));
   }, []);
+
+  if (loading)
+    return (
+      <div className="rounded-lg border border-border p-4">
+        <p className="text-sm text-muted-foreground">Cargando mapa...</p>
+      </div>
+    );
+
+  // Construimos el lookup { "276": 5350 } a partir de los datos de la API
+  const offersByNumeric = Object.fromEntries(
+    offersData.map(({ country_code, total_jobs }) => [
+      COUNTRY_CODE_TO_NUMERIC[country_code],
+      Number(total_jobs),
+    ]),
+  );
+
+  const maxOffers = Math.max(...offersData.map((d) => Number(d.total_jobs)));
+
+  // Escala de color continua: países con pocas ofertas → azul claro, muchas → azul oscuro.
+  // d3.scaleSequential mapea un valor numérico [0, maxOffers] a un color interpolado.
+  const colorScale = d3
+    .scaleSequential()
+    .domain([0, maxOffers])
+    .interpolator(d3.interpolate("#dbeafe", "#1d4ed8"));
 
   return (
     <div className="rounded-lg border border-border p-4">

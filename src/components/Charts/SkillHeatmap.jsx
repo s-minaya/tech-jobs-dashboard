@@ -1,37 +1,75 @@
-import { useState } from "react";
-import * as d3 from "d3";
-import {
-  coOccurrenceSkills,
-  coOccurrenceLookup,
-  heatmapColorScale,
-  maxCount,
-} from "@/lib/heatmapConfig";
+import { useState, useEffect } from "react";
+import { getSkillCoOccurrence } from "@/services/jobServices";
+import { createHeatmapColorScale, getTextColor } from "@/lib/heatmapConfig";
 
 const MARGIN = { top: 48, right: 16, bottom: 16, left: 80 };
 const CELL_SIZE = 48;
 
-// Calcula las dimensiones del SVG en función del número de skills
-const width =
-  CELL_SIZE * coOccurrenceSkills.length + MARGIN.left + MARGIN.right;
-const height =
-  CELL_SIZE * coOccurrenceSkills.length + MARGIN.top + MARGIN.bottom;
-
-// Devuelve un color de texto legible (blanco u oscuro) sobre el color de fondo dado.
-// Usa la luminancia relativa del color para decidir cuál contrasta mejor.
-function getTextColor(bgColor) {
-  const rgb = d3.color(bgColor);
-  if (!rgb) return "#0f172a";
-  const luminance =
-    0.2126 * (rgb.r / 255) + 0.7152 * (rgb.g / 255) + 0.0722 * (rgb.b / 255);
-  return luminance > 0.4 ? "#0f172a" : "#ffffff";
+// Selecciona las N skills más conectadas del dataset.
+// "Más conectada" = la que aparece más veces como skill o co_skill en los pares.
+// Esto garantiza que el heatmap muestre las skills con más relaciones entre sí,
+// maximizando el número de celdas con datos y minimizando los ceros.
+function selectTopSkills(data, n = 12) {
+  const frequency = {};
+  for (const { skill, co_skill } of data) {
+    frequency[skill] = (frequency[skill] ?? 0) + 1;
+    frequency[co_skill] = (frequency[co_skill] ?? 0) + 1;
+  }
+  return Object.entries(frequency)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, n)
+    .map(([skill]) => skill);
 }
 
 // Heatmap de co-ocurrencia de skills renderizado con D3 + SVG.
-// Cada celda [i, j] muestra cuántas veces skill[i] y skill[j]
-// aparecen juntas en una oferta. La diagonal queda vacía (una skill consigo misma).
+// Hace fetch a la API, selecciona las skills más conectadas y
+// construye el lookup y la escala de color dinámicamente.
 function SkillHeatmap() {
-  // Celda actualmente bajo el cursor — { skill, coSkill, count } o null
+  const [coOccurrenceData, setCoOccurrenceData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [tooltip, setTooltip] = useState(null);
+
+  useEffect(() => {
+    getSkillCoOccurrence()
+      .then(setCoOccurrenceData)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading)
+    return (
+      <div className="rounded-lg border border-border p-4">
+        <p className="text-sm text-muted-foreground">Cargando...</p>
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="rounded-lg border border-border p-4">
+        <p className="text-sm text-destructive">{error}</p>
+      </div>
+    );
+
+  // Seleccionamos las 12 skills más conectadas del dataset completo
+  const skills = selectTopSkills(coOccurrenceData, 12);
+
+  // Simetrizamos el lookup: si existe A|B, creamos también B|A con el mismo valor.
+  // La vista de la BD evita duplicados con js1.skill_id < js2.skill_id,
+  // así que solo tenemos la mitad de los pares — los completamos aquí.
+  const lookup = {};
+  for (const { skill, co_skill, co_count } of coOccurrenceData) {
+    if (!skills.includes(skill) || !skills.includes(co_skill)) continue;
+    const count = Number(co_count);
+    lookup[`${skill}|${co_skill}`] = count;
+    lookup[`${co_skill}|${skill}`] = count; // par simétrico
+  }
+
+  const maxCount = Math.max(...Object.values(lookup), 1);
+  const colorScale = createHeatmapColorScale(maxCount);
+
+  const width = CELL_SIZE * skills.length + MARGIN.left + MARGIN.right;
+  const height = CELL_SIZE * skills.length + MARGIN.top + MARGIN.bottom;
 
   return (
     <div className="rounded-lg border border-border p-4">
@@ -42,8 +80,8 @@ function SkillHeatmap() {
       <div className="overflow-x-auto">
         <svg width={width} height={height}>
           <g transform={`translate(${MARGIN.left}, ${MARGIN.top})`}>
-            {/* Etiquetas del eje X (skills en horizontal, rotadas 45°) */}
-            {coOccurrenceSkills.map((skill, i) => (
+            {/* Etiquetas eje X — rotadas 45° para que no se solapen */}
+            {skills.map((skill, i) => (
               <text
                 key={`x-${skill}`}
                 x={i * CELL_SIZE + CELL_SIZE / 2}
@@ -51,15 +89,14 @@ function SkillHeatmap() {
                 textAnchor="start"
                 fontSize={11}
                 fill="currentColor"
-                className="text-muted-foreground"
                 transform={`rotate(-45, ${i * CELL_SIZE + CELL_SIZE / 2}, -8)`}
               >
                 {skill}
               </text>
             ))}
 
-            {/* Etiquetas del eje Y (skills en vertical) */}
-            {coOccurrenceSkills.map((skill, i) => (
+            {/* Etiquetas eje Y */}
+            {skills.map((skill, i) => (
               <text
                 key={`y-${skill}`}
                 x={-8}
@@ -68,20 +105,19 @@ function SkillHeatmap() {
                 dominantBaseline="middle"
                 fontSize={11}
                 fill="currentColor"
-                className="text-muted-foreground"
               >
                 {skill}
               </text>
             ))}
 
-            {/* Celdas del heatmap */}
-            {coOccurrenceSkills.map((skill, i) =>
-              coOccurrenceSkills.map((coSkill, j) => {
+            {/* Celdas del heatmap — una por cada par de skills */}
+            {skills.map((skill, i) =>
+              skills.map((coSkill, j) => {
                 // La diagonal (skill consigo misma) se deja vacía
                 if (skill === coSkill) return null;
 
-                const count = coOccurrenceLookup[`${skill}|${coSkill}`] ?? 0;
-                const bgColor = heatmapColorScale(count);
+                const count = lookup[`${skill}|${coSkill}`] ?? 0;
+                const bgColor = colorScale(count);
                 const textColor = getTextColor(bgColor);
 
                 return (
@@ -105,7 +141,7 @@ function SkillHeatmap() {
                       }
                       onMouseLeave={() => setTooltip(null)}
                     />
-                    {/* Solo mostramos el número si la celda es grande enough para leerlo */}
+                    {/* Solo mostramos el número si hay co-ocurrencias */}
                     {count > 0 && (
                       <text
                         x={j * CELL_SIZE + CELL_SIZE / 2 - 1}
@@ -129,7 +165,7 @@ function SkillHeatmap() {
         </svg>
       </div>
 
-      {/* Tooltip flotante */}
+      {/* Tooltip flotante — fixed para salir del overflow del SVG */}
       {tooltip && (
         <div
           className="pointer-events-none fixed z-50 rounded border border-border bg-background px-2 py-1 text-xs shadow"
@@ -143,7 +179,7 @@ function SkillHeatmap() {
         </div>
       )}
 
-      {/* Leyenda */}
+      {/* Leyenda de color */}
       <div className="mt-4 flex items-center justify-end gap-2 text-xs text-muted-foreground">
         <span>Menos frecuente</span>
         <div className="flex h-3 w-24 overflow-hidden rounded">
@@ -151,7 +187,7 @@ function SkillHeatmap() {
             <div
               key={i}
               className="flex-1"
-              style={{ backgroundColor: heatmapColorScale(t * maxCount) }}
+              style={{ backgroundColor: colorScale(t * maxCount) }}
             />
           ))}
         </div>

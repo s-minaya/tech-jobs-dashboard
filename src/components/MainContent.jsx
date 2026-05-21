@@ -1,5 +1,6 @@
 // Área principal del dashboard.
-// Recibe los filtros activos para pasárselos a las gráficas cuando estén conectadas a datos reales.
+// Distribuye los filtros activos a cada visualización para que
+// cada chart los envíe como query params a la API.
 import TopSkillsChart from "./Charts/TopSkillsChart";
 import DemandByRoleChart from "./Charts/DemandByRoleChart";
 import SalaryChart from "./Charts/SalaryChart";

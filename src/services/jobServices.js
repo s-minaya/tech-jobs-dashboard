@@ -1,44 +1,48 @@
-import {
-  topSkills,
-  demandByRole,
-  salaryByRoleAndCountry,
-  offersByCountry,
-  skillCoOccurrence,
-  coOccurrenceSkills,
-} from "@/data/mockData";
+const API_URL = import.meta.env.VITE_API_URL;
 
-// Capa de servicio que abstrae el origen de los datos.
-// Ahora devuelve mock data directamente.
-// Cuando la API esté lista, cada función hará un fetch al endpoint
-// correspondiente y los componentes no necesitarán ningún cambio.
-
-// Ejemplo de cómo quedará cada función cuando haya API real:
-// export async function getTopSkills(filters) {
-//   const params = new URLSearchParams(filters);
-//   const res = await fetch(`/api/skills/top?${params}`);
-//   return res.json();
-// }
-
-export function getTopSkills() {
-  return topSkills;
+// Función base para todas las peticiones a la API.
+// Lanza un error si la respuesta no es OK (4xx, 5xx)
+// para que los componentes puedan capturarlo con .catch()
+async function fetchJson(path) {
+  const res = await fetch(`${API_URL}${path}`);
+  if (!res.ok) throw new Error(`Error ${res.status} en ${path}`);
+  return res.json();
 }
 
-export function getDemandByRole() {
-  return demandByRole;
+// Devuelve las skills más demandadas globalmente.
+// Si skillCategoria está definida y no es "Todas", filtra por categoría
+// pasando el parámetro a la API para que filtre en la BD.
+export async function getTopSkills({ skillCategoria } = {}) {
+  const params = new URLSearchParams();
+  if (skillCategoria && skillCategoria !== "Todas")
+    params.set("category", skillCategoria.toLowerCase());
+  return fetchJson(`/api/skills/top?${params}`);
 }
 
-export function getSalaryByRoleAndCountry() {
-  return salaryByRoleAndCountry;
+// Devuelve la evolución mensual de ofertas por rol.
+// Si pais está definido y no es "Todos", filtra por país en la BD.
+export async function getDemandByRole({ pais } = {}) {
+  const params = new URLSearchParams();
+  if (pais && pais !== "Todos") params.set("country", pais.toLowerCase());
+  return fetchJson(`/api/jobs/demand-by-role?${params}`);
 }
 
-export function getOffersByCountry() {
-  return offersByCountry;
+// Devuelve el salario medio y mediana por rol y país.
+// Si pais está definido y no es "Todos", filtra por país en la BD.
+export async function getSalaryByRoleAndCountry({ pais } = {}) {
+  const params = new URLSearchParams();
+  if (pais && pais !== "Todos") params.set("country", pais.toLowerCase());
+  return fetchJson(`/api/salary/by-role-country?${params}`);
 }
 
-export function getSkillCoOccurrence() {
-  return skillCoOccurrence;
+// Devuelve el total de ofertas activas por país.
+// Alimenta el mapa coroplético de Europa.
+export async function getOffersByCountry() {
+  return fetchJson("/api/jobs/offers-by-country");
 }
 
-export function getCoOccurrenceSkills() {
-  return coOccurrenceSkills;
+// Devuelve los pares de skills que aparecen juntas frecuentemente.
+// Alimenta el heatmap de co-ocurrencia.
+export async function getSkillCoOccurrence() {
+  return fetchJson("/api/skills/cooccurrence");
 }

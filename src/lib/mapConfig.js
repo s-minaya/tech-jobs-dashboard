@@ -1,6 +1,3 @@
-import * as d3 from "d3";
-import { getOffersByCountry } from "@/services/jobServices";
-
 // URL del dataset mundial en formato TopoJSON (110m = baja resolución, suficiente para este zoom)
 export const GEO_URL =
   "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
@@ -18,31 +15,14 @@ export const INCLUDED_ISO_NUMERIC = new Set([
   "056", // BE
 ]);
 
-// Conversión de ISO-3 (el que usa nuestra BD) a numérico (el que usa el TopoJSON).
-// Necesario para cruzar los datos de ofertas con los datos geográficos.
-export const ISO3_TO_NUMERIC = {
-  DEU: "276",
-  FRA: "250",
-  ESP: "724",
-  NLD: "528",
-  POL: "616",
-  ITA: "380",
-  AUT: "040",
-  BEL: "056",
+// Conversión de country_code de la BD (2 letras) a numérico (el que usa el TopoJSON)
+export const COUNTRY_CODE_TO_NUMERIC = {
+  de: "276",
+  fr: "250",
+  es: "724",
+  nl: "528",
+  pl: "616",
+  it: "380",
+  at: "040",
+  be: "056",
 };
-
-// Lookup { codigoNumerico: nOfertas } para acceso O(1) al pintar cada país.
-// Se calcula una vez aquí para no recalcularlo en cada render del componente.
-export const offersByNumeric = Object.fromEntries(
-  getOffersByCountry().map(({ iso, offers }) => [ISO3_TO_NUMERIC[iso], offers]),
-);
-
-// Valor máximo de ofertas, usado como techo de la escala de color.
-export const maxOffers = Math.max(...getOffersByCountry().map((d) => d.offers));
-
-// Escala de color continua: países con pocas ofertas → azul claro, muchas → azul oscuro.
-// d3.scaleSequential mapea un valor numérico [0, maxOffers] a un color interpolado.
-export const colorScale = d3
-  .scaleSequential()
-  .domain([0, maxOffers])
-  .interpolator(d3.interpolate("#dbeafe", "#1d4ed8"));
