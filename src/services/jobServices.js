@@ -41,8 +41,9 @@ export async function getOffersByCountry() {
   return fetchJson("/api/jobs/offers-by-country");
 }
 
-// Devuelve los pares de skills que aparecen juntas frecuentemente.
-// Alimenta el heatmap de co-ocurrencia.
+// Devuelve los pares de skills que aparecen juntas frecuentemente,
+// junto con el total de ofertas del dataset para calcular porcentajes.
+// Respuesta: { pairs: [...], total_jobs: number }
 export async function getSkillCoOccurrence() {
   return fetchJson("/api/skills/cooccurrence");
 }

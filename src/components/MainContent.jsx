@@ -16,7 +16,7 @@ function MainContent({ filters }) {
         <DemandByRoleChart filters={filters} />
         <SalaryChart filters={filters} />
         <EuropeMap filters={filters} />
-        <SkillHeatmap />
+        <SkillHeatmap filters={filters} />
       </div>
     </main>
   );

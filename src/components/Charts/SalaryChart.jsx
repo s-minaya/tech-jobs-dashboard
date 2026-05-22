@@ -3,8 +3,6 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { getSalaryByRoleAndCountry } from "@/services/jobServices";
@@ -161,7 +159,7 @@ function SalaryChart({ filters }) {
               />
             }
           />
-          <ChartLegend content={<ChartLegendContent />} />
+
           {/* Solo renderizamos las barras de los roles seleccionados */}
           {allRoles
             .filter((role) => selectedRoles.includes(role))

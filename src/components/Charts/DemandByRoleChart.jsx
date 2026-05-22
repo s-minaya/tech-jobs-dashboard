@@ -3,8 +3,6 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
 } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import { getDemandByRole } from "@/services/jobServices";
@@ -145,7 +143,7 @@ function DemandByRoleChart({ filters }) {
           <XAxis dataKey="month" tick={{ fontSize: 12 }} />
           <YAxis tick={{ fontSize: 12 }} width={40} />
           <ChartTooltip content={<ChartTooltipContent />} />
-          <ChartLegend content={<ChartLegendContent />} />
+
           {/* Solo renderizamos las líneas de los roles seleccionados */}
           {allRoles
             .filter((role) => selectedRoles.includes(role))
