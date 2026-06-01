@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const API_URL = import.meta.env.VITE_API_URL;
 
 async function fetchJson(path) {
@@ -101,4 +102,11 @@ export async function getSkillCoOccurrence(filters = {}) {
     ...rest
   } = filters;
   return fetchJson(`/api/skills/cooccurrence?${buildParams(rest)}`);
+}
+
+// getSummaryStats
+// Devuelve los indicadores globales del dashboard.
+// No acepta filtros: los KPIs representan el estado completo de la BD.
+export async function getSummaryStats() {
+  return fetchJson("/api/stats/summary");
 }

@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-undef */
 import express from "express";
 import cors from "cors";
 import pg from "pg";
@@ -327,5 +329,42 @@ app.get("/api/skills/cooccurrence", async (req, res) => {
     });
   } catch (err) {
     errorHandler(res, err, "skills-cooccurrence");
+  }
+});
+
+// GET /api/stats/summary
+// Indicadores globales del dashboard (KPI cards).
+// No aplica ningún filtro: los números representan el estado completo
+// de la base de datos, independientemente de lo que el usuario tenga filtrado.
+// Esto da contexto sobre el volumen y calidad del dataset.
+//
+// Devuelve:
+//   total_active_jobs    → ofertas activas en este momento
+//   total_countries      → países cubiertos por el dataset
+//   total_skills         → skills distintas registradas en la BD
+//   pct_with_salary      → porcentaje de ofertas activas con salario declarado
+//   last_updated         → fecha de la oferta activa más reciente
+app.get("/api/stats/summary", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        COUNT(*)                                              AS total_active_jobs,
+        COUNT(DISTINCT country_code)                          AS total_countries,
+        (SELECT COUNT(*) FROM skills)                         AS total_skills,
+        ROUND(
+          SUM(CASE WHEN salary_mid IS NOT NULL
+                    AND salary_is_predicted = FALSE
+                    AND salary_mid >= 1000
+                   THEN 1 ELSE 0 END) * 100.0
+          / NULLIF(COUNT(*), 0)
+        , 1)                                                  AS pct_with_salary,
+        MAX(posted_at)                                        AS last_updated
+      FROM jobs
+      WHERE is_active = TRUE
+    `);
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    errorHandler(res, err, "stats-summary");
   }
 });
