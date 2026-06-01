@@ -1,22 +1,26 @@
 import { useState } from "react";
 
-// Estado inicial de todos los filtros del dashboard.
-// Coincide con las keys definidas en src/components/config/filters.js
+// Valores por defecto de todos los filtros del dashboard.
+// Coinciden con las keys definidas en src/components/config/filters.js
+//
+// periodo: "Últimos 90 días" en lugar de "Últimos 30 días" porque:
+//   - Es el periodo que usan las vistas de la BD por defecto
+//   - Con 30 días la gráfica de evolución mensual solo muestra 1 mes,
+//     lo que no permite ver tendencias
+//   - Las ofertas más recientes pueden no tener role_category asignado
+//     todavía si el pipeline de NLP no las ha procesado
 const initialFilters = {
   pais: "Todos",
-  periodo: "Últimos 30 días",
+  periodo: "Últimos 90 días",
   contrato: "Todos",
   jornada: "Todos",
   remote: "Todos",
   skillCategoria: "Todas",
 };
 
-// Hook que encapsula el estado y la lógica de los filtros del dashboard.
+// useFilters
+// Encapsula el estado y la lógica de los filtros del dashboard.
 // Separa la gestión del estado de la capa de presentación en App.jsx.
-// Devuelve:
-//   filters       → objeto con el valor activo de cada filtro
-//   handleFilterChange → función para actualizar un filtro concreto por key
-//   resetFilters  → restaura todos los filtros a su valor inicial
 export function useFilters() {
   const [filters, setFilters] = useState(initialFilters);
 

@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { useState } from "react";
+import { ChartContainer } from "@/components/ui/chart";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { getSalaryByRoleAndCountry } from "@/services/jobServices";
 import { getRoleLabel } from "@/lib/roleLabels";
+import { useChartData } from "@/hooks/useChartData";
+import ChartCard from "@/components/ui/ChartCard";
+import ChartDescription from "@/components/ui/ChartDescription";
+import RoleSelector from "@/components/ui/RoleSelector";
 
 const CHART_COLORS = [
   "var(--chart-1)",
@@ -16,10 +16,10 @@ const CHART_COLORS = [
   "var(--chart-5)",
 ];
 
-// Los datos de la API vienen con una fila por país+rol.
-// Recharts necesita una fila por país con todos los roles como columnas.
-// Transformamos: [{ country_code, role_category, median_salary_eur }] →
-//                [{ country: "DE", backend: 65000, data_analyst: 48000, ... }]
+// pivotData
+// Transforma [{ country_code, role_category, median_salary_eur }]
+// en [{ country: "DE", backend: 65000, data_analyst: 48000 }]
+// para que Recharts agrupe las barras por país.
 function pivotData(rows) {
   const byCountry = {};
   for (const { country_code, role_category, median_salary_eur } of rows) {
@@ -34,40 +34,73 @@ function extractRoles(rows) {
   return [...new Set(rows.map((r) => r.role_category))];
 }
 
-function formatSalary(value) {
-  return `${(value / 1000).toFixed(0)}k`;
+// TooltipSalario
+// Muestra el salario con unidad y una nota sobre qué es la mediana.
+function TooltipSalario({ active, payload, label, chartConfig }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="grid min-w-52 gap-1.5 rounded-lg border border-border/50 bg-background px-3 py-2 text-xs shadow-xl">
+      <p className="font-medium">{label}</p>
+      <p className="text-muted-foreground">Salario mediano anual en euros</p>
+      {payload.map((entry) =>
+        entry.value != null ? (
+          <div
+            key={entry.dataKey}
+            className="flex items-center justify-between gap-4"
+          >
+            <div className="flex items-center gap-1.5">
+              <div
+                className="h-2 w-2 rounded-sm"
+                style={{ backgroundColor: entry.fill }}
+              />
+              <span className="text-muted-foreground">
+                {chartConfig[entry.dataKey]?.label ?? entry.dataKey}
+              </span>
+            </div>
+            <span className="font-medium tabular-nums">
+              {Number(entry.value).toLocaleString("es-ES")} €/año
+            </span>
+          </div>
+        ) : null,
+      )}
+      <p className="mt-1 border-t border-border pt-1 text-muted-foreground/70">
+        La mitad de las ofertas pagan más que este valor y la otra mitad menos.
+      </p>
+    </div>
+  );
 }
 
-// Gráfica de barras agrupadas de salario mediano por rol y país.
-// Los roles se calculan dinámicamente a partir de los datos de la API.
-// Usa la mediana como métrica principal — más robusta que la media frente a outliers.
-// El usuario puede seleccionar qué roles mostrar mediante botones toggle.
-// Por defecto muestra los 5 primeros para no saturar la gráfica.
+// SalaryChart
+// Salario mediano anual por rol y país.
+// Filtros que aplican: país, periodo, contrato, jornada, remote.
+// Categoría de skill NO aplica: el salario no depende de qué skill se busca.
 function SalaryChart({ filters }) {
-  const [data, setData] = useState([]);
-  const [allRoles, setAllRoles] = useState([]);
-  const [selectedRoles, setSelectedRoles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const {
+    data: response,
+    loading,
+    isInitialLoad,
+    error,
+  } = useChartData(
+    () => getSalaryByRoleAndCountry(filters),
+    [
+      filters.pais,
+      filters.periodo,
+      filters.contrato,
+      filters.jornada,
+      filters.remote,
+    ],
+  );
 
-  useEffect(() => {
-    setLoading(true);
-    getSalaryByRoleAndCountry(filters)
-      .then((rows) => {
-        const roles = extractRoles(rows);
-        setAllRoles(roles);
-        setSelectedRoles(roles.slice(0, 5));
-        setData(pivotData(rows));
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [filters.pais]);
+  const rows = response?.rows ?? [];
+  const totalJobs = response?.total_matching_jobs ?? null;
+  const allRoles = extractRoles(rows);
 
-  function toggleRole(role) {
-    setSelectedRoles((prev) =>
-      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role],
-    );
-  }
+  // null → inicial (5 primeros) | [] → Ninguno | [...] → selección manual
+  const [selectedRoles, setSelectedRoles] = useState(null);
+  const effectiveSelected =
+    selectedRoles === null
+      ? allRoles.slice(0, 5)
+      : selectedRoles.filter((r) => allRoles.includes(r));
 
   const chartConfig = Object.fromEntries(
     allRoles.map((role, i) => [
@@ -79,101 +112,62 @@ function SalaryChart({ filters }) {
     ]),
   );
 
-  if (loading)
-    return (
-      <div className="rounded-lg border border-border p-4">
-        <p className="text-sm text-muted-foreground">Cargando...</p>
-      </div>
-    );
-
-  if (error)
-    return (
-      <div className="rounded-lg border border-border p-4">
-        <p className="text-sm text-destructive">{error}</p>
-      </div>
-    );
-
   return (
-    <div className="rounded-lg border border-border p-4">
-      <h2 className="mb-4 text-sm font-semibold">
-        Salario mediano por rol y país (€)
-      </h2>
+    <ChartCard
+      title="Salario mediano anual por rol y país"
+      loading={loading}
+      isInitialLoad={isInitialLoad}
+      error={error}
+    >
+      <ChartDescription
+        description="Salario mediano anual en euros por tipo de rol y país. Cada grupo de barras es un país y cada barra es un rol. Solo se incluyen ofertas con salario declarado y verificado mayor de 1.000 €/año."
+        filters={filters}
+        totalJobs={totalJobs}
+        excludeFilters={["skillCategoria"]}
+        nota={
+          filters.contrato !== "Todos"
+            ? `Mostrando solo contratos "${filters.contrato.toLowerCase()}". Los salarios varían entre contrato permanente y temporal.`
+            : null
+        }
+      />
 
-      {/* Controles de selección */}
-      <div className="mb-2 flex items-center gap-2">
-        <button
-          onClick={() => setSelectedRoles([...allRoles])}
-          className="text-xs text-muted-foreground hover:text-foreground"
-        >
-          Todos
-        </button>
-        <span className="text-xs text-muted-foreground">·</span>
-        <button
-          onClick={() => setSelectedRoles([])}
-          className="text-xs text-muted-foreground hover:text-foreground"
-        >
-          Ninguno
-        </button>
-      </div>
+      <RoleSelector
+        allRoles={allRoles}
+        selected={effectiveSelected}
+        onSelect={setSelectedRoles}
+        chartColors={CHART_COLORS}
+        getRoleLabel={getRoleLabel}
+      />
 
-      {/* Selector de roles */}
-      <div className="mb-4 flex flex-wrap gap-1">
-        {allRoles.map((role, i) => {
-          const isSelected = selectedRoles.includes(role);
-          return (
-            <button
-              key={role}
-              onClick={() => toggleRole(role)}
-              className={`rounded border px-2 py-1 text-xs transition-colors ${
-                isSelected
-                  ? "border-transparent text-white"
-                  : "border-border text-muted-foreground"
-              }`}
-              style={
-                isSelected
-                  ? { backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }
-                  : {}
-              }
-            >
-              {getRoleLabel(role)}
-            </button>
-          );
-        })}
-      </div>
-
-      <ChartContainer config={chartConfig} className="h-72 w-full">
-        <BarChart data={data} margin={{ left: 8, right: 8 }}>
-          <CartesianGrid vertical={false} />
-          <XAxis dataKey="country" tick={{ fontSize: 12 }} />
-          <YAxis
-            tick={{ fontSize: 12 }}
-            width={40}
-            tickFormatter={formatSalary}
-          />
-          <ChartTooltip
-            content={
-              <ChartTooltipContent
-                formatter={(value) =>
-                  value ? `${Number(value).toLocaleString()} €` : "Sin datos"
-                }
-              />
-            }
-          />
-
-          {/* Solo renderizamos las barras de los roles seleccionados */}
-          {allRoles
-            .filter((role) => selectedRoles.includes(role))
-            .map((role, i) => (
-              <Bar
-                key={role}
-                dataKey={role}
-                fill={CHART_COLORS[i % CHART_COLORS.length]}
-                radius={[4, 4, 0, 0]}
-              />
-            ))}
-        </BarChart>
-      </ChartContainer>
-    </div>
+      {effectiveSelected.length === 0 ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">
+          Selecciona al menos un rol para ver los salarios.
+        </p>
+      ) : (
+        <ChartContainer config={chartConfig} className="h-72 w-full">
+          <BarChart data={pivotData(rows)} margin={{ left: 8, right: 8 }}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="country" tick={{ fontSize: 12 }} />
+            <YAxis
+              tick={{ fontSize: 11 }}
+              width={52}
+              tickFormatter={(v) => `${(v / 1000).toFixed(0)}k €`}
+            />
+            <Tooltip content={<TooltipSalario chartConfig={chartConfig} />} />
+            {allRoles
+              .filter((role) => effectiveSelected.includes(role))
+              .map((role, i) => (
+                <Bar
+                  key={role}
+                  dataKey={role}
+                  fill={CHART_COLORS[i % CHART_COLORS.length]}
+                  radius={[4, 4, 0, 0]}
+                />
+              ))}
+          </BarChart>
+        </ChartContainer>
+      )}
+    </ChartCard>
   );
 }
 

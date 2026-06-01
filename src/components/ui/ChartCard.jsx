@@ -1,50 +1,59 @@
-// ─────────────────────────────────────────────────────────────────────────────
+// ChartCard
 // Wrapper visual reutilizable para todas las gráficas del dashboard.
-// Proporciona:
-//   - Marco consistente (borde, padding, rounded)
-//   - Título estandarizado
-//   - Estados de carga y error sin repetir JSX en cada chart
 //
-// Uso:
-//   <ChartCard title="Top Skills" loading={loading} error={error}>
-//     <BarChart ... />
-//   </ChartCard>
-//
-// Si loading=true  → muestra "Cargando..."
-// Si error!=null   → muestra el mensaje de error
-// Si ambos false   → renderiza children normalmente
-// ─────────────────────────────────────────────────────────────────────────────
+// Distingue dos estados de carga:
+//   - Carga inicial (isInitialLoad=true): muestra "Cargando..." porque
+//     no hay datos previos que mostrar.
+//   - Recarga por filtro (loading=true, isInitialLoad=false): mantiene
+//     el contenido visible con opacidad reducida y un badge "Actualizando..."
+//     para que el layout no cambie de tamaño y el scroll no se mueva.
+function ChartCard({
+  title,
+  loading,
+  isInitialLoad,
+  error,
+  children,
+  className = "",
+}) {
+  const showSpinner = loading && isInitialLoad;
+  const showStale = loading && !isInitialLoad;
 
-/**
- * ChartCard
- * Contenedor estándar para las visualizaciones del dashboard.
- *
- * @param {string}    title    - Título visible en la cabecera de la gráfica
- * @param {boolean}   loading  - Si true, muestra el estado de carga
- * @param {string|null} error  - Si no es null, muestra el error en rojo
- * @param {ReactNode} children - El contenido de la gráfica cuando todo está OK
- * @param {string}    className - Clases CSS adicionales opcionales
- */
-function ChartCard({ title, loading, error, children, className = "" }) {
   return (
-    <div className={`rounded-lg border border-border p-4 ${className}`}>
-      {/* Título de la gráfica — siempre visible aunque esté cargando */}
-      {title && (
-        <h2 className="mb-4 text-sm font-semibold">{title}</h2>
-      )}
+    <div
+      className={`relative rounded-lg border border-border p-4 ${className}`}
+    >
+      {title && <h2 className="mb-4 text-sm font-semibold">{title}</h2>}
 
-      {/* Estado de carga */}
-      {loading && (
-        <p className="text-sm text-muted-foreground">Cargando...</p>
-      )}
-
-      {/* Estado de error (solo se muestra si no está cargando) */}
       {!loading && error && (
         <p className="text-sm text-destructive">Error: {error}</p>
       )}
 
-      {/* Contenido normal (solo se renderiza si no hay loading ni error) */}
-      {!loading && !error && children}
+      {/* Carga inicial: spinner clásico porque no hay datos que mostrar */}
+      {showSpinner && (
+        <p className="text-sm text-muted-foreground">Cargando...</p>
+      )}
+
+      {/* Contenido: siempre en el DOM cuando hay datos, aunque esté recargando.
+          La opacidad reducida indica al usuario que los datos se están actualizando. */}
+      {!error && !showSpinner && (
+        <div
+          style={{
+            opacity: showStale ? 0.4 : 1,
+            transition: "opacity 200ms ease",
+          }}
+        >
+          {children}
+        </div>
+      )}
+
+      {/* Badge de actualización: aparece encima del contenido sin alterar el layout */}
+      {showStale && (
+        <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-3">
+          <span className="rounded-full border border-border bg-background/80 px-2 py-0.5 text-xs text-muted-foreground shadow-sm">
+            Actualizando...
+          </span>
+        </div>
+      )}
     </div>
   );
 }

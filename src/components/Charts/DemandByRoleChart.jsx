@@ -1,12 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { ChartContainer } from "@/components/ui/chart";
 import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from "recharts";
 import { getDemandByRole } from "@/services/jobServices";
 import { getRoleLabel } from "@/lib/roleLabels";
+import { useChartData } from "@/hooks/useChartData";
+import ChartCard from "@/components/ui/ChartCard";
+import ChartDescription from "@/components/ui/ChartDescription";
+import RoleSelector from "@/components/ui/RoleSelector";
 
 const CHART_COLORS = [
   "var(--chart-1)",
@@ -16,8 +23,37 @@ const CHART_COLORS = [
   "var(--chart-5)",
 ];
 
-function pivotData(rows) {
+const MESES_POR_PERIODO = {
+  "Últimos 30 días": 1,
+  "Últimos 90 días": 3,
+  "Últimos 6 meses": 6,
+  "Todo el histórico": null,
+};
+
+// generarMesesRango
+// Genera etiquetas de mes para el rango seleccionado, para que el eje X
+// muestre todos los meses aunque algunos no tengan datos en la BD.
+function generarMesesRango(nMeses) {
+  if (!nMeses) return null;
+  const meses = [];
+  const ahora = new Date();
+  for (let i = nMeses - 1; i >= 0; i--) {
+    const d = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
+    meses.push(
+      d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" }),
+    );
+  }
+  return meses;
+}
+
+// pivotData
+// Transforma [{ month, role_category, job_count }] en [{ month, backend: 150, ... }].
+// Si se pasa un rango de meses, inicializa todos para que aparezcan en el eje X.
+function pivotData(rows, mesesRango) {
   const byMonth = {};
+  if (mesesRango) {
+    for (const mes of mesesRango) byMonth[mes] = { month: mes };
+  }
   for (const { month, role_category, job_count } of rows) {
     const label = new Date(month).toLocaleDateString("es-ES", {
       month: "short",
@@ -33,37 +69,64 @@ function extractRoles(rows) {
   return [...new Set(rows.map((r) => r.role_category))];
 }
 
-// Gráfica de líneas con la evolución mensual de ofertas por rol.
-// El usuario puede seleccionar qué roles mostrar mediante botones toggle.
-// Por defecto muestra los 5 primeros para no saturar la gráfica.
+// TooltipDemanda
+// Muestra "175 ofertas" en vez de solo "175".
+function TooltipDemanda({ active, payload, label, chartConfig }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="grid min-w-40 gap-1.5 rounded-lg border border-border/50 bg-background px-3 py-2 text-xs shadow-xl">
+      <p className="font-medium">{label}</p>
+      {payload.map((entry) => (
+        <div
+          key={entry.dataKey}
+          className="flex items-center justify-between gap-4"
+        >
+          <div className="flex items-center gap-1.5">
+            <div
+              className="h-2 w-2 rounded-sm"
+              style={{ backgroundColor: entry.color }}
+            />
+            <span className="text-muted-foreground">
+              {chartConfig[entry.dataKey]?.label ?? entry.dataKey}
+            </span>
+          </div>
+          <span className="font-medium tabular-nums">
+            {entry.value != null
+              ? `${entry.value.toLocaleString("es-ES")} ofertas`
+              : "Sin datos"}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// DemandByRoleChart
+// Evolución mensual de ofertas por rol.
+// Filtros que aplican: país, periodo, contrato, remote.
+// Jornada y categoría de skill NO aplican.
 function DemandByRoleChart({ filters }) {
-  const [data, setData] = useState([]);
-  const [allRoles, setAllRoles] = useState([]);
-  // Roles actualmente visibles — se inicializan con los 5 primeros al cargar
-  const [selectedRoles, setSelectedRoles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // Solo se recarga cuando cambian los filtros que aplican.
+  const {
+    data: response,
+    loading,
+    isInitialLoad,
+    error,
+  } = useChartData(
+    () => getDemandByRole(filters),
+    [filters.pais, filters.periodo, filters.contrato, filters.remote],
+  );
 
-  useEffect(() => {
-    setLoading(true);
-    getDemandByRole(filters)
-      .then((rows) => {
-        const roles = extractRoles(rows);
-        setAllRoles(roles);
-        // Seleccionamos los 5 primeros por defecto
-        setSelectedRoles(roles.slice(0, 5));
-        setData(pivotData(rows));
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [filters.pais]);
+  const rows = response?.rows ?? [];
+  const totalJobs = response?.total_matching_jobs ?? null;
+  const allRoles = extractRoles(rows);
 
-  // Alterna la visibilidad de un rol al hacer clic en su botón
-  function toggleRole(role) {
-    setSelectedRoles((prev) =>
-      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role],
-    );
-  }
+  // null → inicial (5 primeros) | [] → Ninguno | [...] → selección manual
+  const [selectedRoles, setSelectedRoles] = useState(null);
+  const effectiveSelected =
+    selectedRoles === null
+      ? allRoles.slice(0, 5)
+      : selectedRoles.filter((r) => allRoles.includes(r));
 
   const chartConfig = Object.fromEntries(
     allRoles.map((role, i) => [
@@ -75,91 +138,63 @@ function DemandByRoleChart({ filters }) {
     ]),
   );
 
-  if (loading)
-    return (
-      <div className="rounded-lg border border-border p-4">
-        <p className="text-sm text-muted-foreground">Cargando...</p>
-      </div>
-    );
-
-  if (error)
-    return (
-      <div className="rounded-lg border border-border p-4">
-        <p className="text-sm text-destructive">{error}</p>
-      </div>
-    );
+  const nMeses = MESES_POR_PERIODO[filters.periodo] ?? null;
+  const mesesRango = generarMesesRango(nMeses);
 
   return (
-    <div className="rounded-lg border border-border p-4">
-      <h2 className="mb-4 text-sm font-semibold">
-        Evolución mensual de demanda por rol
-      </h2>
-      {/* Controles de selección */}
-      <div className="mb-2 flex items-center gap-2">
-        <button
-          onClick={() => setSelectedRoles([...allRoles])}
-          className="text-xs text-muted-foreground hover:text-foreground"
-        >
-          Todos
-        </button>
-        <span className="text-xs text-muted-foreground">·</span>
-        <button
-          onClick={() => setSelectedRoles([])}
-          className="text-xs text-muted-foreground hover:text-foreground"
-        >
-          Ninguno
-        </button>
-      </div>
+    <ChartCard
+      title="Evolución mensual de ofertas por rol"
+      loading={loading}
+      isInitialLoad={isInitialLoad}
+      error={error}
+    >
+      <ChartDescription
+        description="Número de ofertas publicadas cada mes por tipo de rol. Permite ver qué perfiles están creciendo en demanda y cuáles pierden fuerza."
+        filters={filters}
+        totalJobs={totalJobs}
+        nota="Por defecto se muestran los 5 roles más demandados."
+        excludeFilters={["jornada", "skillCategoria"]}
+      />
 
-      {/* Selector de roles — botones toggle uno por rol disponible */}
-      <div className="mb-4 flex flex-wrap gap-1">
-        {allRoles.map((role, i) => {
-          const isSelected = selectedRoles.includes(role);
-          return (
-            <button
-              key={role}
-              onClick={() => toggleRole(role)}
-              className={`rounded border px-2 py-1 text-xs transition-colors ${
-                isSelected
-                  ? "border-transparent text-white"
-                  : "border-border text-muted-foreground"
-              }`}
-              // El color de fondo activo coincide con el color de la línea
-              style={
-                isSelected
-                  ? { backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }
-                  : {}
-              }
-            >
-              {getRoleLabel(role)}
-            </button>
-          );
-        })}
-      </div>
+      <RoleSelector
+        allRoles={allRoles}
+        selected={effectiveSelected}
+        onSelect={setSelectedRoles}
+        chartColors={CHART_COLORS}
+        getRoleLabel={getRoleLabel}
+      />
 
-      <ChartContainer config={chartConfig} className="h-72 w-full">
-        <LineChart data={data} margin={{ left: 8, right: 8 }}>
-          <CartesianGrid vertical={false} />
-          <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-          <YAxis tick={{ fontSize: 12 }} width={40} />
-          <ChartTooltip content={<ChartTooltipContent />} />
-
-          {/* Solo renderizamos las líneas de los roles seleccionados */}
-          {allRoles
-            .filter((role) => selectedRoles.includes(role))
-            .map((role, i) => (
-              <Line
-                key={role}
-                type="monotone"
-                dataKey={role}
-                stroke={chartConfig[role].color}
-                strokeWidth={2}
-                dot={false}
-              />
-            ))}
-        </LineChart>
-      </ChartContainer>
-    </div>
+      {effectiveSelected.length === 0 ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">
+          Selecciona al menos un rol para ver la evolución mensual.
+        </p>
+      ) : (
+        <ChartContainer config={chartConfig} className="h-72 w-full">
+          <LineChart
+            data={pivotData(rows, mesesRango)}
+            margin={{ left: 8, right: 8 }}
+          >
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+            <YAxis tick={{ fontSize: 11 }} width={40} />
+            <Tooltip content={<TooltipDemanda chartConfig={chartConfig} />} />
+            {allRoles
+              .filter((role) => effectiveSelected.includes(role))
+              .map((role) => (
+                <Line
+                  key={role}
+                  type="monotone"
+                  dataKey={role}
+                  stroke={chartConfig[role].color}
+                  strokeWidth={2}
+                  dot={false}
+                  connectNulls={false}
+                />
+              ))}
+          </LineChart>
+        </ChartContainer>
+      )}
+    </ChartCard>
   );
 }
 

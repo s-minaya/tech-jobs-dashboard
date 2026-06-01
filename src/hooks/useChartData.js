@@ -1,55 +1,45 @@
-// ─────────────────────────────────────────────────────────────────────────────
+/* eslint-disable react-hooks/set-state-in-effect */
+import { useState, useEffect, useRef } from "react";
+
+// useChartData
 // Hook genérico para cargar datos de cualquier endpoint de la API.
-// Lo usarán TopSkillsChart, DemandByRoleChart, SalaryChart y SkillHeatmap
-// para no repetir el mismo patrón useState + useEffect + try/catch en cada uno.
 //
-// Uso:
-//   const { data, loading, error } = useChartData(
-//     () => getTopSkills(filters),  // función que devuelve una Promise
-//     [filters.skillCategoria]       // dependencias: cuándo volver a cargar
-//   );
+// Implementa stale-while-revalidate: cuando se está recargando por un cambio
+// de filtro, devuelve los datos anteriores en lugar de un array vacío.
+// Esto evita que el chart desaparezca durante la recarga y el layout cambie
+// de tamaño, lo que haría que el browser subiera el scroll.
 //
-// Ventajas de centralizarlo aquí:
-//   - Un solo lugar donde arreglar bugs de carga
-//   - Consistencia: todos los charts muestran "Cargando..." y errores igual
-//   - Fácil de extender (por ejemplo, añadir cancelación de requests con AbortController)
-// ─────────────────────────────────────────────────────────────────────────────
-
-import { useState, useEffect } from "react";
-
-/**
- * useChartData
- * Ejecuta una función async y gestiona los estados de carga, datos y error.
- *
- * @param {Function} fetchFn   - Función que devuelve una Promise con los datos.
- *                               Se re-ejecuta cuando cambian las dependencias.
- *                               Ejemplo: () => getTopSkills(filters)
- * @param {Array}    deps      - Array de dependencias (igual que useEffect).
- *                               El hook vuelve a llamar fetchFn cuando cambia alguna.
- * @param {*}        initialData - Valor inicial de `data` antes de que cargue.
- *                               Por defecto [] (array vacío) para gráficas de listas.
- *
- * @returns {{ data, loading, error }}
- *   data    → los datos devueltos por fetchFn (o initialData si aún no cargó)
- *   loading → true mientras la petición está en curso
- *   error   → string con el mensaje de error, o null si todo fue bien
- */
+// isInitialLoad distingue la primera carga (sin datos previos) de las
+// recargas por cambio de filtro (con datos previos disponibles).
+// Los componentes pueden usarlo para mostrar un estado distinto en cada caso:
+// en la carga inicial ChartCard muestra "Cargando...", en recargas muestra
+// el badge "Actualizando..." sobre los datos anteriores.
 export function useChartData(fetchFn, deps, initialData = []) {
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [error, setError] = useState(null);
 
+  // Guarda los últimos datos válidos para devolverlos durante recargas.
+  const staleDataRef = useRef(initialData);
+
   useEffect(() => {
-    // Marcamos como loading cada vez que se re-ejecuta (por cambio de deps)
     setLoading(true);
-    setError(null); // limpiamos errores anteriores
+    setError(null);
+
+    // Durante recargas por cambio de filtro, mantenemos los datos anteriores
+    // visibles. Durante la carga inicial staleDataRef tiene initialData (array
+    // vacío) así que data queda en [] hasta que llegue la respuesta.
+    setData(staleDataRef.current);
 
     fetchFn()
       .then((result) => {
+        staleDataRef.current = result;
         setData(result);
+        // Una vez llega la primera respuesta, ya no es la carga inicial.
+        setIsInitialLoad(false);
       })
       .catch((err) => {
-        // Guardamos solo el mensaje de texto para mostrarlo al usuario
         setError(err.message ?? "Error desconocido");
       })
       .finally(() => {
@@ -57,7 +47,7 @@ export function useChartData(fetchFn, deps, initialData = []) {
       });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps); // deps viene del caller, igual que en useEffect estándar
+  }, deps);
 
-  return { data, loading, error };
+  return { data, loading, isInitialLoad, error };
 }

@@ -1,88 +1,90 @@
-import { useState, useEffect } from "react";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { BarChart, Bar, XAxis, YAxis } from "recharts";
 import { getTopSkills } from "@/services/jobServices";
+import { useChartData } from "@/hooks/useChartData";
+import ChartCard from "@/components/ui/ChartCard";
+import ChartDescription from "@/components/ui/ChartDescription";
 
-// Configuración de colores y etiquetas para la gráfica.
-// color usa la variable CSS --chart-1 definida por shadcn en index.css.
 const chartConfig = {
-  job_count: {
-    label: "Ofertas",
-    color: "var(--chart-1)",
-  },
+  job_count: { label: "Número de ofertas", color: "var(--chart-1)" },
 };
 
+const PX_POR_SKILL = 32;
+const ALTURA_MINIMA = 200;
+
+// TopSkillsChart
 // Gráfica de barras horizontales con las skills más demandadas.
-// Usa layout="vertical" para que las barras crezcan de izquierda a derecha
-// y el nombre de la skill quede legible en el eje Y.
-
+// La altura se calcula dinámicamente para que siempre quepan todos los nombres.
 function TopSkillsChart({ filters }) {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const {
+    data: response,
+    loading,
+    isInitialLoad,
+    error,
+  } = useChartData(
+    () => getTopSkills(filters),
+    [
+      filters.pais,
+      filters.periodo,
+      filters.contrato,
+      filters.remote,
+      filters.skillCategoria,
+    ],
+  );
 
-  useEffect(() => {
-    setLoading(true);
-    getTopSkills(filters)
-      .then(setData)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [filters.skillCategoria]);
-
-  if (loading)
-    return (
-      <div className="rounded-lg border border-border p-4">
-        <p className="text-sm text-muted-foreground">Cargando...</p>
-      </div>
-    );
-
-  if (error)
-    return (
-      <div className="rounded-lg border border-border p-4">
-        <p className="text-sm text-destructive">{error}</p>
-      </div>
-    );
-
-  if (data.length === 0)
-    return (
-      <div className="rounded-lg border border-border p-4">
-        <h2 className="mb-4 text-sm font-semibold">
-          Top Skills más demandadas
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          No hay datos para la categoría seleccionada.
-        </p>
-      </div>
-    );
+  const rows = response?.rows ?? [];
+  const totalJobs = response?.total_matching_jobs ?? null;
+  const alturaPx = Math.max(ALTURA_MINIMA, rows.length * PX_POR_SKILL);
 
   return (
-    <div className="rounded-lg border border-border p-4">
-      <h2 className="mb-4 text-sm font-semibold">Top Skills más demandadas</h2>
-      <ChartContainer config={chartConfig} className="h-72 w-full">
-        <BarChart
-          data={data}
-          layout="vertical"
-          margin={{ left: 16, right: 16 }}
-        >
-          <CartesianGrid horizontal={false} />
-          {/* Eje numérico oculto, solo sirve para que Recharts calcule la escala */}
-          <XAxis type="number" dataKey="job_count" hide />
-          {/* Eje con los nombres de las skills, ancho fijo para que no se corten */}
-          <YAxis
-            type="category"
-            dataKey="skill"
-            width={90}
-            tick={{ fontSize: 12 }}
-          />
-          <ChartTooltip content={<ChartTooltipContent />} />
-          <Bar dataKey="job_count" fill="var(--chart-1)" radius={4} />
-        </BarChart>
-      </ChartContainer>
-    </div>
+    <ChartCard
+      title="Top Skills más demandadas"
+      loading={loading}
+      isInitialLoad={isInitialLoad}
+      error={error}
+    >
+      <ChartDescription
+        description={`Skills técnicas que aparecen en más ofertas de empleo, ordenadas de mayor a menor. Cada barra muestra en cuántas ofertas se menciona esa tecnología${filters.skillCategoria !== "Todas" ? ` de la categoría "${filters.skillCategoria.toLowerCase()}"` : ""}.`}
+        filters={filters}
+        totalJobs={totalJobs}
+        // Jornada no aplica a esta gráfica: las skills más demandadas
+        // no cambian significativamente según si el contrato es full o part time.
+        excludeFilters={["jornada"]}
+      />
+
+      {rows.length === 0 && !loading ? (
+        <p className="text-sm text-muted-foreground">
+          No hay datos para los filtros seleccionados. Prueba a ampliar el
+          periodo o quitar algún filtro.
+        </p>
+      ) : (
+        <div style={{ width: "100%", height: alturaPx }}>
+          <ChartContainer config={chartConfig} className="h-full w-full">
+            <BarChart
+              data={rows}
+              layout="vertical"
+              margin={{ left: 8, right: 16, top: 4, bottom: 4 }}
+            >
+              <XAxis type="number" dataKey="job_count" hide />
+              {/* interval={0} fuerza a mostrar todos los ticks aunque el espacio sea justo */}
+              <YAxis
+                type="category"
+                dataKey="skill"
+                width={100}
+                tick={{ fontSize: 12 }}
+                interval={0}
+              />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="job_count" fill="var(--chart-1)" radius={4} />
+            </BarChart>
+          </ChartContainer>
+        </div>
+      )}
+    </ChartCard>
   );
 }
 
