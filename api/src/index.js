@@ -4,6 +4,7 @@ import express from "express";
 import cors from "cors";
 import pg from "pg";
 import dotenv from "dotenv";
+import { buildFilters } from "./buildFilters.js";
 
 dotenv.config({ path: ".env.local" });
 
@@ -29,46 +30,6 @@ pool.connect((err, client, release) => {
 const port = process.env.PORT ?? 3000;
 app.listen(port, () => console.log(`Servidor en http://localhost:${port}`));
 app.get("/", (req, res) => res.send("OK"));
-
-// buildFilters
-// Convierte los query params en condiciones SQL para el WHERE.
-// Solo genera condiciones sobre el alias 'j' (tabla jobs).
-// Los filtros que implican otras tablas se añaden fuera de esta función.
-function buildFilters(query, existingValues = []) {
-  const conditions = [];
-  const values = [...existingValues];
-
-  conditions.push("j.is_active = TRUE");
-
-  if (query.country) {
-    values.push(query.country.toLowerCase());
-    conditions.push(`j.country_code = $${values.length}`);
-  }
-
-  const periodoMap = { "30d": "30 days", "90d": "90 days", "180d": "180 days" };
-  const intervalo = periodoMap[query.periodo];
-  if (intervalo) {
-    values.push(intervalo);
-    conditions.push(`j.posted_at >= NOW() - $${values.length}::interval`);
-  }
-
-  if (query.contrato) {
-    values.push(query.contrato.toLowerCase());
-    conditions.push(`j.contract_type = $${values.length}`);
-  }
-
-  if (query.jornada) {
-    values.push(query.jornada.toLowerCase());
-    conditions.push(`j.contract_time = $${values.length}`);
-  }
-
-  if (query.remote === "true" || query.remote === "false") {
-    values.push(query.remote === "true");
-    conditions.push(`j.remote = $${values.length}`);
-  }
-
-  return { conditions, values };
-}
 
 function errorHandler(res, err, context) {
   console.error(`[${context}]`, err.message);
