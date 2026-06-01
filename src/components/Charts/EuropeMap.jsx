@@ -9,9 +9,10 @@ import {
   COUNTRY_NAMES,
 } from "@/lib/mapConfig";
 import { useChartData } from "@/hooks/useChartData";
-import { getOffersByCountry } from "@/services/jobServices";
+import { getOffersByCountry, getSkillsList } from "@/services/jobServices";
 import ChartCard from "@/components/ui/ChartCard";
 import ChartDescription from "@/components/ui/ChartDescription";
+import SkillAutocomplete from "@/components/ui/SkillAutocomplete";
 
 const WIDTH = 600;
 const HEIGHT = 300;
@@ -25,24 +26,49 @@ const projection = d3
 const pathGenerator = d3.geoPath().projection(projection);
 
 // EuropeMap
-// Mapa coroplético de Europa. El color refleja el número de ofertas
-// que cumplen los filtros activos. Escala rojo→verde igual que el heatmap.
-// Filtros que aplican: periodo, contrato, jornada, remote.
-// País NO filtra: resalta el país seleccionado con borde blanco.
-// Categoría de skill NO aplica.
+// Mapa coroplético de Europa. El color de cada país refleja el número de ofertas
+// que cumplen los filtros activos (periodo, contrato, jornada, remote).
+// El usuario puede además filtrar por una skill concreta usando el autocomplete:
+// el mapa mostrará en cuántas ofertas de cada país aparece esa tecnología.
 function EuropeMap({ filters }) {
   const [geographies, setGeographies] = useState([]);
   const [geoLoading, setGeoLoading] = useState(true);
 
-  // Solo se recarga cuando cambian los filtros que aplican al mapa.
+  // Lista completa de skills para el autocomplete.
+  // Se carga una vez al montar: no depende de ningún filtro.
+  const [allSkills, setAllSkills] = useState([]);
+
+  // Skill seleccionada por el usuario en el autocomplete, o null.
+  const [selectedSkill, setSelectedSkill] = useState(null);
+
+  // Cargamos el GeoJSON y la lista de skills en paralelo al montar.
+  useEffect(() => {
+    Promise.all([fetch(GEO_URL).then((r) => r.json()), getSkillsList()])
+      .then(([world, skills]) => {
+        setGeographies(
+          topojson.feature(world, world.objects.countries).features,
+        );
+        setAllSkills(skills);
+      })
+      .finally(() => setGeoLoading(false));
+  }, []);
+
+  // Recargamos los datos del mapa cuando cambian los filtros del sidebar
+  // o cuando el usuario selecciona/deselecciona una skill.
   const {
     data: response,
     loading: offersLoading,
     isInitialLoad,
     error,
   } = useChartData(
-    () => getOffersByCountry(filters),
-    [filters.periodo, filters.contrato, filters.jornada, filters.remote],
+    () => getOffersByCountry(filters, selectedSkill),
+    [
+      filters.periodo,
+      filters.contrato,
+      filters.jornada,
+      filters.remote,
+      selectedSkill,
+    ],
   );
 
   const offersData = response?.rows ?? [];
@@ -54,17 +80,6 @@ function EuropeMap({ filters }) {
       : null;
 
   const [tooltip, setTooltip] = useState(null);
-
-  useEffect(() => {
-    fetch(GEO_URL)
-      .then((r) => r.json())
-      .then((world) => {
-        setGeographies(
-          topojson.feature(world, world.objects.countries).features,
-        );
-      })
-      .finally(() => setGeoLoading(false));
-  }, []);
 
   const offersByNumeric = Object.fromEntries(
     offersData.map(({ country_code, total_jobs }) => [
@@ -88,22 +103,30 @@ function EuropeMap({ filters }) {
     <ChartCard
       title="Ofertas por país en Europa"
       loading={loading}
-      isInitialLoad={isInitialLoad}
+      isInitialLoad={isInitialLoad && geoLoading}
       error={error}
     >
       <ChartDescription
-        description="Distribución geográfica de las ofertas de empleo tech. El color va de rojo (pocas ofertas) a verde (muchas). Pasa el ratón sobre un país para ver el número exacto."
+        description={
+          selectedSkill
+            ? `Ofertas de empleo que incluyen "${selectedSkill}" como skill requerida, por país. El color va de rojo (pocas ofertas) a verde (muchas).`
+            : "Distribución geográfica de las ofertas de empleo tech. El color va de rojo (pocas ofertas) a verde (muchas). Usa el buscador para filtrar por una tecnología concreta."
+        }
         filters={filters}
         totalJobs={totalJobs}
-        // País no filtra el mapa (resalta visualmente), skillCategoria no aplica
         excludeFilters={["pais", "skillCategoria"]}
         contexto="mapa"
-        nota={
-          selectedCountry
-            ? `${COUNTRY_NAMES[selectedCountry] ?? selectedCountry.toUpperCase()} resaltado con borde blanco.`
-            : "Selecciona un país en el panel lateral para resaltarlo."
-        }
       />
+
+      {/* Autocomplete de skills */}
+      <div className="mb-4">
+        <SkillAutocomplete
+          skills={allSkills}
+          selectedSkill={selectedSkill}
+          onSelect={setSelectedSkill}
+          onClear={() => setSelectedSkill(null)}
+        />
+      </div>
 
       <div className="relative">
         <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full">
@@ -132,7 +155,7 @@ function EuropeMap({ filters }) {
                 stroke={stroke}
                 strokeWidth={strokeWidth}
                 opacity={opacity}
-                style={{ transition: "opacity 200ms ease" }}
+                style={{ transition: "opacity 200ms ease, fill 300ms ease" }}
                 className={isIncluded ? "cursor-pointer" : ""}
                 onMouseEnter={(e) => {
                   if (!isIncluded) return;
@@ -158,13 +181,14 @@ function EuropeMap({ filters }) {
             <span className="font-medium">{tooltip.name}</span>
             <span className="ml-1.5 text-muted-foreground">
               {tooltip.offers != null
-                ? `${tooltip.offers.toLocaleString("es-ES")} ofertas`
+                ? `${tooltip.offers.toLocaleString("es-ES")} ofertas${selectedSkill ? ` con ${selectedSkill}` : ""}`
                 : "Sin datos"}
             </span>
           </div>
         )}
       </div>
 
+      {/* Leyenda */}
       <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
         <span>Menos ofertas</span>
         <div className="flex h-3 w-32 overflow-hidden rounded">

@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable no-undef */
 import express from "express";
 import cors from "cors";
 import pg from "pg";
@@ -33,8 +31,7 @@ app.get("/", (req, res) => res.send("OK"));
 // buildFilters
 // Convierte los query params en condiciones SQL para el WHERE.
 // Solo genera condiciones sobre el alias 'j' (tabla jobs).
-// Los filtros que implican otras tablas (ej: skills alias 's') se añaden
-// fuera de esta función para no contaminar los values de otras queries.
+// Los filtros que implican otras tablas se añaden fuera de esta función.
 function buildFilters(query, existingValues = []) {
   const conditions = [];
   const values = [...existingValues];
@@ -71,31 +68,69 @@ function buildFilters(query, existingValues = []) {
   return { conditions, values };
 }
 
-// errorHandler
-// Devuelve el mensaje real de PostgreSQL al cliente para facilitar el diagnóstico.
 function errorHandler(res, err, context) {
   console.error(`[${context}]`, err.message);
   res.status(500).json({ error: `Error en ${context}`, detail: err.message });
 }
 
+// GET /api/skills/list
+// Devuelve todas las skills registradas en la BD, ordenadas alfabéticamente.
+// Se usa para poblar el autocomplete del mapa. No aplica ningún filtro de periodo
+// ni de ofertas activas: queremos ver todas las skills conocidas, independientemente
+// de si tienen ofertas recientes.
+app.get("/api/skills/list", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT name, category
+       FROM skills
+       ORDER BY name ASC`,
+    );
+    res.json(result.rows);
+  } catch (err) {
+    errorHandler(res, err, "skills-list");
+  }
+});
+
 // GET /api/jobs/offers-by-country
-// Filtros que aplican: periodo, contrato, jornada, remote.
-// País NO aplica: el mapa siempre muestra todos los países.
+// Total de ofertas activas por país con los filtros aplicados.
+// Acepta el param 'skill' (nombre exacto de una skill) para filtrar
+// las ofertas que incluyen esa tecnología. En ese caso añade los JOINs
+// necesarios con job_skills y skills.
+// El filtro de país se ignora: el mapa siempre muestra todos los países.
+// Devuelve { rows, total_matching_jobs }.
 app.get("/api/jobs/offers-by-country", async (req, res) => {
   try {
     const { country: _ignored, ...restQuery } = req.query;
     const { conditions, values } = buildFilters(restQuery);
 
-    const result = await pool.query(
-      `SELECT j.country_code, c.name AS country_name, COUNT(*) AS total_jobs
-       FROM jobs j
-       JOIN countries c ON c.code = j.country_code
-       WHERE ${conditions.join(" AND ")}
-       GROUP BY j.country_code, c.name
-       ORDER BY total_jobs DESC`,
-      values,
-    );
+    let query;
 
+    if (req.query.skill) {
+      // Con filtro de skill: necesitamos JOIN a job_skills y skills
+      values.push(req.query.skill);
+      conditions.push(`s.name = $${values.length}`);
+
+      query = `
+        SELECT j.country_code, c.name AS country_name, COUNT(DISTINCT j.id) AS total_jobs
+        FROM jobs j
+        JOIN countries c ON c.code = j.country_code
+        JOIN job_skills js ON js.job_id = j.id
+        JOIN skills s ON s.id = js.skill_id
+        WHERE ${conditions.join(" AND ")}
+        GROUP BY j.country_code, c.name
+        ORDER BY total_jobs DESC`;
+    } else {
+      // Sin filtro de skill: query simple sin JOINs extra
+      query = `
+        SELECT j.country_code, c.name AS country_name, COUNT(*) AS total_jobs
+        FROM jobs j
+        JOIN countries c ON c.code = j.country_code
+        WHERE ${conditions.join(" AND ")}
+        GROUP BY j.country_code, c.name
+        ORDER BY total_jobs DESC`;
+    }
+
+    const result = await pool.query(query, values);
     const total = result.rows.reduce((sum, r) => sum + Number(r.total_jobs), 0);
     res.json({ rows: result.rows, total_matching_jobs: total });
   } catch (err) {
@@ -104,9 +139,8 @@ app.get("/api/jobs/offers-by-country", async (req, res) => {
 });
 
 // GET /api/jobs/demand-by-role
-// Filtros que aplican: país, periodo, contrato, remote.
-// Jornada NO aplica: la tendencia mensual de roles no cambia significativamente por jornada.
-// Categoría de skill NO aplica: los roles no dependen de la categoría de skill.
+// Evolución mensual de ofertas por rol.
+// Filtros: país, periodo, contrato, remote. Jornada no aplica.
 app.get("/api/jobs/demand-by-role", async (req, res) => {
   try {
     const { jornada: _j, ...filtrosAplicables } = req.query;
@@ -144,10 +178,8 @@ app.get("/api/jobs/demand-by-role", async (req, res) => {
 });
 
 // GET /api/salary/by-role-country
-// Filtros que aplican: país, periodo, contrato, jornada, remote.
-// Categoría de skill NO aplica: el salario no depende de qué categoría de skill se busca.
-// Excluye salary_mid < 1000 porque son datos corruptos del pipeline
-// (salarios por hora o mensuales importados sin convertir a escala anual).
+// Salario mediano por rol y país.
+// Excluye salary_mid < 1000 (datos corruptos del pipeline).
 app.get("/api/salary/by-role-country", async (req, res) => {
   try {
     const { conditions, values } = buildFilters(req.query);
@@ -191,15 +223,10 @@ app.get("/api/salary/by-role-country", async (req, res) => {
 });
 
 // GET /api/skills/top
-// Filtros que aplican: país, periodo, contrato, remote, category.
-// Jornada NO aplica: las skills más demandadas no cambian significativamente por jornada.
-// Sin periodo explícito aplica 90 días por defecto.
-//
-// ESTRUCTURA DE VALUES CRÍTICA:
-// valuesForCount se clona ANTES de añadir el valor de category a values.
-// Si se clonara después, la query COUNT recibiría un valor extra ($N) que
-// no referencia ningún placeholder en su SQL, y PostgreSQL devuelve:
-// "bind message supplies N parameters, but prepared statement requires M".
+// Skills más demandadas. Usa dos conjuntos de conditions para evitar que
+// el COUNT total falle al referenciar el alias 's' (skills) que no está
+// disponible en esa query. valuesForCount se clona ANTES de añadir category
+// para no pasar parámetros extra al COUNT.
 app.get("/api/skills/top", async (req, res) => {
   try {
     const { jornada: _j, ...filtrosAplicables } = req.query;
@@ -210,10 +237,7 @@ app.get("/api/skills/top", async (req, res) => {
       conditionsJobs.push("j.posted_at >= NOW() - INTERVAL '90 days'");
     }
 
-    // Clonamos values ANTES de añadir category.
-    // La query COUNT usa solo conditionsJobs (sin alias 's') y recibe este clon.
-    // Si añadiéramos category a values antes de clonar, la query COUNT recibiría
-    // un parámetro extra que su SQL no referencia → error de PostgreSQL.
+    // Clonamos ANTES de añadir category para que el COUNT no reciba ese valor extra
     const valuesForCount = [...values];
 
     const conditionsWithSkills = [...conditionsJobs];
@@ -261,17 +285,14 @@ app.get("/api/skills/top", async (req, res) => {
 });
 
 // GET /api/skills/cooccurrence
-// Filtros que aplican: periodo, contrato, remote.
-// País NO aplica: las co-ocurrencias se calculan globalmente para tener
-// suficientes datos estadísticos (por país habría muy pocos pares).
-// Jornada NO aplica: marginal en co-ocurrencias.
-// Sin periodo explícito aplica 90 días por defecto.
+// Pares de skills que aparecen juntas. Solo aplica el filtro de periodo.
+// País, contrato, jornada y remote no aplican (datos globales).
 app.get("/api/skills/cooccurrence", async (req, res) => {
   try {
-    const { country: _c, jornada: _j, ...filtrosAplicables } = req.query;
-    const { conditions, values } = buildFilters(filtrosAplicables);
+    const { country: _c, jornada: _j, ...restQuery } = req.query;
+    const { conditions, values } = buildFilters(restQuery);
 
-    if (!filtrosAplicables.periodo || filtrosAplicables.periodo === "all") {
+    if (!req.query.periodo || req.query.periodo === "all") {
       conditions.push("j.posted_at >= NOW() - INTERVAL '90 days'");
     }
 

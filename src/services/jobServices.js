@@ -11,8 +11,7 @@ async function fetchJson(path) {
 
 // buildParams
 // Convierte el objeto de filtros del sidebar en URLSearchParams.
-// Cada función de servicio destructura y descarta los filtros que no aplican
-// antes de llamar a buildParams, así el backend nunca los recibe.
+// Cada función descarta los filtros irrelevantes antes de llamar a buildParams.
 function buildParams(filters = {}) {
   const params = new URLSearchParams();
 
@@ -43,6 +42,14 @@ function buildParams(filters = {}) {
   return params;
 }
 
+// getSkillsList
+// Devuelve todas las skills registradas en la BD, ordenadas alfabéticamente.
+// No aplica ningún filtro: queremos todas las skills conocidas para el autocomplete,
+// independientemente de si tienen ofertas recientes.
+export async function getSkillsList() {
+  return fetchJson("/api/skills/list");
+}
+
 // getTopSkills
 // Filtros que aplican: país, periodo, contrato, remote, skillCategoria.
 // Jornada NO aplica.
@@ -71,21 +78,19 @@ export async function getSalaryByRoleAndCountry(filters = {}) {
 }
 
 // getOffersByCountry
-// Filtros que aplican: periodo, contrato, jornada, remote.
-// País NO filtra el mapa (solo resalta visualmente).
-// skillCategoria NO aplica.
-export async function getOffersByCountry(filters = {}) {
+// Filtros que aplican: periodo, contrato, jornada, remote, skill (nombre exacto).
+// País NO filtra (solo resalta en el mapa). skillCategoria NO aplica.
+// El param skill es independiente del sistema de filtros del sidebar:
+// es una búsqueda puntual de tecnología que el usuario introduce en el mapa.
+export async function getOffersByCountry(filters = {}, skill = null) {
   const { pais: _p, skillCategoria: _s, ...rest } = filters;
-  return fetchJson(`/api/jobs/offers-by-country?${buildParams(rest)}`);
+  const params = buildParams(rest);
+  if (skill) params.set("skill", skill);
+  return fetchJson(`/api/jobs/offers-by-country?${params}`);
 }
 
 // getSkillCoOccurrence
-// Filtros que aplican: solo periodo.
-// País, contrato, jornada y remote NO aplican: las co-ocurrencias se calculan
-// sobre el conjunto global de ofertas para tener suficiente masa estadística.
-// Filtrar por país o tipo de contrato dejaría demasiados pocos datos y los
-// porcentajes perderían representatividad.
-// skillCategoria se gestiona en el frontend (selectSkills), no en el backend.
+// Solo aplica el filtro de periodo. El resto no aplican (datos globales).
 export async function getSkillCoOccurrence(filters = {}) {
   const {
     pais: _p,
