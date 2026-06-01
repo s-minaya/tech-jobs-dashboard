@@ -1,26 +1,19 @@
 import { useState } from "react";
+import { PERIODO_DEFAULT } from "@/lib/filterUtils";
 
-// Valores por defecto de todos los filtros del dashboard.
-// Coinciden con las keys definidas en src/components/config/filters.js
-//
-// periodo: "Últimos 90 días" en lugar de "Últimos 30 días" porque:
-//   - Es el periodo que usan las vistas de la BD por defecto
-//   - Con 30 días la gráfica de evolución mensual solo muestra 1 mes,
-//     lo que no permite ver tendencias
-//   - Las ofertas más recientes pueden no tener role_category asignado
-//     todavía si el pipeline de NLP no las ha procesado
+// Valores iniciales de todos los filtros del dashboard.
+// PERIODO_DEFAULT se importa de filterUtils para que useFilters y
+// describeFiltros estén siempre sincronizados: si cambia el default,
+// solo hay que tocarlo en filterUtils.js.
 const initialFilters = {
   pais: "Todos",
-  periodo: "Últimos 90 días",
+  periodo: PERIODO_DEFAULT,
   contrato: "Todos",
   jornada: "Todos",
   remote: "Todos",
   skillCategoria: "Todas",
 };
 
-// useFilters
-// Encapsula el estado y la lógica de los filtros del dashboard.
-// Separa la gestión del estado de la capa de presentación en App.jsx.
 export function useFilters() {
   const [filters, setFilters] = useState(initialFilters);
 

@@ -13,8 +13,9 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/test/setup.js"],
     globals: true,
-    // Solo busca tests dentro de src/ para no interferir con los
-    // tests del backend que viven en api/__tests__/
-    include: ["src/**/*.test.{js,jsx}"],
+    // Excluimos api/ para que el runner del frontend no recoja
+    // los tests del backend.
+    include: ["src/tests/**/*.test.{js,jsx}"],
+    exclude: ["**/node_modules/**", "**/api/**"],
   },
 });

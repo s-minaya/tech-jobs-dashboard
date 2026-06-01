@@ -1,6 +1,6 @@
+// filterUtils.js
 // Utilidades compartidas por todos los charts para trabajar con los filtros.
 
-// Nombres de países en español para mostrar al usuario.
 export const NOMBRES_PAISES = {
   DE: "Alemania",
   FR: "Francia",
@@ -12,22 +12,29 @@ export const NOMBRES_PAISES = {
   BE: "Bélgica",
 };
 
+// PERIODO_DEFAULT
+// El periodo que useFilters usa como estado inicial.
+// describeFiltros lo trata como "sin filtro activo": si el usuario
+// no ha cambiado el periodo, no tiene sentido mostrarlo como filtro activo.
+// Centralizado aquí para que si cambia el default, solo haya que tocarlo
+// en un sitio y tanto useFilters como describeFiltros queden sincronizados.
+export const PERIODO_DEFAULT = "Últimos 90 días";
+
+// describeFiltros
 // Convierte el objeto de filtros en un array de strings legibles.
-// Solo incluye los filtros que difieren del valor por defecto.
-//
+// Solo incluye los filtros que difieren de su valor neutro.
 // excludeKeys: array de claves a omitir aunque estén activas.
-// Lo usan los charts que no aplican ciertos filtros (ej: SalaryChart
-// ignora skillCategoria porque el salario no depende de la skill).
 export function describeFiltros(filters, excludeKeys = []) {
   const partes = [];
 
   if (!excludeKeys.includes("pais") && filters.pais && filters.pais !== "Todos")
     partes.push(NOMBRES_PAISES[filters.pais] ?? filters.pais);
 
+  // El periodo solo se omite si coincide con el default o no está definido.
   if (
     !excludeKeys.includes("periodo") &&
     filters.periodo &&
-    filters.periodo !== "Últimos 30 días"
+    filters.periodo !== PERIODO_DEFAULT
   )
     partes.push(filters.periodo.toLowerCase());
 

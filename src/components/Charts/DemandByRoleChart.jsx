@@ -23,15 +23,22 @@ const CHART_COLORS = [
   "var(--chart-5)",
 ];
 
+// Periodos que tienen suficientes meses para mostrar tendencias en una
+// gráfica de líneas. "Últimos 30 días" queda fuera porque 1-2 puntos
+// en una línea no transmiten ninguna tendencia significativa.
+const PERIODOS_CON_TENDENCIA = [
+  "Últimos 90 días",
+  "Últimos 6 meses",
+  "Todo el histórico",
+];
+
 const MESES_POR_PERIODO = {
-  "Últimos 30 días": 1,
   "Últimos 90 días": 3,
   "Últimos 6 meses": 6,
   "Todo el histórico": null,
 };
 
-// generarMesesRango
-// Genera etiquetas de mes para el rango seleccionado, para que el eje X
+// Genera etiquetas de mes para el rango seleccionado para que el eje X
 // muestre todos los meses aunque algunos no tengan datos en la BD.
 function generarMesesRango(nMeses) {
   if (!nMeses) return null;
@@ -46,7 +53,6 @@ function generarMesesRango(nMeses) {
   return meses;
 }
 
-// pivotData
 // Transforma [{ month, role_category, job_count }] en [{ month, backend: 150, ... }].
 // Si se pasa un rango de meses, inicializa todos para que aparezcan en el eje X.
 function pivotData(rows, mesesRango) {
@@ -69,8 +75,7 @@ function extractRoles(rows) {
   return [...new Set(rows.map((r) => r.role_category))];
 }
 
-// TooltipDemanda
-// Muestra "175 ofertas" en vez de solo "175".
+// Tooltip personalizado que muestra "175 ofertas" en vez de solo "175".
 function TooltipDemanda({ active, payload, label, chartConfig }) {
   if (!active || !payload?.length) return null;
   return (
@@ -102,11 +107,10 @@ function TooltipDemanda({ active, payload, label, chartConfig }) {
 }
 
 // DemandByRoleChart
-// Evolución mensual de ofertas por rol.
-// Filtros que aplican: país, periodo, contrato, remote.
-// Jornada y categoría de skill NO aplican.
+// Gráfica de líneas con la evolución mensual de ofertas por tipo de rol.
+// Requiere al menos 3 meses de datos para que la tendencia sea visible.
+// Con "Últimos 30 días" muestra un aviso en lugar de la gráfica.
 function DemandByRoleChart({ filters }) {
-  // Solo se recarga cuando cambian los filtros que aplican.
   const {
     data: response,
     loading,
@@ -141,6 +145,10 @@ function DemandByRoleChart({ filters }) {
   const nMeses = MESES_POR_PERIODO[filters.periodo] ?? null;
   const mesesRango = generarMesesRango(nMeses);
 
+  // Comprobamos si el periodo seleccionado tiene suficientes meses
+  // para que una gráfica de líneas sea informativa.
+  const periodoInsuficiente = !PERIODOS_CON_TENDENCIA.includes(filters.periodo);
+
   return (
     <ChartCard
       title="Evolución mensual de ofertas por rol"
@@ -149,50 +157,69 @@ function DemandByRoleChart({ filters }) {
       error={error}
     >
       <ChartDescription
-        description="Número de ofertas publicadas cada mes por tipo de rol. Permite ver qué perfiles están creciendo en demanda y cuáles pierden fuerza."
+        description="Número de ofertas publicadas cada mes por tipo de rol. Permite ver qué perfiles están creciendo en demanda y cuáles pierden fuerza a lo largo del tiempo."
         filters={filters}
         totalJobs={totalJobs}
         nota="Por defecto se muestran los 5 roles más demandados."
         excludeFilters={["jornada", "skillCategoria"]}
       />
 
-      <RoleSelector
-        allRoles={allRoles}
-        selected={effectiveSelected}
-        onSelect={setSelectedRoles}
-        chartColors={CHART_COLORS}
-        getRoleLabel={getRoleLabel}
-      />
-
-      {effectiveSelected.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">
-          Selecciona al menos un rol para ver la evolución mensual.
-        </p>
+      {/* Aviso cuando el periodo es demasiado corto para ver tendencias */}
+      {periodoInsuficiente ? (
+        <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+          <p className="font-medium">
+            Periodo insuficiente para ver tendencias
+          </p>
+          <p className="mt-1">
+            Con "Últimos 30 días" solo hay 1-2 puntos en la línea, lo que no
+            permite ver si la demanda de un rol está subiendo o bajando.
+            Selecciona <strong>90 días, 6 meses o todo el histórico</strong>{" "}
+            para ver la evolución real por rol.
+          </p>
+        </div>
       ) : (
-        <ChartContainer config={chartConfig} className="h-72 w-full">
-          <LineChart
-            data={pivotData(rows, mesesRango)}
-            margin={{ left: 8, right: 8 }}
-          >
-            <CartesianGrid vertical={false} />
-            <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 11 }} width={40} />
-            <Tooltip content={<TooltipDemanda chartConfig={chartConfig} />} />
-            {allRoles
-              .filter((role) => effectiveSelected.includes(role))
-              .map((role) => (
-                <Line
-                  key={role}
-                  type="monotone"
-                  dataKey={role}
-                  stroke={chartConfig[role].color}
-                  strokeWidth={2}
-                  dot={false}
-                  connectNulls={false}
+        <>
+          <RoleSelector
+            allRoles={allRoles}
+            selected={effectiveSelected}
+            onSelect={setSelectedRoles}
+            chartColors={CHART_COLORS}
+            getRoleLabel={getRoleLabel}
+          />
+
+          {effectiveSelected.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Selecciona al menos un rol para ver la evolución mensual.
+            </p>
+          ) : (
+            <ChartContainer config={chartConfig} className="h-72 w-full">
+              <LineChart
+                data={pivotData(rows, mesesRango)}
+                margin={{ left: 8, right: 8 }}
+              >
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 11 }} width={40} />
+                <Tooltip
+                  content={<TooltipDemanda chartConfig={chartConfig} />}
                 />
-              ))}
-          </LineChart>
-        </ChartContainer>
+                {allRoles
+                  .filter((role) => effectiveSelected.includes(role))
+                  .map((role) => (
+                    <Line
+                      key={role}
+                      type="monotone"
+                      dataKey={role}
+                      stroke={chartConfig[role].color}
+                      strokeWidth={2}
+                      dot={false}
+                      connectNulls={false}
+                    />
+                  ))}
+              </LineChart>
+            </ChartContainer>
+          )}
+        </>
       )}
     </ChartCard>
   );
