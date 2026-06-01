@@ -12,8 +12,9 @@ async function fetchJson(path) {
 
 // buildParams
 // Convierte el objeto de filtros del sidebar en URLSearchParams.
-// Cada función descarta los filtros irrelevantes antes de llamar a buildParams.
-function buildParams(filters = {}) {
+// Exportada para poder testearla directamente sin exponerla al usuario
+// ni tener que reimplementarla en los tests.
+export function buildParams(filters = {}) {
   const params = new URLSearchParams();
 
   if (filters.pais && filters.pais !== "Todos")
@@ -43,17 +44,6 @@ function buildParams(filters = {}) {
   return params;
 }
 
-// getSkillsList
-// Devuelve todas las skills registradas en la BD, ordenadas alfabéticamente.
-// No aplica ningún filtro: queremos todas las skills conocidas para el autocomplete,
-// independientemente de si tienen ofertas recientes.
-export async function getSkillsList() {
-  return fetchJson("/api/skills/list");
-}
-
-// getTopSkills
-// Filtros que aplican: país, periodo, contrato, remote, skillCategoria.
-// Jornada NO aplica.
 export async function getTopSkills(filters = {}) {
   const { jornada: _j, ...rest } = filters;
   const params = buildParams(rest);
@@ -62,27 +52,16 @@ export async function getTopSkills(filters = {}) {
   return fetchJson(`/api/skills/top?${params}`);
 }
 
-// getDemandByRole
-// Filtros que aplican: país, periodo, contrato, remote.
-// Jornada y skillCategoria NO aplican.
 export async function getDemandByRole(filters = {}) {
   const { jornada: _j, skillCategoria: _s, ...rest } = filters;
   return fetchJson(`/api/jobs/demand-by-role?${buildParams(rest)}`);
 }
 
-// getSalaryByRoleAndCountry
-// Filtros que aplican: país, periodo, contrato, jornada, remote.
-// skillCategoria NO aplica.
 export async function getSalaryByRoleAndCountry(filters = {}) {
   const { skillCategoria: _s, ...rest } = filters;
   return fetchJson(`/api/salary/by-role-country?${buildParams(rest)}`);
 }
 
-// getOffersByCountry
-// Filtros que aplican: periodo, contrato, jornada, remote, skill (nombre exacto).
-// País NO filtra (solo resalta en el mapa). skillCategoria NO aplica.
-// El param skill es independiente del sistema de filtros del sidebar:
-// es una búsqueda puntual de tecnología que el usuario introduce en el mapa.
 export async function getOffersByCountry(filters = {}, skill = null) {
   const { pais: _p, skillCategoria: _s, ...rest } = filters;
   const params = buildParams(rest);
@@ -90,8 +69,6 @@ export async function getOffersByCountry(filters = {}, skill = null) {
   return fetchJson(`/api/jobs/offers-by-country?${params}`);
 }
 
-// getSkillCoOccurrence
-// Solo aplica el filtro de periodo. El resto no aplican (datos globales).
 export async function getSkillCoOccurrence(filters = {}) {
   const {
     pais: _p,
@@ -104,9 +81,10 @@ export async function getSkillCoOccurrence(filters = {}) {
   return fetchJson(`/api/skills/cooccurrence?${buildParams(rest)}`);
 }
 
-// getSummaryStats
-// Devuelve los indicadores globales del dashboard.
-// No acepta filtros: los KPIs representan el estado completo de la BD.
+export async function getSkillsList() {
+  return fetchJson("/api/skills/list");
+}
+
 export async function getSummaryStats() {
   return fetchJson("/api/stats/summary");
 }
