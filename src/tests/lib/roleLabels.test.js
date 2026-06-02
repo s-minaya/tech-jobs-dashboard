@@ -1,0 +1,51 @@
+import { describe, it, expect } from "vitest";
+import { getRoleLabel, ROLE_LABELS } from "@/lib/roleLabels";
+
+describe("ROLE_LABELS", () => {
+  it("contiene los roles principales del dashboard", () => {
+    const rolesEsperados = [
+      "backend",
+      "frontend",
+      "fullstack",
+      "devops",
+      "data_science",
+      "data_analyst",
+      "data_engineering",
+      "ai_ml",
+      "cloud",
+      "security",
+      "mobile",
+    ];
+    rolesEsperados.forEach((rol) => {
+      expect(ROLE_LABELS).toHaveProperty(rol);
+    });
+  });
+
+  it("todos los valores son strings no vacíos", () => {
+    Object.values(ROLE_LABELS).forEach((label) => {
+      expect(typeof label).toBe("string");
+      expect(label.length).toBeGreaterThan(0);
+    });
+  });
+});
+
+describe("getRoleLabel", () => {
+  it("convierte keys conocidas al label legible correcto", () => {
+    expect(getRoleLabel("backend")).toBe("Backend");
+    expect(getRoleLabel("data_science")).toBe("Data Science");
+    expect(getRoleLabel("ai_ml")).toBe("AI / ML");
+    expect(getRoleLabel("qa_testing")).toBe("QA / Testing");
+    expect(getRoleLabel("erp_sap")).toBe("ERP / SAP");
+  });
+
+  it("devuelve el key original como fallback cuando no existe en ROLE_LABELS", () => {
+    // La BD podría devolver un rol nuevo que aún no está en el frontend.
+    // El fallback evita mostrar "undefined" o romper el componente.
+    expect(getRoleLabel("nuevo_rol")).toBe("nuevo_rol");
+    expect(getRoleLabel("unknown")).toBe("unknown");
+  });
+
+  it("el fallback funciona con strings vacíos y valores edge case", () => {
+    expect(getRoleLabel("")).toBe("");
+  });
+});
