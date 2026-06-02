@@ -9,19 +9,11 @@ import {
   Tooltip,
 } from "recharts";
 import { getDemandByRole } from "@/services/jobServices";
-import { getRoleLabel } from "@/lib/roleLabels";
+import { getRoleLabel, getRoleColor } from "@/lib/roleLabels";
 import { useChartData } from "@/hooks/useChartData";
 import ChartCard from "@/components/ui/ChartCard";
 import ChartDescription from "@/components/ui/ChartDescription";
 import RoleSelector from "@/components/ui/RoleSelector";
-
-const CHART_COLORS = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
-];
 
 // Periodos que tienen suficientes meses para mostrar tendencias en una
 // gráfica de líneas. "Últimos 30 días" queda fuera porque 1-2 puntos
@@ -76,6 +68,7 @@ function extractRoles(rows) {
 }
 
 // Tooltip personalizado que muestra "175 ofertas" en vez de solo "175".
+
 function TooltipDemanda({ active, payload, label, chartConfig }) {
   if (!active || !payload?.length) return null;
   return (
@@ -132,13 +125,13 @@ function DemandByRoleChart({ filters }) {
       ? allRoles.slice(0, 5)
       : selectedRoles.filter((r) => allRoles.includes(r));
 
+  // Cada rol recibe su color semántico (Backend=índigo, Data Science=esmeralda...)
+  // en lugar de un color por posición. Así el color es consistente
+  // independientemente del orden en que lleguen los roles de la API.
   const chartConfig = Object.fromEntries(
-    allRoles.map((role, i) => [
+    allRoles.map((role) => [
       role,
-      {
-        label: getRoleLabel(role),
-        color: CHART_COLORS[i % CHART_COLORS.length],
-      },
+      { label: getRoleLabel(role), color: getRoleColor(role) },
     ]),
   );
 
@@ -183,7 +176,9 @@ function DemandByRoleChart({ filters }) {
             allRoles={allRoles}
             selected={effectiveSelected}
             onSelect={setSelectedRoles}
-            chartColors={CHART_COLORS}
+            // Pasamos los colores semánticos al selector para que los botones
+            // de cada rol tengan el mismo color que su línea en la gráfica
+            chartColors={allRoles.map(getRoleColor)}
             getRoleLabel={getRoleLabel}
           />
 
@@ -210,7 +205,7 @@ function DemandByRoleChart({ filters }) {
                       key={role}
                       type="monotone"
                       dataKey={role}
-                      stroke={chartConfig[role].color}
+                      stroke={getRoleColor(role)}
                       strokeWidth={2}
                       dot={false}
                       connectNulls={false}

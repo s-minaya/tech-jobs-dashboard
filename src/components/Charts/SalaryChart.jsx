@@ -2,19 +2,11 @@ import { useState } from "react";
 import { ChartContainer } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { getSalaryByRoleAndCountry } from "@/services/jobServices";
-import { getRoleLabel } from "@/lib/roleLabels";
+import { getRoleLabel, getRoleColor } from "@/lib/roleLabels";
 import { useChartData } from "@/hooks/useChartData";
 import ChartCard from "@/components/ui/ChartCard";
 import ChartDescription from "@/components/ui/ChartDescription";
 import RoleSelector from "@/components/ui/RoleSelector";
-
-const CHART_COLORS = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
-];
 
 // pivotData
 // Transforma [{ country_code, role_category, median_salary_eur }]
@@ -36,6 +28,7 @@ function extractRoles(rows) {
 
 // TooltipSalario
 // Muestra el salario con unidad y una nota sobre qué es la mediana.
+
 function TooltipSalario({ active, payload, label, chartConfig }) {
   if (!active || !payload?.length) return null;
   return (
@@ -102,13 +95,12 @@ function SalaryChart({ filters }) {
       ? allRoles.slice(0, 5)
       : selectedRoles.filter((r) => allRoles.includes(r));
 
+  // Color semántico por rol: Backend siempre índigo, Data Science siempre
+  // esmeralda, independientemente del orden en que lleguen de la API.
   const chartConfig = Object.fromEntries(
-    allRoles.map((role, i) => [
+    allRoles.map((role) => [
       role,
-      {
-        label: getRoleLabel(role),
-        color: CHART_COLORS[i % CHART_COLORS.length],
-      },
+      { label: getRoleLabel(role), color: getRoleColor(role) },
     ]),
   );
 
@@ -135,7 +127,7 @@ function SalaryChart({ filters }) {
         allRoles={allRoles}
         selected={effectiveSelected}
         onSelect={setSelectedRoles}
-        chartColors={CHART_COLORS}
+        chartColors={allRoles.map(getRoleColor)}
         getRoleLabel={getRoleLabel}
       />
 
@@ -156,11 +148,11 @@ function SalaryChart({ filters }) {
             <Tooltip content={<TooltipSalario chartConfig={chartConfig} />} />
             {allRoles
               .filter((role) => effectiveSelected.includes(role))
-              .map((role, i) => (
+              .map((role) => (
                 <Bar
                   key={role}
                   dataKey={role}
-                  fill={CHART_COLORS[i % CHART_COLORS.length]}
+                  fill={getRoleColor(role)}
                   radius={[4, 4, 0, 0]}
                 />
               ))}

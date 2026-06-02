@@ -24,3 +24,45 @@ export const ROLE_LABELS = {
 export function getRoleLabel(key) {
   return ROLE_LABELS[key] ?? key;
 }
+
+// ── Colores por rol ──────────────────────────────────────────────────────────
+// Cada rol tiene su propio color, agrupados por familia semántica pero con
+// variaciones de tono para que sean distinguibles dentro del mismo grupo.
+//
+// Familia Dev      → índigos   (backend oscuro → fullstack claro)
+// Familia Data     → esmeraldas (data_eng oscuro → data_analyst claro)
+// Familia Infra    → ámbar/verde (devops oscuro → sysadmin claro)
+// Familia AI/Esp   → rosas/coralEs (ai_ml → erp_sap)
+// Cajones de sastre → slate neutro (management, other)
+// ────────────────────────────────────────────────────────────────────────────
+export const ROLE_COLORS = {
+  // Dev — índigos
+  backend: "var(--role-backend)",
+  frontend: "var(--role-frontend)",
+  fullstack: "var(--role-fullstack)",
+
+  // Data — esmeraldas
+  data_engineering: "var(--role-data-engineering)",
+  data_science: "var(--role-data-science)",
+  data_analyst: "var(--role-data-analyst)",
+
+  // Infra — ámbar/teal
+  devops: "var(--role-devops)",
+  cloud: "var(--role-cloud)",
+  sysadmin: "var(--role-sysadmin)",
+
+  // AI / Especialidad — rosas y corales
+  ai_ml: "var(--role-ai-ml)",
+  security: "var(--role-security)",
+  mobile: "var(--role-mobile)",
+  qa_testing: "var(--role-qa-testing)",
+  erp_sap: "var(--role-erp-sap)",
+
+  // Cajones de sastre — neutros azulados
+  management: "var(--role-management)",
+  other: "var(--role-other)",
+};
+
+export function getRoleColor(key) {
+  return ROLE_COLORS[key] ?? "var(--chart-1)";
+}
