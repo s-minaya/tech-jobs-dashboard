@@ -1,12 +1,18 @@
 // ChartCard
 // Wrapper visual reutilizable para todas las gráficas del dashboard.
 //
+// En lugar de borde fino, usa sombra para dar elevación:
+//   - Light mode: shadow-md con toque azulado sutil
+//   - Dark mode: sombra negra intensa (shadow-black/60) para contrastar
+//     sobre el fondo oscuro sin que las cards se pierdan
+//
 // Distingue dos estados de carga:
 //   - Carga inicial (isInitialLoad=true): muestra "Cargando..." porque
 //     no hay datos previos que mostrar.
 //   - Recarga por filtro (loading=true, isInitialLoad=false): mantiene
 //     el contenido visible con opacidad reducida y un badge "Actualizando..."
 //     para que el layout no cambie de tamaño y el scroll no se mueva.
+
 function ChartCard({
   title,
   loading,
@@ -20,7 +26,7 @@ function ChartCard({
 
   return (
     <div
-      className={`relative rounded-lg border border-border p-4 ${className}`}
+      className={`relative rounded-xl bg-card p-4 shadow-md shadow-black/8 dark:shadow-lg dark:shadow-black/60 ${className} `}
     >
       {title && <h2 className="mb-4 text-sm font-semibold">{title}</h2>}
 

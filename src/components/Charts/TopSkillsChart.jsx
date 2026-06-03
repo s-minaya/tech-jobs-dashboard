@@ -19,6 +19,9 @@ const ALTURA_MINIMA = 200;
 // TopSkillsChart
 // Gráfica de barras horizontales con las skills más demandadas.
 // La altura se calcula dinámicamente para que siempre quepan todos los nombres.
+// El color del tick del eje Y adapta al tema:
+//   - Light: foreground oscuro (heredado de currentColor)
+//   - Dark: blanco para contrastar sobre el fondo oscuro de la card
 function TopSkillsChart({ filters }) {
   const {
     data: response,
@@ -40,6 +43,12 @@ function TopSkillsChart({ filters }) {
   const totalJobs = response?.total_matching_jobs ?? null;
   const alturaPx = Math.max(ALTURA_MINIMA, rows.length * PX_POR_SKILL);
 
+  // El color del texto de las etiquetas varía según el tema activo.
+  // Recharts renderiza los ticks fuera del árbol de React (SVG directo),
+  // así que no puede leer variables CSS — necesitamos el valor resuelto.
+  const isDark = document.documentElement.classList.contains("dark");
+  const tickColor = isDark ? "#ffffff" : "var(--foreground)";
+
   return (
     <ChartCard
       title="Top Skills más demandadas"
@@ -51,8 +60,6 @@ function TopSkillsChart({ filters }) {
         description={`Skills técnicas que aparecen en más ofertas de empleo, ordenadas de mayor a menor. Cada barra muestra en cuántas ofertas se menciona esa tecnología${filters.skillCategoria !== "Todas" ? ` de la categoría "${filters.skillCategoria.toLowerCase()}"` : ""}.`}
         filters={filters}
         totalJobs={totalJobs}
-        // Jornada no aplica a esta gráfica: las skills más demandadas
-        // no cambian significativamente según si el contrato es full o part time.
         excludeFilters={["jornada"]}
       />
 
@@ -70,16 +77,15 @@ function TopSkillsChart({ filters }) {
               margin={{ left: 8, right: 16, top: 4, bottom: 4 }}
             >
               <XAxis type="number" dataKey="job_count" hide />
-              {/* interval={0} fuerza a mostrar todos los ticks aunque el espacio sea justo */}
               <YAxis
                 type="category"
                 dataKey="skill"
                 width={100}
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 12, fill: tickColor }}
                 interval={0}
               />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="job_count" fill="var(--chart-1)" radius={4} />
+              <Bar dataKey="job_count" fill="var(--primary)" radius={4} />
             </BarChart>
           </ChartContainer>
         </div>

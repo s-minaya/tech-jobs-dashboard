@@ -1,5 +1,5 @@
+import { useState, useEffect } from "react";
 import { useFilters } from "@/hooks/useFilters";
-import { useState } from "react";
 import { useTheme } from "@/hooks/useTheme";
 import Sidebar from "@/components/Sidebar";
 import MainContent from "@/components/MainContent";
@@ -17,10 +17,29 @@ import BottomNav from "@/components/BottomNav";
 function App() {
   const { filters, handleFilterChange, resetFilters } = useFilters();
   const { isDark, toggleTheme } = useTheme();
-
-  // Sección activa para resaltar el icono correspondiente en el bottom nav.
-  // Por defecto "inicio" al cargar la página.
   const [activeSection, setActiveSection] = useState("inicio");
+
+  // IntersectionObserver: detecta qué sección ocupa más espacio en el viewport
+  // y actualiza activeSection. threshold: 0.3 = sección visible al 30%.
+  useEffect(() => {
+    const sectionIds = ["inicio", "tendencias", "mapa", "skills"];
+    const observers = [];
+
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) setActiveSection(id);
+        },
+        { threshold: 0.3 },
+      );
+      observer.observe(el);
+      observers.push(observer);
+    });
+
+    return () => observers.forEach((o) => o.disconnect());
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-background">

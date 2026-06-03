@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   useHeatmapData,
   DEFAULT_MAX_SKILLS,
@@ -13,30 +14,78 @@ import ChartCard from "@/components/ui/ChartCard";
 import ChartDescription from "@/components/ui/ChartDescription";
 import HeatmapSvg from "@/components/Charts/HeatmapSvg";
 import HeatmapLeyenda from "@/components/Charts/HeatmapLeyenda";
+import { RiPhoneFill } from "react-icons/ri";
 
-// Filtros que esta gráfica ignora.
-// Se pasan a ChartDescription para dos cosas:
-//   1. No mostrarlos en "Filtros activos"
-//   2. Mostrar un aviso ⚠ si el usuario los tiene activos, explicando por qué no tienen efecto
 const FILTROS_IGNORADOS = ["pais", "contrato", "jornada", "remote"];
 
+// useOrientation
+// Devuelve true si el dispositivo está en landscape.
+// Se actualiza automáticamente al girar el dispositivo.
+// Solo activo en móvil — en desktop siempre devuelve true.
+function useOrientation() {
+  const [isLandscape, setIsLandscape] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return window.matchMedia("(orientation: landscape)").matches;
+  });
+
+  useEffect(() => {
+    const mq = window.matchMedia("(orientation: landscape)");
+    const handler = (e) => setIsLandscape(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  return isLandscape;
+}
+
+// RotatePrompt
+// Mensaje animado que se muestra en móvil portrait.
+// El icono del teléfono rota 90° en bucle para indicar al usuario
+// que debe girar el dispositivo.
+function RotatePrompt() {
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
+      {/* Icono de teléfono con animación de rotación continua */}
+      <div
+        className="text-primary"
+        style={{
+          animation: "rotatePhone 2s ease-in-out infinite",
+        }}
+      >
+        <RiPhoneFill className="h-12 w-12" />
+      </div>
+      <div>
+        <p className="text-sm font-medium text-foreground">
+          Gira tu teléfono para ver la tabla
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Esta tabla necesita más espacio horizontal
+        </p>
+      </div>
+
+      {/* Keyframe de la animación inyectado inline.
+          Rota de 0° a 90° y vuelve, simulando el gesto de girar el móvil. */}
+      <style>{`
+        @keyframes rotatePhone {
+          0%   { transform: rotate(0deg);  }
+          40%  { transform: rotate(90deg); }
+          60%  { transform: rotate(90deg); }
+          100% { transform: rotate(0deg);  }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 // SkillHeatmap
-// Heatmap de co-ocurrencia de skills en ofertas de empleo.
-// Muestra qué tecnologías aparecen juntas frecuentemente en las mismas ofertas.
-//
-// Filtros que aplican: periodo, categoría de skill.
-// El resto no aplican porque las co-ocurrencias se calculan sobre el conjunto
-// global de ofertas para tener suficiente masa estadística. Con filtros
-// restrictivos (un país, un tipo de contrato) quedarían tan pocas ofertas
-// que los porcentajes dejarían de ser representativos.
+// En móvil portrait muestra el mensaje de rotar el dispositivo.
+// En landscape (móvil girado) y en desktop muestra la tabla normal.
+// El cambio es automático al girar — no hace falta recargar.
 function SkillHeatmap({ filters }) {
   const raw = filters?.skillCategoria ?? "Todas";
   const categoria = raw === "Todas" ? "todas" : raw.toLowerCase();
-
-  // Solo pasamos periodo al hook porque es el único filtro que afecta
-  // a los pares de co-ocurrencia. País, contrato, jornada y remote
-  // se descartan en jobServices antes de llegar al backend.
   const filtrosHeatmap = { periodo: filters.periodo };
+  const isLandscape = useOrientation();
 
   const {
     pairs,
@@ -56,6 +105,11 @@ function SkillHeatmap({ filters }) {
   const maxPct = calcMaxPct(skills, lookup, jobCountMap);
   const hasPairs = pairs.length > 0;
 
+  // En móvil portrait mostramos el prompt de rotar.
+  // window.innerWidth < 768 es el breakpoint md de Tailwind.
+  const isMobilePortrait =
+    typeof window !== "undefined" && window.innerWidth < 768 && !isLandscape;
+
   return (
     <ChartCard
       title="Co-ocurrencia de skills en ofertas de empleo"
@@ -65,55 +119,60 @@ function SkillHeatmap({ filters }) {
     >
       <ChartDescription
         description="Muestra qué skills aparecen juntas en las mismas ofertas. Cada celda indica el porcentaje de ofertas que piden la skill de la fila y también piden la skill de la columna. Verde = aparecen juntas frecuentemente, rojo = raramente. Pasa el ratón sobre cualquier celda para ver el porcentaje en ambas direcciones."
-        // Pasamos filters completo para que ChartDescription pueda detectar
-        // qué filtros ignorados están activos y mostrar el aviso ⚠ correspondiente.
         filters={filters}
         totalJobs={totalJobs}
         excludeFilters={FILTROS_IGNORADOS}
       />
 
-      {skills.length > 0 && (
-        <p className="mb-3 text-xs text-muted-foreground">
-          {loadingSkills ? (
-            "Actualizando..."
-          ) : (
-            <>
-              Mostrando{" "}
-              <strong className="font-medium text-foreground">
-                {skills.length}
-              </strong>{" "}
-              skills
-              {categoria !== "todas" ? (
-                <span>
-                  {" "}
-                  de la categoría <em>{categoria}</em>
-                </span>
+      {/* En móvil portrait: prompt de rotar */}
+      {isMobilePortrait ? (
+        <RotatePrompt />
+      ) : (
+        <>
+          {skills.length > 0 && (
+            <p className="mb-3 text-xs text-muted-foreground">
+              {loadingSkills ? (
+                "Actualizando..."
               ) : (
-                <span> (las más populares globalmente)</span>
+                <>
+                  Mostrando{" "}
+                  <strong className="font-medium text-foreground">
+                    {skills.length}
+                  </strong>{" "}
+                  skills
+                  {categoria !== "todas" ? (
+                    <span>
+                      {" "}
+                      de la categoría <em>{categoria}</em>
+                    </span>
+                  ) : (
+                    <span> (las más populares globalmente)</span>
+                  )}
+                  .
+                </>
               )}
-              .
-            </>
+            </p>
           )}
-        </p>
-      )}
 
-      {!loadingSkills && skills.length === 0 && (
-        <p className="text-sm text-muted-foreground">
-          No hay skills para esta categoría con los filtros actuales.
-        </p>
-      )}
+          {!loadingSkills && skills.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No hay skills para esta categoría con los filtros actuales.
+            </p>
+          )}
 
-      {hasPairs && (
-        <HeatmapSvg
-          skills={skills}
-          lookup={lookup}
-          jobCountMap={jobCountMap}
-          loading={loadingSkills}
-        />
-      )}
+          {hasPairs && (
+            <HeatmapSvg
+              skills={skills}
+              lookup={lookup}
+              jobCountMap={jobCountMap}
+              loading={loadingSkills}
+            />
+          )}
 
-      {skills.length > 0 && !loadingSkills && (
-        <HeatmapLeyenda maxPct={maxPct} />
+          {skills.length > 0 && !loadingSkills && (
+            <HeatmapLeyenda maxPct={maxPct} />
+          )}
+        </>
       )}
     </ChartCard>
   );

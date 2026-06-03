@@ -63,31 +63,37 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.02 265);
 
-  /* Primary → índigo marca */
-  --primary: oklch(0.5 0.24 275);
+  /* Primary → morado marca (el que has elegido tú) */
+  --primary: oklch(0.63 0.27 281);
   --primary-foreground: oklch(0.98 0.004 265);
 
+  /* Secondary → morado muy claro para hover/selección suave */
   --secondary: oklch(0.94 0.04 275);
-  --secondary-foreground: oklch(0.5 0.24 275);
+  --secondary-foreground: oklch(0.63 0.27 281);
 
+  /* Muted → gris azulado para textos secundarios y fondos de descripción */
   --muted: oklch(0.95 0.01 265);
   --muted-foreground: oklch(0.52 0.03 265);
 
   --accent: oklch(0.92 0.05 275);
-  --accent-foreground: oklch(0.5 0.24 275);
+  --accent-foreground: oklch(0.63 0.27 281);
 
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.91 0.01 265);
   --input: oklch(0.91 0.01 265);
-  --ring: oklch(0.5 0.24 275);
+  --ring: oklch(0.63 0.27 281);
   --radius: 0.625rem;
 
-  /* chart-1..5 para componentes genéricos que no usan roles */
-  --chart-1: oklch(0.52 0.24 270);
-  --chart-2: oklch(0.6 0.19 162);
-  --chart-3: oklch(0.68 0.18 75);
-  --chart-4: oklch(0.6 0.23 330);
-  --chart-5: oklch(0.56 0.1 230);
+  /* ── Chart colors ────────────────────────────────────────────────────────
+     chart-1..5 para componentes genéricos que no distinguen por rol.
+     Coinciden con --role-backend/data-science/devops/ai-ml/management
+     para mantener coherencia visual sin duplicar valores.
+  ── ────────────────────────────────────────────────────────────────────── */
+  --chart-1: oklch(0.5 0.26 270); /* = role-backend   */
+  --chart-2: oklch(0.6 0.18 162); /* = role-data-science */
+  --chart-3: oklch(0.58 0.19 55); /* = role-devops    */
+  --chart-4: oklch(0.58 0.26 330); /* = role-ai-ml     */
+  --chart-5: oklch(0.55 0.08 240); /* = role-management */
 
   /* ── Colores de rol — familia Dev (índigos) ──────────────────────────────
      backend: índigo saturado y oscuro → el más común, debe destacar
@@ -136,21 +142,21 @@
   --role-management: oklch(0.55 0.08 240);
   --role-other: oklch(0.65 0.04 240);
 
-  /* Sidebar */
+  /* Sidebar — mismos valores que la superficie principal */
   --sidebar: oklch(0.98 0.004 265);
   --sidebar-foreground: oklch(0.18 0.02 265);
-  --sidebar-primary: oklch(0.5 0.24 275);
+  --sidebar-primary: oklch(0.63 0.27 281);
   --sidebar-primary-foreground: oklch(0.98 0 0);
   --sidebar-accent: oklch(0.92 0.05 275);
-  --sidebar-accent-foreground: oklch(0.5 0.24 275);
+  --sidebar-accent-foreground: oklch(0.63 0.27 281);
   --sidebar-border: oklch(0.91 0.01 265);
-  --sidebar-ring: oklch(0.5 0.24 275);
+  --sidebar-ring: oklch(0.63 0.27 281);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    MODO OSCURO
-   Todos los colores de rol se hacen más luminosos para contrastar
-   sobre el fondo azul marino oscuro.
+   Fondo azul marino oscuro. Todos los colores de rol se hacen más
+   luminosos para contrastar sobre el fondo oscuro.
 ═══════════════════════════════════════════════════════════════════════════ */
 .dark {
   --background: oklch(19.179% 0.0238 265.381);
@@ -160,7 +166,7 @@
   --popover: oklch(0.21 0.03 270);
   --popover-foreground: oklch(0.94 0.01 265);
 
-  --primary: oklch(0.68 0.2 275);
+  --primary: oklch(0.63 0.27 281);
   --primary-foreground: oklch(0.12 0.02 265);
 
   --secondary: oklch(0.26 0.04 270);
@@ -175,15 +181,16 @@
   --destructive: oklch(0.65 0.22 25);
   --border: oklch(1 0 0 / 8%);
   --input: oklch(1 0 0 / 10%);
-  --ring: oklch(0.68 0.2 275);
+  --ring: oklch(0.63 0.27 281);
 
-  --chart-1: oklch(0.68 0.22 270);
-  --chart-2: oklch(0.7 0.17 162);
-  --chart-3: oklch(0.76 0.16 75);
-  --chart-4: oklch(0.7 0.2 330);
-  --chart-5: oklch(0.66 0.1 230);
+  /* Chart colors en dark: coinciden con los roles dark */
+  --chart-1: oklch(0.65 0.24 270); /* = role-backend dark   */
+  --chart-2: oklch(0.7 0.16 162); /* = role-data-science dark */
+  --chart-3: oklch(0.68 0.17 55); /* = role-devops dark    */
+  --chart-4: oklch(0.7 0.24 330); /* = role-ai-ml dark     */
+  --chart-5: oklch(0.68 0.07 240); /* = role-management dark */
 
-  /* Dev — más luminosos en dark */
+  /* Dev */
   --role-backend: oklch(0.65 0.24 270);
   --role-frontend: oklch(0.72 0.2 272);
   --role-fullstack: oklch(0.8 0.14 275);
@@ -211,12 +218,12 @@
 
   --sidebar: oklch(0.21 0.03 270);
   --sidebar-foreground: oklch(0.94 0.01 265);
-  --sidebar-primary: oklch(0.68 0.2 275);
+  --sidebar-primary: oklch(0.63 0.27 281);
   --sidebar-primary-foreground: oklch(0.94 0.01 265);
   --sidebar-accent: oklch(0.3 0.06 275);
   --sidebar-accent-foreground: oklch(0.68 0.2 275);
   --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.68 0.2 275);
+  --sidebar-ring: oklch(0.63 0.27 281);
 }
 
 @layer base {
