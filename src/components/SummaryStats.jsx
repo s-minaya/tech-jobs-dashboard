@@ -17,12 +17,14 @@ function formatDate(iso) {
 }
 
 // KpiCard
-// Tarjeta individual para un indicador. Diseño minimalista para que
-// varios quepan en una fila sin saturar visualmente la cabecera.
+// Tarjeta individual flotante sobre el hero.
+// Usa sombra pronunciada (shadow-lg) para reforzar el efecto de elevación
+// respecto al gradiente del fondo. El borde sutil separa visualmente
+// las cards entre sí sin romper la cohesión.
 function KpiCard({ label, value, description }) {
   return (
-    <div className="rounded-lg border border-border bg-card px-4 py-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
+    <div className="rounded-xl border border-border/60 bg-card px-4 py-3 shadow-lg backdrop-blur-sm">
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
       <p className="mt-0.5 text-2xl font-semibold tracking-tight text-foreground">
         {value}
       </p>
@@ -39,6 +41,7 @@ function KpiCard({ label, value, description }) {
 // cada vez que el pipeline de datos añade nuevas ofertas.
 // No reacciona a los filtros del sidebar: representa el volumen
 // total del dataset, no una vista filtrada.
+// Las cards tienen shadow-lg para reforzar el efecto flotante sobre el hero.
 function SummaryStats() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -59,7 +62,7 @@ function SummaryStats() {
         {[...Array(5)].map((_, i) => (
           <div
             key={i}
-            className="h-16 animate-pulse rounded-lg border border-border bg-muted"
+            className="h-20 animate-pulse rounded-xl border border-border bg-muted shadow-lg"
           />
         ))}
       </div>
