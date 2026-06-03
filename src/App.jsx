@@ -4,27 +4,26 @@ import { useTheme } from "@/hooks/useTheme";
 import Sidebar from "@/components/Sidebar";
 import MainContent from "@/components/MainContent";
 import BottomNav from "@/components/BottomNav";
+import FilterSheet from "@/components/Filters/FilterSheet";
 
-// Componente raíz de la aplicación.
-// Gestiona filtros, tema y sección activa del bottom nav.
-// En desktop: sidebar lateral visible.
-// En móvil: sidebar oculto, bottom nav fijo con anclas a cada sección.
-// Delega la gestión de filtros al hook useFilters y distribuye
-// el estado a Sidebar (para mostrar/cambiar) y MainContent (para filtrar datos).
-// El toggle de tema se pasa a MainContent para que lo coloque
-// dentro del hero, evitando que un div extra rompa el layout.
-
+// App
+// Componente raíz. Gestiona filtros, tema, sección activa del bottom nav
+// y visibilidad del panel de filtros móvil (FilterSheet).
+//
+// En desktop: sidebar lateral visible, FilterSheet nunca se muestra.
+// En móvil: sidebar oculto, bottom nav fijo, FilterSheet se abre al
+// pulsar el icono de filtros del navbar.
 function App() {
   const { filters, handleFilterChange, resetFilters } = useFilters();
   const { isDark, toggleTheme } = useTheme();
   const [activeSection, setActiveSection] = useState("inicio");
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // IntersectionObserver: detecta qué sección ocupa más espacio en el viewport
   // y actualiza activeSection. threshold: 0.3 = sección visible al 30%.
   useEffect(() => {
     const sectionIds = ["inicio", "tendencias", "mapa", "skills"];
     const observers = [];
-
     sectionIds.forEach((id) => {
       const el = document.getElementById(id);
       if (!el) return;
@@ -37,7 +36,6 @@ function App() {
       observer.observe(el);
       observers.push(observer);
     });
-
     return () => observers.forEach((o) => o.disconnect());
   }, []);
 
@@ -57,9 +55,20 @@ function App() {
         toggleTheme={toggleTheme}
       />
 
-      {/* Bottom nav: solo visible en móvil (md:hidden interno al componente)
-          onOpenFilters se implementará en el siguiente commit */}
-      <BottomNav activeSection={activeSection} onOpenFilters={() => {}} />
+      {/* Bottom nav: solo visible en móvil (md:hidden interno al componente) */}
+      <BottomNav
+        activeSection={activeSection}
+        onOpenFilters={() => setFiltersOpen(true)}
+      />
+
+      {/* Panel de filtros móvil: se desliza desde abajo al pulsar el icono */}
+      <FilterSheet
+        isOpen={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onReset={resetFilters}
+      />
     </div>
   );
 }

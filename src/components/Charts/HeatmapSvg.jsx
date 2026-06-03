@@ -129,7 +129,8 @@ function HeatmapSvg({ skills, lookup, jobCountMap, loading = false }) {
         .attr("rx", 3)
         .attr("fill", (d) => {
           const co = lookup[`${d.row}|${d.col}`] ?? 0;
-          if (co === 0) return "#f1f5f9";
+          const isDark = document.documentElement.classList.contains("dark");
+          if (co === 0) return isDark ? "oklch(0.26 0.03 265)" : "#f1f5f9";
           return colorScale((co / (jobCountMap[d.row] ?? 1)) * 100);
         });
 
