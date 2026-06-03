@@ -21,9 +21,14 @@ function formatDate(iso) {
 // Usa sombra pronunciada (shadow-lg) para reforzar el efecto de elevación
 // respecto al gradiente del fondo. El borde sutil separa visualmente
 // las cards entre sí sin romper la cohesión.
-function KpiCard({ label, value, description }) {
+// La prop fullWidth permite que una card ocupe dos columnas en el grid.
+function KpiCard({ label, value, description, fullWidth = false }) {
   return (
-    <div className="rounded-xl border border-border/60 bg-card px-4 py-3 shadow-lg backdrop-blur-sm">
+    <div
+      className={`rounded-xl border border-border/60 bg-card px-4 py-3 shadow-lg backdrop-blur-sm ${
+        fullWidth ? "col-span-2" : ""
+      }`}
+    >
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
       <p className="mt-0.5 text-2xl font-semibold tracking-tight text-foreground">
         {value}
@@ -41,7 +46,11 @@ function KpiCard({ label, value, description }) {
 // cada vez que el pipeline de datos añade nuevas ofertas.
 // No reacciona a los filtros del sidebar: representa el volumen
 // total del dataset, no una vista filtrada.
-// Las cards tienen shadow-lg para reforzar el efecto flotante sobre el hero.
+//
+// Grid responsive:
+//   móvil    → 2 columnas: 2+2 cards y la última ocupa las 2 columnas
+//   sm       → 3 columnas
+//   lg       → 5 columnas (todas en una fila)
 function SummaryStats() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -62,7 +71,9 @@ function SummaryStats() {
         {[...Array(5)].map((_, i) => (
           <div
             key={i}
-            className="h-20 animate-pulse rounded-xl border border-border bg-muted shadow-lg"
+            className={`h-20 animate-pulse rounded-xl border border-border bg-muted shadow-lg ${
+              i === 4 ? "col-span-2 sm:col-span-1" : ""
+            }`}
           />
         ))}
       </div>
@@ -93,10 +104,13 @@ function SummaryStats() {
         value={`${stats.pct_with_salary}%`}
         description="de las ofertas activas"
       />
+      {/* Última actualización ocupa 2 columnas en móvil (fila propia),
+          1 columna en sm y lg donde hay espacio suficiente */}
       <KpiCard
         label="Última actualización"
         value={formatDate(stats.last_updated)}
         description="oferta más reciente"
+        fullWidth
       />
     </div>
   );
