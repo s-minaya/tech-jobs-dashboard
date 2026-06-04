@@ -146,6 +146,12 @@ function DemandByRoleChart({ filters }) {
   // para que una gráfica de áreas sea informativa.
   const periodoInsuficiente = !PERIODOS_CON_TENDENCIA.includes(filters.periodo);
 
+  // Color de los ticks de los ejes: blanco en dark, heredado en light.
+  // Recharts renderiza los ticks como SVG <text> y no hereda CSS variables,
+  // así que necesitamos el valor resuelto en el momento del render.
+  const isDark = document.documentElement.classList.contains("dark");
+  const tickColor = isDark ? "#ffffff" : undefined;
+
   return (
     <ChartCard
       title="Evolución mensual de ofertas por rol"
@@ -194,11 +200,10 @@ function DemandByRoleChart({ filters }) {
             <ChartContainer config={chartConfig} className="h-72 w-full">
               <AreaChart
                 data={pivotData(rows, mesesRango)}
-                margin={{ left: 8, right: 8 }}
+                margin={{ left: 8, right: 8, top: 20 }}
                 onMouseLeave={() => setActiveRole(null)}
               >
-                {/* Gradientes: uno por rol, de su color al transparente.
-                    El id del gradiente coincide con el dataKey del área. */}
+                {/* Gradientes: uno por rol, de su color al transparente. */}
                 <defs>
                   {effectiveSelected.map((role) => {
                     const color = getRoleColor(role);
@@ -224,8 +229,12 @@ function DemandByRoleChart({ filters }) {
                 </defs>
 
                 <CartesianGrid vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 11 }} width={40} />
+                {/* tickColor blanco en dark para que los labels sean legibles */}
+                <XAxis
+                  dataKey="month"
+                  tick={{ fontSize: 12, fill: tickColor }}
+                />
+                <YAxis tick={{ fontSize: 11, fill: tickColor }} width={52} />
                 <Tooltip
                   content={<TooltipDemanda chartConfig={chartConfig} />}
                 />
@@ -235,12 +244,10 @@ function DemandByRoleChart({ filters }) {
                   .map((role) => {
                     const color = getRoleColor(role);
                     const gradId = `gradient-${role.replace(/[^a-z0-9]/gi, "-")}`;
-                    // Sin hover: todas las áreas con fill sutil y línea visible
-                    // Con hover: el rol activo se resalta, los demás se atenúan
                     const isActive = activeRole === role;
                     const isOther = activeRole !== null && !isActive;
                     const lineOpacity = isOther ? 0.15 : 1;
-                    const fillOpacity = isActive ? 1 : isOther ? 0 : 0;
+                    const fillOpacity = isActive ? 1 : 0;
 
                     return (
                       <Area

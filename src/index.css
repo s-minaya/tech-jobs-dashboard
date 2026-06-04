@@ -56,32 +56,32 @@
 ═══════════════════════════════════════════════════════════════════════════ */
 :root {
   /* Superficie y texto */
-  --background: oklch(0.98 0.004 265);
-  --foreground: oklch(0.18 0.02 265);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.02 265);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.02 265);
+  --background: hsl(240, 20%, 98%);
+  --foreground: hsl(240, 10%, 15%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(240, 10%, 15%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(240, 10%, 15%);
 
-  /* Primary → morado marca (el que has elegido tú) */
-  --primary: oklch(0.63 0.27 281);
-  --primary-foreground: oklch(0.98 0.004 265);
+  /* Primary → morado marca hsl(249, 100%, 69%) */
+  --primary: hsl(249, 100%, 69%);
+  --primary-foreground: hsl(240, 20%, 98%);
 
   /* Secondary → morado muy claro para hover/selección suave */
-  --secondary: oklch(0.94 0.04 275);
-  --secondary-foreground: oklch(0.63 0.27 281);
+  --secondary: hsl(270, 40%, 94%);
+  --secondary-foreground: hsl(249, 100%, 69%);
 
   /* Muted → gris azulado para textos secundarios y fondos de descripción */
-  --muted: oklch(0.95 0.01 265);
-  --muted-foreground: oklch(0.52 0.03 265);
+  --muted: hsl(240, 10%, 95%);
+  --muted-foreground: hsl(240, 8%, 52%);
 
-  --accent: oklch(0.92 0.05 275);
-  --accent-foreground: oklch(0.63 0.27 281);
+  --accent: hsl(270, 50%, 92%);
+  --accent-foreground: hsl(249, 100%, 69%);
 
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.91 0.01 265);
-  --input: oklch(0.91 0.01 265);
-  --ring: oklch(0.63 0.27 281);
+  --destructive: hsl(14, 100%, 57%);
+  --border: hsl(240, 8%, 91%);
+  --input: hsl(240, 8%, 91%);
+  --ring: hsl(249, 100%, 69%);
   --radius: 0.625rem;
 
   /* ── Chart colors ────────────────────────────────────────────────────────
@@ -89,38 +89,38 @@
      Coinciden con --role-backend/data-science/devops/ai-ml/management
      para mantener coherencia visual sin duplicar valores.
   ── ────────────────────────────────────────────────────────────────────── */
-  --chart-1: oklch(0.5 0.26 270); /* = role-backend   */
-  --chart-2: oklch(0.6 0.18 162); /* = role-data-science */
-  --chart-3: oklch(0.58 0.19 55); /* = role-devops    */
-  --chart-4: oklch(0.58 0.26 330); /* = role-ai-ml     */
-  --chart-5: oklch(0.55 0.08 240); /* = role-management */
+  --chart-1: hsl(258, 80%, 40%); /* = role-backend   */
+  --chart-2: hsl(162, 60%, 35%); /* = role-data-science */
+  --chart-3: hsl(55, 60%, 42%); /* = role-devops    */
+  --chart-4: hsl(330, 75%, 40%); /* = role-ai-ml     */
+  --chart-5: hsl(240, 15%, 40%); /* = role-management */
 
   /* ── Colores de rol — familia Dev (índigos) ──────────────────────────────
      backend: índigo saturado y oscuro → el más común, debe destacar
      frontend: índigo medio
      fullstack: índigo claro/lavanda
   ── ────────────────────────────────────────────────────────────────────── */
-  --role-backend: oklch(0.5 0.26 270);
-  --role-frontend: oklch(0.6 0.22 272);
-  --role-fullstack: oklch(0.7 0.16 275);
+  --role-backend: hsl(258, 80%, 38%);
+  --role-frontend: hsl(260, 70%, 48%);
+  --role-fullstack: hsl(263, 55%, 60%);
 
   /* ── Familia Data (esmeraldas/teales) ────────────────────────────────────
      data_engineering: teal oscuro
      data_science: esmeralda media
      data_analyst: verde menta claro
   ── ────────────────────────────────────────────────────────────────────── */
-  --role-data-engineering: oklch(0.5 0.2 175);
-  --role-data-science: oklch(0.6 0.18 162);
-  --role-data-analyst: oklch(0.68 0.15 148);
+  --role-data-engineering: hsl(175, 60%, 32%);
+  --role-data-science: hsl(162, 55%, 38%);
+  --role-data-analyst: hsl(148, 45%, 46%);
 
   /* ── Familia Infra (ámbar/naranja) ───────────────────────────────────────
      devops: ámbar oscuro/mostaza
      cloud: ámbar brillante
      sysadmin: ámbar claro/dorado pálido
   ── ────────────────────────────────────────────────────────────────────── */
-  --role-devops: oklch(0.58 0.19 55);
-  --role-cloud: oklch(0.7 0.18 70);
-  --role-sysadmin: oklch(0.78 0.15 85);
+  --role-devops: hsl(55, 55%, 42%);
+  --role-cloud: hsl(70, 58%, 48%);
+  --role-sysadmin: hsl(85, 48%, 56%);
 
   /* ── Familia AI/Especialidad (rosas, corales, fucsias) ───────────────────
      ai_ml: rosa vibrante — el más "especial", merece el color más llamativo
@@ -129,28 +129,28 @@
      qa_testing: rosa pálido/salmón
      erp_sap: rosa terroso/marrón rosado
   ── ────────────────────────────────────────────────────────────────────── */
-  --role-ai-ml: oklch(0.58 0.26 330);
-  --role-security: oklch(0.55 0.22 310);
-  --role-mobile: oklch(0.63 0.2 20);
-  --role-qa-testing: oklch(0.68 0.15 350);
-  --role-erp-sap: oklch(0.6 0.13 5);
+  --role-ai-ml: hsl(330, 75%, 40%);
+  --role-security: hsl(310, 65%, 38%);
+  --role-mobile: hsl(20, 68%, 45%);
+  --role-qa-testing: hsl(350, 48%, 50%);
+  --role-erp-sap: hsl(5, 42%, 44%);
 
   /* ── Cajones de sastre (neutros azulados) ────────────────────────────────
      management: slate azulado medio — importante pero no técnico
      other: gris azulado apagado — residual, no debe llamar la atención
   ── ────────────────────────────────────────────────────────────────────── */
-  --role-management: oklch(0.55 0.08 240);
-  --role-other: oklch(0.65 0.04 240);
+  --role-management: hsl(240, 22%, 42%);
+  --role-other: hsl(240, 10%, 52%);
 
   /* Sidebar — mismos valores que la superficie principal */
-  --sidebar: oklch(0.98 0.004 265);
-  --sidebar-foreground: oklch(0.18 0.02 265);
-  --sidebar-primary: oklch(0.63 0.27 281);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.92 0.05 275);
-  --sidebar-accent-foreground: oklch(0.63 0.27 281);
-  --sidebar-border: oklch(0.91 0.01 265);
-  --sidebar-ring: oklch(0.63 0.27 281);
+  --sidebar: hsl(240, 20%, 98%);
+  --sidebar-foreground: hsl(240, 10%, 15%);
+  --sidebar-primary: hsl(249, 100%, 69%);
+  --sidebar-primary-foreground: hsl(0, 0%, 98%);
+  --sidebar-accent: hsl(270, 50%, 92%);
+  --sidebar-accent-foreground: hsl(249, 100%, 69%);
+  --sidebar-border: hsl(240, 8%, 91%);
+  --sidebar-ring: hsl(249, 100%, 69%);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -159,71 +159,71 @@
    luminosos para contrastar sobre el fondo oscuro.
 ═══════════════════════════════════════════════════════════════════════════ */
 .dark {
-  --background: oklch(19.179% 0.0238 265.381);
-  --foreground: oklch(0.94 0.01 265);
-  --card: oklch(0.21 0.03 270);
-  --card-foreground: oklch(0.94 0.01 265);
-  --popover: oklch(0.21 0.03 270);
-  --popover-foreground: oklch(0.94 0.01 265);
+  --background: hsl(235, 25%, 14%);
+  --foreground: hsl(240, 10%, 94%);
+  --card: hsl(237, 22%, 18%);
+  --card-foreground: hsl(240, 10%, 94%);
+  --popover: hsl(237, 22%, 18%);
+  --popover-foreground: hsl(240, 10%, 94%);
 
-  --primary: oklch(0.63 0.27 281);
-  --primary-foreground: oklch(0.12 0.02 265);
+  --primary: hsl(249, 100%, 69%);
+  --primary-foreground: hsl(240, 15%, 10%);
 
-  --secondary: oklch(0.26 0.04 270);
-  --secondary-foreground: oklch(0.68 0.2 275);
+  --secondary: hsl(240, 18%, 22%);
+  --secondary-foreground: hsl(263, 55%, 68%);
 
-  --muted: oklch(0.26 0.03 265);
-  --muted-foreground: oklch(0.65 0.03 265);
+  --muted: hsl(240, 12%, 22%);
+  --muted-foreground: hsl(240, 8%, 65%);
 
-  --accent: oklch(0.3 0.06 275);
-  --accent-foreground: oklch(0.68 0.2 275);
+  --accent: hsl(255, 20%, 26%);
+  --accent-foreground: hsl(263, 55%, 68%);
 
-  --destructive: oklch(0.65 0.22 25);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 10%);
-  --ring: oklch(0.63 0.27 281);
+  --destructive: hsl(20, 80%, 58%);
+  --border: hsl(0, 0%, 100%, 0.08);
+  --input: hsl(0, 0%, 100%, 0.1);
+  --ring: hsl(249, 100%, 69%);
 
-  /* Chart colors en dark: coinciden con los roles dark */
-  --chart-1: oklch(0.65 0.24 270); /* = role-backend dark   */
-  --chart-2: oklch(0.7 0.16 162); /* = role-data-science dark */
-  --chart-3: oklch(0.68 0.17 55); /* = role-devops dark    */
-  --chart-4: oklch(0.7 0.24 330); /* = role-ai-ml dark     */
-  --chart-5: oklch(0.68 0.07 240); /* = role-management dark */
+  /* Chart colors en dark: más luminosos para contrastar sobre fondo oscuro */
+  --chart-1: hsl(258, 70%, 58%); /* = role-backend dark   */
+  --chart-2: hsl(162, 52%, 48%); /* = role-data-science dark */
+  --chart-3: hsl(55, 55%, 55%); /* = role-devops dark    */
+  --chart-4: hsl(330, 68%, 52%); /* = role-ai-ml dark     */
+  --chart-5: hsl(240, 18%, 55%); /* = role-management dark */
 
   /* Dev */
-  --role-backend: oklch(0.65 0.24 270);
-  --role-frontend: oklch(0.72 0.2 272);
-  --role-fullstack: oklch(0.8 0.14 275);
+  --role-backend: hsl(258, 70%, 58%);
+  --role-frontend: hsl(260, 62%, 62%);
+  --role-fullstack: hsl(263, 48%, 70%);
 
   /* Data */
-  --role-data-engineering: oklch(0.62 0.18 175);
-  --role-data-science: oklch(0.7 0.16 162);
-  --role-data-analyst: oklch(0.77 0.13 148);
+  --role-data-engineering: hsl(175, 52%, 42%);
+  --role-data-science: hsl(162, 48%, 48%);
+  --role-data-analyst: hsl(148, 38%, 56%);
 
   /* Infra */
-  --role-devops: oklch(0.68 0.17 55);
-  --role-cloud: oklch(0.78 0.16 70);
-  --role-sysadmin: oklch(0.84 0.13 85);
+  --role-devops: hsl(55, 50%, 52%);
+  --role-cloud: hsl(70, 52%, 58%);
+  --role-sysadmin: hsl(85, 42%, 64%);
 
   /* AI/Especialidad */
-  --role-ai-ml: oklch(0.7 0.24 330);
-  --role-security: oklch(0.67 0.2 310);
-  --role-mobile: oklch(0.72 0.18 20);
-  --role-qa-testing: oklch(0.76 0.13 350);
-  --role-erp-sap: oklch(0.7 0.11 5);
+  --role-ai-ml: hsl(330, 68%, 52%);
+  --role-security: hsl(310, 58%, 48%);
+  --role-mobile: hsl(20, 62%, 52%);
+  --role-qa-testing: hsl(350, 42%, 58%);
+  --role-erp-sap: hsl(5, 38%, 52%);
 
   /* Cajones de sastre */
-  --role-management: oklch(0.68 0.07 240);
-  --role-other: oklch(0.72 0.04 240);
+  --role-management: hsl(240, 18%, 55%);
+  --role-other: hsl(240, 8%, 60%);
 
-  --sidebar: oklch(0.21 0.03 270);
-  --sidebar-foreground: oklch(0.94 0.01 265);
-  --sidebar-primary: oklch(0.63 0.27 281);
-  --sidebar-primary-foreground: oklch(0.94 0.01 265);
-  --sidebar-accent: oklch(0.3 0.06 275);
-  --sidebar-accent-foreground: oklch(0.68 0.2 275);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.63 0.27 281);
+  --sidebar: hsl(237, 22%, 18%);
+  --sidebar-foreground: hsl(240, 10%, 94%);
+  --sidebar-primary: hsl(249, 100%, 69%);
+  --sidebar-primary-foreground: hsl(240, 10%, 94%);
+  --sidebar-accent: hsl(255, 20%, 26%);
+  --sidebar-accent-foreground: hsl(263, 55%, 68%);
+  --sidebar-border: hsl(0, 0%, 100%, 0.08);
+  --sidebar-ring: hsl(249, 100%, 69%);
 }
 
 @layer base {

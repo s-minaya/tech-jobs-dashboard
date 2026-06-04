@@ -28,7 +28,6 @@ function extractRoles(rows) {
 
 // TooltipSalario
 // Muestra el salario con unidad y una nota sobre qué es la mediana.
-
 function TooltipSalario({ active, payload, label, chartConfig }) {
   if (!active || !payload?.length) return null;
   return (
@@ -104,6 +103,11 @@ function SalaryChart({ filters }) {
     ]),
   );
 
+  // Ticks blancos en dark mode para legibilidad.
+  // Recharts renderiza los ticks como SVG <text> sin acceso a CSS variables.
+  const isDark = document.documentElement.classList.contains("dark");
+  const tickColor = isDark ? "#ffffff" : undefined;
+
   return (
     <ChartCard
       title="Salario mediano anual por rol y país"
@@ -137,12 +141,15 @@ function SalaryChart({ filters }) {
         </p>
       ) : (
         <ChartContainer config={chartConfig} className="h-72 w-full">
-          <BarChart data={pivotData(rows)} margin={{ left: 8, right: 8 }}>
+          <BarChart
+            data={pivotData(rows)}
+            margin={{ left: 8, right: 8, top: 16 }}
+          >
             <CartesianGrid vertical={false} />
-            <XAxis dataKey="country" tick={{ fontSize: 12 }} />
+            <XAxis dataKey="country" tick={{ fontSize: 12, fill: tickColor }} />
             <YAxis
-              tick={{ fontSize: 11 }}
-              width={52}
+              tick={{ fontSize: 11, fill: tickColor }}
+              width={56}
               tickFormatter={(v) => `${(v / 1000).toFixed(0)}k €`}
             />
             <Tooltip content={<TooltipSalario chartConfig={chartConfig} />} />

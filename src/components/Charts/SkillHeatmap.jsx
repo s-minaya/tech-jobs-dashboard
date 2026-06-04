@@ -14,7 +14,7 @@ import ChartCard from "@/components/ui/ChartCard";
 import ChartDescription from "@/components/ui/ChartDescription";
 import HeatmapSvg from "@/components/Charts/HeatmapSvg";
 import HeatmapLeyenda from "@/components/Charts/HeatmapLeyenda";
-import { RiPhoneFill } from "react-icons/ri";
+import { SlScreenSmartphone } from "react-icons/sl";
 
 const FILTROS_IGNORADOS = ["pais", "contrato", "jornada", "remote"];
 
@@ -45,14 +45,14 @@ function useOrientation() {
 function RotatePrompt() {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
-      {/* Icono de teléfono con animación de rotación continua */}
+      {/* Smartphone que rota de vertical (0°) a horizontal (90°) y vuelve.
+          RiSmartphoneLine tiene forma de móvil moderno.
+          La animación pausada en 90° sugiere claramente el gesto de girar. */}
       <div
         className="text-primary"
-        style={{
-          animation: "rotatePhone 2s ease-in-out infinite",
-        }}
+        style={{ animation: "rotateMobile 2.5s ease-in-out infinite" }}
       >
-        <RiPhoneFill className="h-12 w-12" />
+        <SlScreenSmartphone className="h-12 w-12" />
       </div>
       <div>
         <p className="text-sm font-medium text-foreground">
@@ -63,14 +63,12 @@ function RotatePrompt() {
         </p>
       </div>
 
-      {/* Keyframe de la animación inyectado inline.
-          Rota de 0° a 90° y vuelve, simulando el gesto de girar el móvil. */}
       <style>{`
-        @keyframes rotatePhone {
-          0%   { transform: rotate(0deg);  }
-          40%  { transform: rotate(90deg); }
-          60%  { transform: rotate(90deg); }
-          100% { transform: rotate(0deg);  }
+        @keyframes rotateMobile {
+          0%   { transform: rotate(0deg);   }   /* vertical — posición inicial */
+          35%  { transform: rotate(-90deg); }   /* horizontal — giro completado */
+          65%  { transform: rotate(-90deg); }   /* pausa en horizontal */
+          100% { transform: rotate(0deg);   }   /* vuelve a vertical */
         }
       `}</style>
     </div>

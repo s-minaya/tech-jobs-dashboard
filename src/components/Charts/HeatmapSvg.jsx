@@ -22,9 +22,11 @@ function HeatmapSvg({ skills, lookup, jobCountMap, loading = false }) {
     function draw(availableWidth) {
       const n = skills.length;
 
-      // Margen izquierdo basado en la skill más larga (para que la etiqueta quepa)
+      // Margen izquierdo basado en la skill más larga (para que la etiqueta quepa).
+      // Multiplicamos por 7px por carácter y usamos mínimo 80px para que nombres
+      // como "Kubernetes" o "Data Engineering" no queden cortados.
       const maxLabelLen = Math.max(...skills.map((s) => s.length));
-      const marginLeft = Math.min(Math.max(maxLabelLen * 6, 60), 130);
+      const marginLeft = Math.min(Math.max(maxLabelLen * 7, 80), 160);
       const marginBottom = 110;
       const MARGIN = {
         top: 12,
@@ -130,7 +132,8 @@ function HeatmapSvg({ skills, lookup, jobCountMap, loading = false }) {
         .attr("fill", (d) => {
           const co = lookup[`${d.row}|${d.col}`] ?? 0;
           const isDark = document.documentElement.classList.contains("dark");
-          if (co === 0) return isDark ? "oklch(0.26 0.03 265)" : "#f1f5f9";
+          // Gris neutro para celdas sin datos — distinto del rojo de "raramente juntas"
+          if (co === 0) return isDark ? "hsl(237, 22%, 22%)" : "#f1f5f9";
           return colorScale((co / (jobCountMap[d.row] ?? 1)) * 100);
         });
 

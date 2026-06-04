@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   ChartContainer,
   ChartTooltip,
@@ -16,12 +17,34 @@ const chartConfig = {
 const PX_POR_SKILL = 32;
 const ALTURA_MINIMA = 200;
 
+// useIsDark
+// Observa la clase "dark" en el <html> y devuelve true/false en tiempo real.
+// Necesario porque Recharts renderiza los ticks como SVG fuera del árbol React
+// y no puede leer variables CSS — necesitamos el valor resuelto en cada render.
+// MutationObserver garantiza que el color se actualiza al cambiar el tema.
+function useIsDark() {
+  const [isDark, setIsDark] = useState(() =>
+    document.documentElement.classList.contains("dark"),
+  );
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  return isDark;
+}
+
 // TopSkillsChart
 // Gráfica de barras horizontales con las skills más demandadas.
 // La altura se calcula dinámicamente para que siempre quepan todos los nombres.
-// El color del tick del eje Y adapta al tema:
-//   - Light: foreground oscuro (heredado de currentColor)
-//   - Dark: blanco para contrastar sobre el fondo oscuro de la card
+// El color del tick del eje Y adapta al tema activo en tiempo real.
 function TopSkillsChart({ filters }) {
   const {
     data: response,
@@ -43,11 +66,10 @@ function TopSkillsChart({ filters }) {
   const totalJobs = response?.total_matching_jobs ?? null;
   const alturaPx = Math.max(ALTURA_MINIMA, rows.length * PX_POR_SKILL);
 
-  // El color del texto de las etiquetas varía según el tema activo.
-  // Recharts renderiza los ticks fuera del árbol de React (SVG directo),
-  // así que no puede leer variables CSS — necesitamos el valor resuelto.
-  const isDark = document.documentElement.classList.contains("dark");
-  const tickColor = isDark ? "#ffffff" : "var(--foreground)";
+  // useIsDark con MutationObserver garantiza que el color se actualiza
+  // correctamente al cambiar el tema en cualquier dirección.
+  const isDark = useIsDark();
+  const tickColor = isDark ? "#ffffff" : "#64748b";
 
   return (
     <ChartCard
@@ -85,7 +107,7 @@ function TopSkillsChart({ filters }) {
                 interval={0}
               />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="job_count" fill="var(--primary)" radius={4} />
+              <Bar dataKey="job_count" fill="var(--chart-1)" radius={4} />
             </BarChart>
           </ChartContainer>
         </div>
