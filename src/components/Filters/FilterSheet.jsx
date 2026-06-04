@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import FilterSection from "@/components/Filters/FilterSection";
 import { FILTERS } from "@/config/filters";
 import { RiCloseLine } from "react-icons/ri";
@@ -13,84 +13,264 @@ import { RiCloseLine } from "react-icons/ri";
 //   - Tocar el overlay o pulsar X cierra el panel
 //   - Mientras está abierto, el scroll del body se bloquea (overflow-hidden)
 //
-// El handle superior (barra gris) es solo visual — indica que el panel
-// es deslizable, aunque el drag no está implementado (cierre con X u overlay).
+// Drag para cerrar:
+//   - El usuario puede arrastrar el panel hacia abajo desde el handle o la cabecera
+//   - Si arrastra más del 30% de la altura del panel, se cierra automáticamente
+//   - Si arrastra menos, el panel vuelve a su posición original con spring
+//   - Durante el drag se registra un touchmove en document con passive:false
+//     para poder llamar preventDefault() y evitar el scroll de página
+//   - Sin blur en el overlay durante el drag para ver las gráficas de fondo
 function FilterSheet({ isOpen, onClose, filters, onFilterChange, onReset }) {
-  // Bloquear scroll del body cuando el panel está abierto
+  const panelRef = useRef(null);
+  const handleRef = useRef(null);
+  const dragState = useRef(null);
+  const isDraggingRef = useRef(false); // ref para acceder en listeners del DOM
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Bloquear scroll de página mientras el panel está abierto.
+  // La técnica más robusta en iOS Safari es interceptar touchmove
+  // en document con passive:false y llamar preventDefault().
+  // Esto evita que cualquier gesto de scroll llegue a la página,
+  // independientemente de dónde empiece el toque.
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
+    if (!isOpen) return;
+
+    const preventScroll = (e) => {
+      // Permitir scroll dentro del panel (panelRef) pero no en la página
+      if (panelRef.current && panelRef.current.contains(e.target)) {
+        // Si el panel puede scrollear internamente y no estamos haciendo drag, dejar pasar
+        const panel = panelRef.current;
+        const atTop = panel.scrollTop === 0;
+        const atBottom =
+          panel.scrollTop + panel.clientHeight >= panel.scrollHeight;
+        const movingDown =
+          e.touches[0].clientY <
+          (dragState.current?.startY ?? e.touches[0].clientY);
+        const movingUp =
+          e.touches[0].clientY >
+          (dragState.current?.startY ?? e.touches[0].clientY);
+
+        if (isDraggingRef.current) {
+          e.preventDefault(); // durante drag siempre bloqueamos
+          return;
+        }
+        if (atTop && movingUp) {
+          e.preventDefault();
+          return;
+        } // evita bounce arriba
+        if (atBottom && movingDown) {
+          e.preventDefault();
+          return;
+        } // evita bounce abajo
+        return; // scroll interno normal
+      }
+      // Fuera del panel (overlay, etc.) siempre bloqueamos
+      e.preventDefault();
     };
+
+    setDragY(0);
+    document.addEventListener("touchmove", preventScroll, { passive: false });
+    return () => document.removeEventListener("touchmove", preventScroll);
   }, [isOpen]);
+
+  // ── Lógica de drag ──────────────────────────────────────────────────────────
+
+  const startDrag = useCallback((clientY) => {
+    if (!panelRef.current) return;
+    dragState.current = {
+      startY: clientY,
+      startScrollTop: panelRef.current.scrollTop,
+    };
+    isDraggingRef.current = true;
+    setIsDragging(true);
+    setDragY(0);
+  }, []);
+
+  const moveDrag = useCallback((clientY) => {
+    if (!dragState.current || !isDraggingRef.current) return;
+    const delta = clientY - dragState.current.startY;
+    if (delta < 0 || dragState.current.startScrollTop > 0) return;
+    setDragY(delta);
+  }, []);
+
+  const endDrag = useCallback(() => {
+    if (!dragState.current) return;
+    const panelHeight = panelRef.current?.offsetHeight ?? 300;
+    const currentDragY = dragState.current
+      ? isDraggingRef.current
+        ? undefined
+        : 0
+      : 0;
+
+    setDragY((prev) => {
+      if (prev > panelHeight * 0.3) {
+        setTimeout(() => onClose(), 0);
+      }
+      return 0;
+    });
+    isDraggingRef.current = false;
+    setIsDragging(false);
+    dragState.current = null;
+  }, [onClose]);
+
+  // Registrar listeners en el handle con passive:false para touchmove
+  useEffect(() => {
+    const el = handleRef.current;
+    if (!el) return;
+
+    const onTouchStart = (e) => startDrag(e.touches[0].clientY);
+    const onTouchEnd = () => endDrag();
+
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchend", onTouchEnd, { passive: true });
+
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [startDrag, endDrag]);
+
+  // Registrar touchmove en document con passive:false mientras el panel está abierto.
+  // Esto permite llamar preventDefault() en cualquier punto del drag,
+  // no solo en el handle, evitando que el navegador haga scroll de página.
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const onTouchMove = (e) => {
+      if (!isDraggingRef.current) return;
+      e.preventDefault(); // cancela el scroll nativo del navegador
+      moveDrag(e.touches[0].clientY);
+    };
+
+    document.addEventListener("touchmove", onTouchMove, { passive: false });
+    return () => document.removeEventListener("touchmove", onTouchMove);
+  }, [isOpen, moveDrag]);
+
+  // Mouse handlers para testing en desktop
+  const handleMouseDown = (e) => startDrag(e.clientY);
+
+  useEffect(() => {
+    if (!isDragging) return;
+    const onMouseMove = (e) => moveDrag(e.clientY);
+    const onMouseUp = () => endDrag();
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [isDragging, moveDrag, endDrag]);
+
+  // ── Estilos del panel ───────────────────────────────────────────────────────
+  const panelStyle = isOpen
+    ? {
+        transform: `translateY(${dragY}px)`,
+        transition: isDragging ? "none" : "transform 300ms ease-out",
+      }
+    : { transform: "translateY(100%)", transition: "transform 300ms ease-out" };
+
+  const byKey = Object.fromEntries(FILTERS.map((f) => [f.key, f]));
 
   return (
     <>
-      {/* Overlay oscuro — toca para cerrar */}
+      {/* Overlay — sin blur durante el drag para ver las gráficas de fondo */}
       <div
-        className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300 md:hidden ${isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"} `}
+        className={`fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 md:hidden ${isDragging ? "" : "backdrop-blur-sm"} ${isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"} `}
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Panel deslizante desde abajo
-          max-h-[85vh] limita la altura al 85% de la pantalla.
-          overflow-y-auto permite scroll interno si hay muchos filtros.
-          rounded-t-2xl da el efecto de "hoja" redondeada arriba. */}
+      {/* Panel deslizante */}
       <div
-        className={`fixed right-0 bottom-0 left-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-background shadow-2xl shadow-black/40 transition-transform duration-300 ease-out md:hidden ${isOpen ? "translate-y-0" : "translate-y-full"} `}
+        ref={panelRef}
+        className={`fixed right-0 bottom-0 left-0 z-50 max-h-[85vh] rounded-t-2xl bg-background shadow-2xl shadow-black/40 md:hidden ${isDragging ? "overflow-hidden" : "overflow-y-auto"} `}
+        style={panelStyle}
       >
-        {/* Handle visual */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="h-1 w-10 rounded-full bg-muted-foreground/30" />
-        </div>
+        {/* Área de agarre — handle + cabecera inician el drag */}
+        <div ref={handleRef}>
+          {/* Handle visual */}
+          <div className="flex cursor-grab justify-center pt-3 pb-1 active:cursor-grabbing">
+            <div className="h-1 w-10 rounded-full bg-muted-foreground/30" />
+          </div>
 
-        {/* Cabecera */}
-        <div className="flex items-center justify-between px-4 py-3">
-          <h2 className="text-base font-semibold">Filtros</h2>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onReset}
-              className="text-xs text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Resetear
-            </button>
-            <button
-              onClick={onClose}
-              aria-label="Cerrar filtros"
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
-            >
-              <RiCloseLine className="h-4 w-4" />
-            </button>
+          {/* Cabecera */}
+          <div
+            className="flex cursor-grab items-center justify-between px-4 py-3 active:cursor-grabbing"
+            onMouseDown={handleMouseDown}
+          >
+            <h2 className="text-base font-semibold">Filtros</h2>
+            <div className="flex items-center gap-3">
+              <button
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={onReset}
+                className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Resetear
+              </button>
+              <button
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={onClose}
+                aria-label="Cerrar filtros"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
+              >
+                <RiCloseLine className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Divisor */}
         <div className="mx-4 h-px bg-border" />
 
-        {/* Contenido de filtros — mismo componente que el sidebar */}
-        <div className="px-4 py-4">
-          {FILTERS.map(({ key, ...rest }) => (
+        {/* Filtros con layout fijo para móvil */}
+        <div className="space-y-2 px-4 py-4">
+          {/* Fila 1: País — ancho completo */}
+          <FilterSection
+            {...byKey.pais}
+            selected={filters.pais}
+            onSelect={(v) => onFilterChange("pais", v)}
+          />
+
+          {/* Filas 2 y 3: dos columnas, botones en columna (fullWidth) dentro de cada una */}
+          <div className="grid grid-cols-2 gap-3">
             <FilterSection
-              key={key}
-              {...rest}
-              selected={filters[key]}
-              onSelect={(value) => {
-                onFilterChange(key, value);
-              }}
+              {...byKey.periodo}
+              fullWidth
+              selected={filters.periodo}
+              onSelect={(v) => onFilterChange("periodo", v)}
             />
-          ))}
+            <FilterSection
+              {...byKey.contrato}
+              fullWidth
+              selected={filters.contrato}
+              onSelect={(v) => onFilterChange("contrato", v)}
+            />
+            <FilterSection
+              {...byKey.jornada}
+              fullWidth
+              selected={filters.jornada}
+              onSelect={(v) => onFilterChange("jornada", v)}
+            />
+            <FilterSection
+              {...byKey.remote}
+              fullWidth
+              selected={filters.remote}
+              onSelect={(v) => onFilterChange("remote", v)}
+            />
+          </div>
+
+          {/* Fila 4: Categoría — ancho completo */}
+          <FilterSection
+            {...byKey.skillCategoria}
+            selected={filters.skillCategoria}
+            onSelect={(v) => onFilterChange("skillCategoria", v)}
+          />
         </div>
 
-        {/* Botón de aplicar — cierra el panel y aplica los filtros */}
-        <div className="sticky bottom-0 border-t border-border bg-background px-4 py-3">
+        <div className="sticky bottom-0 flex justify-center border-t border-border bg-background px-4 py-3">
           <button
             onClick={onClose}
-            className="w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="rounded-xl bg-primary px-10 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Ver resultados
           </button>

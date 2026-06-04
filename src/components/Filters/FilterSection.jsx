@@ -19,6 +19,7 @@ function FilterButton({
   );
 }
 
+// FilterSection
 // Sección de filtro con título y sus opciones renderizadas como botones.
 // Props:
 //   title     → texto del encabezado (ej: "País")
@@ -41,7 +42,7 @@ function FilterSection({
           <FilterButton
             key={option}
             fullWidth={fullWidth}
-            isActive={selected === option} // se pinta activo si coincide con el estado
+            isActive={selected === option}
             onClick={() => onSelect(option)}
           >
             {option}

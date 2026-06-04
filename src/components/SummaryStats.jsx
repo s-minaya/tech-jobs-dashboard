@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getSummaryStats } from "@/services/jobServices";
+import { RiCalendarLine } from "react-icons/ri";
 
 // Formatea un número grande con separador de miles: 26023 → "26.023"
 function formatNumber(n) {
@@ -22,19 +23,42 @@ function formatDate(iso) {
 // respecto al gradiente del fondo. El borde sutil separa visualmente
 // las cards entre sí sin romper la cohesión.
 // La prop fullWidth permite que una card ocupe dos columnas en el grid.
-function KpiCard({ label, value, description, fullWidth = false }) {
+// La prop icon permite añadir un icono decorativo en la esquina superior derecha.
+function KpiCard({ label, value, description, fullWidth = false, icon: Icon }) {
   return (
     <div
-      className={`rounded-xl border border-border/60 bg-card px-4 py-3 shadow-lg backdrop-blur-sm ${
+      className={`relative rounded-xl border border-border/60 bg-card px-4 py-3 shadow-lg backdrop-blur-sm ${
         fullWidth ? "col-span-2" : ""
       }`}
     >
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-2xl font-semibold tracking-tight text-foreground">
-        {value}
-      </p>
-      {description && (
-        <p className="mt-0.5 text-xs text-muted-foreground/70">{description}</p>
+      {Icon ? (
+        /* Layout con icono: texto a la izquierda, icono grande centrado a la derecha */
+        <div className="flex items-center justify-between gap-1">
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-muted-foreground">{label}</p>
+            <p className="mt-0.5 text-2xl font-semibold tracking-tight text-foreground">
+              {value}
+            </p>
+            {description && (
+              <p className="mt-0.5 text-xs text-muted-foreground/70">
+                {description}
+              </p>
+            )}
+          </div>
+          <Icon className="h-10 w-10 shrink-0 text-primary/50" />
+        </div>
+      ) : (
+        <>
+          <p className="text-xs font-medium text-muted-foreground">{label}</p>
+          <p className="mt-0.5 text-2xl font-semibold tracking-tight text-foreground">
+            {value}
+          </p>
+          {description && (
+            <p className="mt-0.5 text-xs text-muted-foreground/70">
+              {description}
+            </p>
+          )}
+        </>
       )}
     </div>
   );
@@ -111,6 +135,7 @@ function SummaryStats() {
         value={formatDate(stats.last_updated)}
         description="oferta más reciente"
         fullWidth
+        icon={RiCalendarLine}
       />
     </div>
   );
