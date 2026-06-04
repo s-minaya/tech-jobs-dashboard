@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { ChartContainer } from "@/components/ui/chart";
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -68,7 +68,6 @@ function extractRoles(rows) {
 }
 
 // Tooltip personalizado que muestra "175 ofertas" en vez de solo "175".
-
 function TooltipDemanda({ active, payload, label, chartConfig }) {
   if (!active || !payload?.length) return null;
   return (
@@ -100,7 +99,9 @@ function TooltipDemanda({ active, payload, label, chartConfig }) {
 }
 
 // DemandByRoleChart
-// Gráfica de líneas con la evolución mensual de ofertas por tipo de rol.
+// Gráfica de áreas con la evolución mensual de ofertas por tipo de rol.
+// Al hacer hover sobre un rol, su área se rellena con gradiente y el resto
+// se atenúa — efecto conseguido con fillOpacity dinámico por rol.
 // Requiere al menos 3 meses de datos para que la tendencia sea visible.
 // Con "Últimos 30 días" muestra un aviso en lugar de la gráfica.
 function DemandByRoleChart({ filters }) {
@@ -120,6 +121,9 @@ function DemandByRoleChart({ filters }) {
 
   // null → inicial (5 primeros) | [] → Ninguno | [...] → selección manual
   const [selectedRoles, setSelectedRoles] = useState(null);
+  // activeRole: rol sobre el que está el cursor — null = ninguno en hover
+  const [activeRole, setActiveRole] = useState(null);
+
   const effectiveSelected =
     selectedRoles === null
       ? allRoles.slice(0, 5)
@@ -139,7 +143,7 @@ function DemandByRoleChart({ filters }) {
   const mesesRango = generarMesesRango(nMeses);
 
   // Comprobamos si el periodo seleccionado tiene suficientes meses
-  // para que una gráfica de líneas sea informativa.
+  // para que una gráfica de áreas sea informativa.
   const periodoInsuficiente = !PERIODOS_CON_TENDENCIA.includes(filters.periodo);
 
   return (
@@ -188,30 +192,78 @@ function DemandByRoleChart({ filters }) {
             </p>
           ) : (
             <ChartContainer config={chartConfig} className="h-72 w-full">
-              <LineChart
+              <AreaChart
                 data={pivotData(rows, mesesRango)}
                 margin={{ left: 8, right: 8 }}
+                onMouseLeave={() => setActiveRole(null)}
               >
+                {/* Gradientes: uno por rol, de su color al transparente.
+                    El id del gradiente coincide con el dataKey del área. */}
+                <defs>
+                  {effectiveSelected.map((role) => {
+                    const color = getRoleColor(role);
+                    const id = `gradient-${role.replace(/[^a-z0-9]/gi, "-")}`;
+                    return (
+                      <linearGradient
+                        key={role}
+                        id={id}
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor={color}
+                          stopOpacity={0.35}
+                        />
+                        <stop offset="95%" stopColor={color} stopOpacity={0} />
+                      </linearGradient>
+                    );
+                  })}
+                </defs>
+
                 <CartesianGrid vertical={false} />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 11 }} width={40} />
                 <Tooltip
                   content={<TooltipDemanda chartConfig={chartConfig} />}
                 />
+
                 {allRoles
                   .filter((role) => effectiveSelected.includes(role))
-                  .map((role) => (
-                    <Line
-                      key={role}
-                      type="monotone"
-                      dataKey={role}
-                      stroke={getRoleColor(role)}
-                      strokeWidth={2}
-                      dot={false}
-                      connectNulls={false}
-                    />
-                  ))}
-              </LineChart>
+                  .map((role) => {
+                    const color = getRoleColor(role);
+                    const gradId = `gradient-${role.replace(/[^a-z0-9]/gi, "-")}`;
+                    // Sin hover: todas las áreas con fill sutil y línea visible
+                    // Con hover: el rol activo se resalta, los demás se atenúan
+                    const isActive = activeRole === role;
+                    const isOther = activeRole !== null && !isActive;
+                    const lineOpacity = isOther ? 0.15 : 1;
+                    const fillOpacity = isActive ? 1 : isOther ? 0 : 0;
+
+                    return (
+                      <Area
+                        key={role}
+                        type="monotone"
+                        dataKey={role}
+                        stroke={color}
+                        strokeWidth={isActive ? 2.5 : 1.5}
+                        strokeOpacity={lineOpacity}
+                        fill={`url(#${gradId})`}
+                        fillOpacity={fillOpacity}
+                        dot={false}
+                        connectNulls={false}
+                        activeDot={{
+                          r: 4,
+                          fill: color,
+                          onMouseEnter: () => setActiveRole(role),
+                        }}
+                        onMouseEnter={() => setActiveRole(role)}
+                      />
+                    );
+                  })}
+              </AreaChart>
             </ChartContainer>
           )}
         </>
