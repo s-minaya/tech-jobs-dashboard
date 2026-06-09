@@ -1,3 +1,4 @@
+// RoleSelector
 // Controles para seleccionar qué roles mostrar en una gráfica.
 // Incluye botones "Todos" y "Ninguno" y un toggle por cada rol disponible.
 // Lo usan DemandByRoleChart y SalaryChart.
@@ -52,7 +53,7 @@ function RoleSelector({
             <button
               key={role}
               onClick={() => toggleRole(role)}
-              className={`rounded border px-2 py-1 text-xs transition-colors ${
+              className={`cursor-pointer rounded border px-2 py-1 text-xs transition-colors ${
                 isSelected
                   ? "border-transparent text-white"
                   : "border-border text-muted-foreground hover:text-foreground"

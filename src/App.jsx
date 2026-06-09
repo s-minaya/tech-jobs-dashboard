@@ -1,18 +1,20 @@
 import { useState, useEffect } from "react";
 import { useFilters } from "@/hooks/useFilters";
 import { useTheme } from "@/hooks/useTheme";
-import Sidebar from "@/components/Sidebar";
 import MainContent from "@/components/MainContent";
 import BottomNav from "@/components/BottomNav";
 import FilterSheet from "@/components/Filters/FilterSheet";
+import FilterDrawer, { FilterFAB } from "@/components/FilterDrawer";
 
 // App
-// Componente raíz. Gestiona filtros, tema, sección activa del bottom nav
-// y visibilidad del panel de filtros móvil (FilterSheet).
+// Componente raíz. Gestiona filtros, tema, sección activa y visibilidad
+// de los paneles de filtros según el tamaño de pantalla:
 //
-// En desktop: sidebar lateral visible, FilterSheet nunca se muestra.
-// En móvil: sidebar oculto, bottom nav fijo, FilterSheet se abre al
-// pulsar el icono de filtros del navbar.
+//   Móvil (<768px):   bottom nav + FilterSheet (bottom sheet desde abajo)
+//   Tablet/Desktop (≥768px): FilterFAB flotante + FilterDrawer (desde la izquierda)
+//
+// El Sidebar lateral ha sido eliminado — en todos los tamaños los filtros
+// se acceden mediante el FAB para no robar espacio a las gráficas.
 function App() {
   const { filters, handleFilterChange, resetFilters } = useFilters();
   const { isDark, toggleTheme } = useTheme();
@@ -40,15 +42,20 @@ function App() {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Sidebar: visible en md+, oculto en móvil */}
-      <Sidebar
+    <div className="min-h-screen bg-background">
+      {/* FAB de filtros — visible solo en md+, oculto en móvil */}
+      <FilterFAB filters={filters} onClick={() => setFiltersOpen(true)} />
+
+      {/* Drawer de filtros — tablet y desktop */}
+      <FilterDrawer
+        isOpen={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
         filters={filters}
         onFilterChange={handleFilterChange}
         onReset={resetFilters}
       />
 
-      {/* Contenido principal */}
+      {/* Contenido principal — ahora ocupa todo el ancho sin sidebar */}
       <MainContent
         filters={filters}
         isDark={isDark}
@@ -61,7 +68,7 @@ function App() {
         onOpenFilters={() => setFiltersOpen(true)}
       />
 
-      {/* Panel de filtros móvil: se desliza desde abajo al pulsar el icono */}
+      {/* Panel de filtros móvil: bottom sheet desde abajo */}
       <FilterSheet
         isOpen={filtersOpen}
         onClose={() => setFiltersOpen(false)}

@@ -89,7 +89,7 @@
      Coinciden con --role-backend/data-science/devops/ai-ml/management
      para mantener coherencia visual sin duplicar valores.
   ── ────────────────────────────────────────────────────────────────────── */
-  --chart-1: hsl(258, 80%, 40%); /* = role-backend   */
+  --chart-1: hsl(249, 100%, 69%); /* = role-backend   */
   --chart-2: hsl(162, 60%, 35%); /* = role-data-science */
   --chart-3: hsl(55, 60%, 42%); /* = role-devops    */
   --chart-4: hsl(330, 75%, 40%); /* = role-ai-ml     */
