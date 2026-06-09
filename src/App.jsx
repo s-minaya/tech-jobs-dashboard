@@ -5,6 +5,7 @@ import MainContent from "@/components/MainContent";
 import BottomNav from "@/components/BottomNav";
 import FilterSheet from "@/components/Filters/FilterSheet";
 import FilterDrawer, { FilterFAB } from "@/components/FilterDrawer";
+import LandingPage from "@/components/LandingPage";
 
 // App
 // Componente raíz. Gestiona filtros, tema, sección activa y visibilidad
@@ -15,11 +16,25 @@ import FilterDrawer, { FilterFAB } from "@/components/FilterDrawer";
 //
 // El Sidebar lateral ha sido eliminado — en todos los tamaños los filtros
 // se acceden mediante el FAB para no robar espacio a las gráficas.
+//
+// La LandingPage bloquea el acceso al dashboard hasta que el usuario
+// pulsa "Comenzar". Se persiste en sessionStorage para no mostrarla
+// en cada recarga durante la misma sesión.
 function App() {
   const { filters, handleFilterChange, resetFilters } = useFilters();
   const { isDark, toggleTheme } = useTheme();
   const [activeSection, setActiveSection] = useState("inicio");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  // showLanding: true mientras el usuario no ha pulsado "Comenzar".
+  // sessionStorage evita que la landing aparezca en cada recarga.
+  const [showLanding, setShowLanding] = useState(
+    () => sessionStorage.getItem("landed") !== "1",
+  );
+
+  function handleEnter() {
+    sessionStorage.setItem("landed", "1");
+    setShowLanding(false);
+  }
 
   // IntersectionObserver: detecta qué sección ocupa más espacio en el viewport
   // y actualiza activeSection. threshold: 0.3 = sección visible al 30%.
@@ -43,6 +58,9 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Landing page — bloquea el dashboard hasta que el usuario pulsa Comenzar */}
+      {showLanding && <LandingPage onEnter={handleEnter} />}
+
       {/* FAB de filtros — visible solo en md+, oculto en móvil */}
       <FilterFAB filters={filters} onClick={() => setFiltersOpen(true)} />
 
