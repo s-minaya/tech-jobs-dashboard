@@ -1,16 +1,17 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource/geist/400.css";
-@import "@fontsource/geist/600.css";
+@import "@fontsource-variable/geist/index.css"; /* Variable font — pesos 100-900 en un solo archivo */
+@import "@fontsource/space-mono/400.css"; /* Títulos — monospace con personalidad */
+@import "@fontsource/space-mono/700.css";
 
 @plugin "@tailwindcss/forms";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: "Geist", sans-serif;
+  --font-heading: "Space Mono", monospace;
+  --font-sans: "Geist Variable", "Geist", sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
