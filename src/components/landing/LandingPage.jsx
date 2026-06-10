@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Lightfall from "@/components/ui/Lightfall";
+import GlowButton from "@/components/ui/GlowButton";
 import { getSummaryStats } from "@/services/jobServices";
 import {
   RiArrowRightLine,
@@ -146,14 +147,18 @@ function LandingPage({ onEnter }) {
           ))}
         </div>
 
-        {/* CTA — pointer-events-auto para que sea clicable */}
-        <button
-          onClick={handleEnter}
-          className="group pointer-events-auto inline-flex cursor-pointer items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-semibold text-[hsl(249,100%,69%)] shadow-lg shadow-black/20 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-primary/30"
-        >
-          Explorar el dashboard
-          <RiArrowRightLine className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
-        </button>
+        {/* CTA — GlowButton con borde aurora animado.
+            pointer-events-auto recupera los eventos sobre el wrapper pointer-events-none. */}
+        <div className="pointer-events-auto">
+          <GlowButton
+            onClick={handleEnter}
+            variant="solid"
+            className="group shadow-lg shadow-black/20 transition-transform duration-200 hover:scale-105"
+          >
+            Explorar el dashboard
+            <RiArrowRightLine className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+          </GlowButton>
+        </div>
       </div>
     </div>
   );

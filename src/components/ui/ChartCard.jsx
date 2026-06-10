@@ -1,10 +1,11 @@
 // ChartCard
 // Wrapper visual reutilizable para todas las gráficas del dashboard.
 //
-// En lugar de borde fino, usa sombra para dar elevación:
-//   - Light mode: shadow-md con toque azulado sutil
-//   - Dark mode: sombra negra intensa (shadow-black/60) para contrastar
-//     sobre el fondo oscuro sin que las cards se pierdan
+// Diseño glassmorphism: bg-card/60 + backdrop-blur para dejar ver el
+// fondo animado (DarkVeil/Aurora) a través de las cards.
+//
+// Borde con gradiente sutil y sombra con tinte de color primary
+// para coherencia visual con el borde aurora del GlowButton.
 //
 // Distingue dos estados de carga:
 //   - Carga inicial (isInitialLoad=true): muestra "Cargando..." porque
@@ -12,7 +13,6 @@
 //   - Recarga por filtro (loading=true, isInitialLoad=false): mantiene
 //     el contenido visible con opacidad reducida y un badge "Actualizando..."
 //     para que el layout no cambie de tamaño y el scroll no se mueva.
-
 function ChartCard({
   title,
   loading,
@@ -26,9 +26,14 @@ function ChartCard({
 
   return (
     <div
-      className={`relative rounded-xl bg-card p-4 shadow-md shadow-black/8 dark:shadow-lg dark:shadow-black/60 ${className} `}
+      className={`relative rounded-2xl border border-white/8 bg-card/60 p-5 shadow-lg shadow-primary/5 backdrop-blur-md transition-all duration-300 hover:border-white/15 hover:shadow-xl hover:shadow-primary/10 dark:shadow-black/40 dark:hover:shadow-black/60 ${className} `}
     >
-      {title && <h2 className="mb-4 text-sm font-semibold">{title}</h2>}
+      {/* Título — más grande y con acento de color */}
+      {title && (
+        <h2 className="mb-3 text-base font-bold tracking-tight text-foreground">
+          {title}
+        </h2>
+      )}
 
       {!loading && error && (
         <p className="text-sm text-destructive">Error: {error}</p>
@@ -36,7 +41,9 @@ function ChartCard({
 
       {/* Carga inicial: spinner clásico porque no hay datos que mostrar */}
       {showSpinner && (
-        <p className="text-sm text-muted-foreground">Cargando...</p>
+        <p className="py-8 text-center text-sm text-muted-foreground">
+          Cargando...
+        </p>
       )}
 
       {/* Contenido: siempre en el DOM cuando hay datos, aunque esté recargando.
@@ -55,7 +62,7 @@ function ChartCard({
       {/* Badge de actualización: aparece encima del contenido sin alterar el layout */}
       {showStale && (
         <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-3">
-          <span className="rounded-full border border-border bg-background/80 px-2 py-0.5 text-xs text-muted-foreground shadow-sm">
+          <span className="rounded-full border border-border bg-background/80 px-2 py-0.5 text-xs text-muted-foreground shadow-sm backdrop-blur-sm">
             Actualizando...
           </span>
         </div>
