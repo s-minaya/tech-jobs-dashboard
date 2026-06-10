@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useFilters } from "@/hooks/useFilters";
 import { useTheme } from "@/hooks/useTheme";
-import MainContent from "@/components/MainContent";
-import BottomNav from "@/components/BottomNav";
+import MainContent from "@/components/layout/MainContent";
+import BottomNav from "@/components/layout/BottomNav";
 import FilterSheet from "@/components/Filters/FilterSheet";
-import FilterDrawer, { FilterFAB } from "@/components/FilterDrawer";
-import LandingPage from "@/components/LandingPage";
+import FilterDrawer, { FilterFAB } from "@/components/Filters/FilterDrawer";
+import LandingPage from "@/components/landing/LandingPage";
 
 // App
 // Componente raíz. Gestiona filtros, tema, sección activa y visibilidad
@@ -25,6 +25,7 @@ function App() {
   const { isDark, toggleTheme } = useTheme();
   const [activeSection, setActiveSection] = useState("inicio");
   const [filtersOpen, setFiltersOpen] = useState(false);
+
   // showLanding: true mientras el usuario no ha pulsado "Comenzar".
   // sessionStorage evita que la landing aparezca en cada recarga.
   const [showLanding, setShowLanding] = useState(
@@ -57,43 +58,47 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Landing page — bloquea el dashboard hasta que el usuario pulsa Comenzar */}
-      {showLanding && <LandingPage onEnter={handleEnter} />}
+    // bg-white en light, bg-black en dark — fondo base de toda la página.
+    // El DarkVeil vive ahora solo dentro del hero en MainContent.
+    <div className="relative min-h-screen bg-white dark:bg-black">
+      <div className="relative z-10">
+        {/* Landing page — bloquea el dashboard hasta que el usuario pulsa Comenzar */}
+        {showLanding && <LandingPage onEnter={handleEnter} />}
 
-      {/* FAB de filtros — visible solo en md+, oculto en móvil */}
-      <FilterFAB filters={filters} onClick={() => setFiltersOpen(true)} />
+        {/* FAB de filtros — visible solo en md+, oculto en móvil */}
+        <FilterFAB filters={filters} onClick={() => setFiltersOpen(true)} />
 
-      {/* Drawer de filtros — tablet y desktop */}
-      <FilterDrawer
-        isOpen={filtersOpen}
-        onClose={() => setFiltersOpen(false)}
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onReset={resetFilters}
-      />
+        {/* Drawer de filtros — tablet y desktop */}
+        <FilterDrawer
+          isOpen={filtersOpen}
+          onClose={() => setFiltersOpen(false)}
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onReset={resetFilters}
+        />
 
-      {/* Contenido principal — ahora ocupa todo el ancho sin sidebar */}
-      <MainContent
-        filters={filters}
-        isDark={isDark}
-        toggleTheme={toggleTheme}
-      />
+        {/* Contenido principal — ahora ocupa todo el ancho sin sidebar */}
+        <MainContent
+          filters={filters}
+          isDark={isDark}
+          toggleTheme={toggleTheme}
+        />
 
-      {/* Bottom nav: solo visible en móvil (md:hidden interno al componente) */}
-      <BottomNav
-        activeSection={activeSection}
-        onOpenFilters={() => setFiltersOpen(true)}
-      />
+        {/* Bottom nav: solo visible en móvil (md:hidden interno al componente) */}
+        <BottomNav
+          activeSection={activeSection}
+          onOpenFilters={() => setFiltersOpen(true)}
+        />
 
-      {/* Panel de filtros móvil: bottom sheet desde abajo */}
-      <FilterSheet
-        isOpen={filtersOpen}
-        onClose={() => setFiltersOpen(false)}
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onReset={resetFilters}
-      />
+        {/* Panel de filtros móvil: bottom sheet desde abajo */}
+        <FilterSheet
+          isOpen={filtersOpen}
+          onClose={() => setFiltersOpen(false)}
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onReset={resetFilters}
+        />
+      </div>
     </div>
   );
 }

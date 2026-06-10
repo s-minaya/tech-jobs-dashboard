@@ -87,7 +87,7 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, onReset }) {
 
       {/* Drawer desde la izquierda — solo md+ */}
       <div
-        className={`fixed top-0 left-0 z-50 flex hidden h-full w-72 flex-col border-r border-border bg-background shadow-2xl shadow-black/20 transition-transform duration-[350ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] md:flex dark:shadow-black/60 ${isOpen ? "translate-x-0" : "-translate-x-full"} `}
+        className={`fixed top-0 left-0 z-50 flex hidden h-full w-72 flex-col border-r border-border bg-background shadow-2xl shadow-black/20 transition-transform duration-350 ease-[cubic-bezier(0.32,0.72,0,1)] md:flex dark:shadow-black/60 ${isOpen ? "translate-x-0" : "-translate-x-full"} `}
       >
         {/* Cabecera */}
         <div className="flex items-center justify-between border-b border-border px-5 py-4">

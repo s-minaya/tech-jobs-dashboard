@@ -26,12 +26,12 @@ import AT from "country-flag-icons/react/3x2/AT";
 import BE from "country-flag-icons/react/3x2/BE";
 
 // Wrapper para normalizar las banderas al mismo tamaño que los react-icons
-const flag = (Flag) => () => <Flag className="h-3.5 w-5 rounded-[2px]" />;
+const flag = (Flag) => () => <Flag className="h-3.5 w-5 rounded-xs" />;
 
 // ── Iconos por opción ─────────────────────────────────────────────────────────
 // Mapa de opción → icono. Si no hay icono definido se omite.
 const OPTION_ICONS = {
-  // País — SVGs de country-flag-icons 
+  // País — SVGs de country-flag-icons
   Todos: RiGlobalLine,
   DE: flag(DE),
   FR: flag(FR),

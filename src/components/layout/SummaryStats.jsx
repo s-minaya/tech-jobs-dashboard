@@ -27,13 +27,13 @@ function formatDate(iso) {
 function KpiCard({ label, value, description, fullWidth = false, icon: Icon }) {
   return (
     <div
-      className={`relative rounded-xl border border-border/60 bg-card px-4 py-3 shadow-lg backdrop-blur-sm ${
+      className={`relative rounded-xl border border-border/60 bg-card/70 px-4 py-3 shadow-lg backdrop-blur-md ${
         fullWidth ? "col-span-2" : ""
       }`}
     >
       {Icon ? (
         /* Layout con icono: texto a la izquierda, icono grande centrado a la derecha */
-        <div className="flex items-center justify-between gap-1">
+        <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-medium text-muted-foreground">{label}</p>
             <p className="mt-0.5 text-2xl font-semibold tracking-tight text-foreground">
@@ -45,7 +45,7 @@ function KpiCard({ label, value, description, fullWidth = false, icon: Icon }) {
               </p>
             )}
           </div>
-          <Icon className="h-10 w-10 shrink-0 text-primary/50" />
+          <Icon className="h-12 w-12 shrink-0 text-primary/50" />
         </div>
       ) : (
         <>
