@@ -6,6 +6,7 @@ import {
 } from "@/hooks/useHeatmapData";
 import {
   selectSkills,
+  filterSkillsWithCoOccurrence,
   buildLookup,
   buildJobCountMap,
   calcMaxPct,
@@ -14,7 +15,7 @@ import ChartCard from "@/components/ui/ChartCard";
 import ChartDescription from "@/components/ui/ChartDescription";
 import HeatmapSvg from "@/components/Charts/HeatmapSvg";
 import HeatmapLeyenda from "@/components/Charts/HeatmapLeyenda";
-import { SlScreenSmartphone } from "react-icons/sl";
+import { RiSmartphoneLine } from "react-icons/ri";
 
 const FILTROS_IGNORADOS = ["pais", "contrato", "jornada", "remote"];
 
@@ -52,7 +53,7 @@ function RotatePrompt() {
         className="text-primary"
         style={{ animation: "rotateMobile 2.5s ease-in-out infinite" }}
       >
-        <SlScreenSmartphone className="h-12 w-12" />
+        <RiSmartphoneLine className="h-12 w-12" />
       </div>
       <div>
         <p className="text-sm font-medium text-foreground">
@@ -96,7 +97,11 @@ function SkillHeatmap({ filters }) {
   } = useHeatmapData(categoria, filtrosHeatmap);
 
   const maxN = categoria === "todas" ? DEFAULT_MAX_SKILLS : FILTERED_MAX;
-  const skills = selectSkills(skillsData, categoria, maxN);
+  // Primero seleccionamos las top N skills por popularidad,
+  // luego filtramos para quedarnos solo con las que tienen al menos
+  // una co-ocurrencia con otra del conjunto — evita filas/columnas vacías.
+  const skillsCandidatas = selectSkills(skillsData, categoria, maxN);
+  const skills = filterSkillsWithCoOccurrence(skillsCandidatas, pairs);
   const combinedSkills = [...allSkillsData, ...skillsData];
   const jobCountMap = buildJobCountMap(combinedSkills);
   const lookup = buildLookup(pairs, skills);

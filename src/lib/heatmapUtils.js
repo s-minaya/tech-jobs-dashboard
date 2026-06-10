@@ -13,7 +13,6 @@ export function selectSkills(skillsData, categoria, maxN) {
     categoria === "todas"
       ? skillsData
       : skillsData.filter((s) => s.skill_category === categoria);
-
   // Set para eliminar duplicados manteniendo el orden de aparición.
   const seen = new Set();
   const unique = [];
@@ -23,8 +22,44 @@ export function selectSkills(skillsData, categoria, maxN) {
       unique.push(s.skill);
     }
   }
-
   return unique.slice(0, maxN);
+}
+
+// filterSkillsWithCoOccurrence
+// A partir de un array de skills candidatas y el lookup de co-ocurrencias,
+// devuelve solo las skills que tienen al menos una co-ocurrencia con otra
+// skill del mismo conjunto. Así el heatmap nunca muestra filas/columnas
+// completamente vacías que confunden al usuario.
+//
+// El algoritmo es iterativo: eliminamos skills sin co-ocurrencias y
+// repetimos hasta que el conjunto sea estable (puede que al eliminar una
+// skill, otras queden sin co-ocurrencias).
+export function filterSkillsWithCoOccurrence(skills, pairs) {
+  // Construimos un Set de pares con co-ocurrencia para acceso O(1)
+  const pairSet = new Set();
+  for (const { skill, co_skill } of pairs) {
+    pairSet.add(`${skill}|${co_skill}`);
+    pairSet.add(`${co_skill}|${skill}`);
+  }
+
+  let current = [...skills];
+  let changed = true;
+
+  // Iteramos hasta estabilidad — normalmente 1-2 pasadas
+  while (changed) {
+    changed = false;
+    const next = current.filter((skill) =>
+      current.some(
+        (other) => other !== skill && pairSet.has(`${skill}|${other}`),
+      ),
+    );
+    if (next.length !== current.length) {
+      current = next;
+      changed = true;
+    }
+  }
+
+  return current;
 }
 
 // buildLookup
@@ -34,14 +69,12 @@ export function selectSkills(skillsData, categoria, maxN) {
 export function buildLookup(pairs, skills) {
   const skillSet = new Set(skills);
   const lookup = {};
-
   for (const { skill, co_skill, co_count } of pairs) {
     if (!skillSet.has(skill) || !skillSet.has(co_skill)) continue;
     const count = Number(co_count);
     lookup[`${skill}|${co_skill}`] = count;
     lookup[`${co_skill}|${skill}`] = count;
   }
-
   return lookup;
 }
 
@@ -72,7 +105,6 @@ export function formatPct(coCount, jobCountA) {
 export function calcMaxPct(skills, lookup, jobCountMap) {
   let maxPct = 0;
   const n = skills.length;
-
   for (let i = 0; i < n; i++) {
     for (let j = 0; j < i; j++) {
       const co = lookup[`${skills[i]}|${skills[j]}`] ?? 0;
@@ -81,7 +113,6 @@ export function calcMaxPct(skills, lookup, jobCountMap) {
       if (pct > maxPct) maxPct = pct;
     }
   }
-
   return maxPct === 0 ? 1 : maxPct;
 }
 
@@ -94,9 +125,7 @@ export function calcMaxPct(skills, lookup, jobCountMap) {
 export function getHeatmapTextColor(bgColorHex) {
   const rgb = d3.color(bgColorHex);
   if (!rgb) return "#1e293b";
-
   const lum =
     0.2126 * (rgb.r / 255) + 0.7152 * (rgb.g / 255) + 0.0722 * (rgb.b / 255);
-
   return lum > 0.55 ? "#1e293b" : "#ffffff";
 }

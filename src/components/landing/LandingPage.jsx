@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Lightfall from "@/components/ui/Lightfall";
+import { getSummaryStats } from "@/services/jobServices";
 import {
   RiArrowRightLine,
   RiBriefcaseLine,
@@ -24,9 +25,13 @@ function getStreakCount() {
 // Al pulsar el botón, la landing se desvanece antes de mostrar el dashboard.
 // pointer-events-none en overlay y wrapper de contenido para que el mouse
 // llegue al canvas de Lightfall y la interacción funcione.
+//
+// Los stats (ofertas, países, skills) se cargan desde la API al montar
+// para mostrar datos reales en lugar de valores hardcodeados.
 function LandingPage({ onEnter }) {
   const [leaving, setLeaving] = useState(false);
   const [streakCount, setStreakCount] = useState(getStreakCount);
+  const [stats, setStats] = useState(null);
 
   // Actualiza streakCount al redimensionar la ventana
   useEffect(() => {
@@ -35,10 +40,41 @@ function LandingPage({ onEnter }) {
     return () => window.removeEventListener("resize", handler);
   }, []);
 
+  // Carga los stats reales de la API — mismos datos que las KPI cards
+  useEffect(() => {
+    getSummaryStats()
+      .then(setStats)
+      .catch(() => {});
+  }, []);
+
   function handleEnter() {
     setLeaving(true);
     setTimeout(onEnter, 600);
   }
+
+  // Formatea números con separador de miles: 39678 → "39.678"
+  function fmt(n) {
+    return n != null ? Number(n).toLocaleString("es-ES") : "—";
+  }
+
+  // Stats dinámicos con fallback mientras cargan
+  const statItems = [
+    {
+      icon: RiBriefcaseLine,
+      label: "Ofertas activas",
+      value: stats ? fmt(stats.total_active_jobs) : "…",
+    },
+    {
+      icon: RiMapPinLine,
+      label: "Países cubiertos",
+      value: stats ? fmt(stats.total_countries) : "…",
+    },
+    {
+      icon: RiBarChartLine,
+      label: "Skills rastreadas",
+      value: stats ? fmt(stats.total_skills) : "…",
+    },
+  ];
 
   return (
     <div
@@ -97,13 +133,9 @@ function LandingPage({ onEnter }) {
           están creciendo en cada país.
         </p>
 
-        {/* Stats */}
+        {/* Stats — datos reales de la API */}
         <div className="mb-10 flex flex-wrap justify-center gap-6">
-          {[
-            { icon: RiBriefcaseLine, label: "Ofertas activas", value: "39K+" },
-            { icon: RiMapPinLine, label: "Países cubiertos", value: "8" },
-            { icon: RiBarChartLine, label: "Skills rastreadas", value: "106" },
-          ].map(({ icon: Icon, label, value }) => (
+          {statItems.map(({ icon: Icon, label, value }) => (
             <div key={label} className="flex flex-col items-center gap-1">
               <div className="flex items-center gap-1.5 text-xs text-white/50">
                 <Icon className="h-3.5 w-3.5" />
