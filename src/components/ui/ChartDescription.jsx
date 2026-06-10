@@ -3,6 +3,10 @@ import FilterWarningPopover from "@/components/ui/FilterWarningPopover";
 
 // NOTAS_FILTROS_IGNORADOS
 // Explica por qué un filtro no aplica a una gráfica concreta.
+// Cada entrada puede ser un string fijo o una función que recibe
+// el contexto (nombre de la gráfica) para dar una explicación específica.
+//
+// Se muestran solo cuando el filtro está activo (distinto del valor por defecto).
 const NOTAS_FILTROS_IGNORADOS = {
   jornada:
     "El filtro de jornada no afecta a esta gráfica: los datos no cambian significativamente entre ofertas a tiempo completo o parcial para lo que aquí se muestra.",
@@ -18,24 +22,20 @@ const NOTAS_FILTROS_IGNORADOS = {
     "El filtro de remoto no afecta a esta gráfica. Separar entre ofertas remotas y presenciales dejaría muy pocos datos y los porcentajes perderían representatividad.",
 };
 
-// getWarningNodes
-// Función exportada que devuelve los nodos FilterWarningPopover activos
-// para un conjunto de filtros y exclusiones. Se usa en los charts para
-// pasar el ⓘ al prop `warning` de ChartCard, situándolo junto al título.
+// getWarningNodes — exportada para uso externo si fuera necesario
 export function getWarningNodes(filters, excludeFilters = [], contexto = "") {
-  const activos = excludeFilters.filter((key) => {
-    if (key === "pais") return filters.pais && filters.pais !== "Todos";
-    if (key === "jornada")
-      return filters.jornada && filters.jornada !== "Todos";
-    if (key === "contrato")
-      return filters.contrato && filters.contrato !== "Todos";
-    if (key === "remote") return filters.remote && filters.remote !== "Todos";
-    if (key === "skillCategoria")
-      return filters.skillCategoria && filters.skillCategoria !== "Todas";
-    return false;
-  });
-
-  const nodes = activos
+  return excludeFilters
+    .filter((key) => {
+      if (key === "pais") return filters.pais && filters.pais !== "Todos";
+      if (key === "jornada")
+        return filters.jornada && filters.jornada !== "Todos";
+      if (key === "contrato")
+        return filters.contrato && filters.contrato !== "Todos";
+      if (key === "remote") return filters.remote && filters.remote !== "Todos";
+      if (key === "skillCategoria")
+        return filters.skillCategoria && filters.skillCategoria !== "Todas";
+      return false;
+    })
     .map((key) => {
       const entrada = NOTAS_FILTROS_IGNORADOS[key];
       const texto = typeof entrada === "function" ? entrada(contexto) : entrada;
@@ -49,23 +49,22 @@ export function getWarningNodes(filters, excludeFilters = [], contexto = "") {
       ) : null;
     })
     .filter(Boolean);
-
-  return nodes.length ? <>{nodes}</> : null;
 }
 
 // ChartDescription
 // Bloque informativo reutilizable en todos los charts.
-// Los avisos ⓘ de filtros ignorados ya NO se renderizan aquí —
-// se generan con getWarningNodes() y se pasan al prop `warning` de ChartCard
-// para que aparezcan junto al título.
+// Muestra:
+//   1. Descripción de qué representa la gráfica
+//   2. Fila de pills: badge de ofertas + filtros activos
+//   3. Avisos ⓘ de filtros ignorados — aparecen inline junto al badge de ofertas
 //
 // Props:
 //   description    → texto explicando qué muestra la gráfica
 //   filters        → objeto completo de filtros
 //   totalJobs      → número de ofertas, o null
 //   nota           → texto adicional opcional
-//   excludeFilters → filtros que esta gráfica ignora
-//   contexto       → identificador de la gráfica
+//   excludeFilters → filtros que esta gráfica ignora (para los avisos)
+//   contexto       → identificador de la gráfica (personaliza el texto del aviso)
 function ChartDescription({
   description,
   filters,
@@ -75,18 +74,25 @@ function ChartDescription({
   contexto = "",
 }) {
   const filtrosActivos = describeFiltros(filters, excludeFilters);
+  // Avisos de filtros que el usuario tiene activos pero esta gráfica ignora
+  const warnings = getWarningNodes(filters, excludeFilters, contexto);
 
   return (
     <div className="mb-4 space-y-2.5 text-xs">
       <p className="leading-relaxed text-muted-foreground">{description}</p>
 
       <div className="flex flex-wrap items-center gap-1.5">
+        {/* Badge de ofertas */}
         {totalJobs != null && (
           <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary ring-1 ring-primary/20">
             {Number(totalJobs).toLocaleString("es-ES")} ofertas
           </span>
         )}
 
+        {/* Avisos ⓘ — inline junto al badge de ofertas */}
+        {warnings}
+
+        {/* Pills de filtros activos */}
         {filtrosActivos.map((f) => (
           <span
             key={f}

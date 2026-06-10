@@ -19,22 +19,37 @@ function formatDate(iso) {
 
 // KpiCard
 // Tarjeta individual flotante sobre el hero.
-// Usa sombra pronunciada (shadow-lg) para reforzar el efecto de elevación
-// respecto al gradiente del fondo. El borde sutil separa visualmente
-// las cards entre sí sin romper la cohesión.
+// Por defecto fondo transparente + backdrop-blur para dejar ver el fondo animado.
+// Al hacer hover: relleno oscuro (hsl(249,30%,8%)) + borde aurora animado
+// con el mismo efecto que GlowButton — mismas clases CSS definidas en index.css.
 // La prop fullWidth permite que una card ocupe dos columnas en el grid.
-// La prop icon permite añadir un icono decorativo en la esquina superior derecha.
+// La prop icon permite añadir un icono decorativo centrado a la derecha.
 function KpiCard({ label, value, description, fullWidth = false, icon: Icon }) {
   return (
     <div
-      className={`relative rounded-xl border border-border/60 bg-card/70 px-4 py-3 shadow-lg backdrop-blur-md ${
-        fullWidth ? "col-span-2" : ""
-      }`}
+      className={`glow-kpi-wrapper group ${fullWidth ? "col-span-2 sm:col-span-1" : ""}`}
     >
-      {Icon ? (
-        /* Layout con icono: texto a la izquierda, icono grande centrado a la derecha */
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
+      <div className="glow-kpi-inner h-full w-full rounded-xl px-4 py-3">
+        {Icon ? (
+          /* Layout con icono: texto a la izquierda, icono grande centrado a la derecha */
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-muted-foreground">
+                {label}
+              </p>
+              <p className="mt-0.5 text-2xl font-semibold tracking-tight text-foreground">
+                {value}
+              </p>
+              {description && (
+                <p className="mt-0.5 text-xs text-muted-foreground/70">
+                  {description}
+                </p>
+              )}
+            </div>
+            <Icon className="h-10 w-10 shrink-0 text-primary/40 transition-colors duration-300 group-hover:text-primary/70" />
+          </div>
+        ) : (
+          <>
             <p className="text-xs font-medium text-muted-foreground">{label}</p>
             <p className="mt-0.5 text-2xl font-semibold tracking-tight text-foreground">
               {value}
@@ -44,22 +59,9 @@ function KpiCard({ label, value, description, fullWidth = false, icon: Icon }) {
                 {description}
               </p>
             )}
-          </div>
-          <Icon className="h-12 w-12 shrink-0 text-primary/50" />
-        </div>
-      ) : (
-        <>
-          <p className="text-xs font-medium text-muted-foreground">{label}</p>
-          <p className="mt-0.5 text-2xl font-semibold tracking-tight text-foreground">
-            {value}
-          </p>
-          {description && (
-            <p className="mt-0.5 text-xs text-muted-foreground/70">
-              {description}
-            </p>
-          )}
-        </>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -91,11 +93,11 @@ function SummaryStats() {
 
   if (loading) {
     return (
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="mb-6 grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {[...Array(5)].map((_, i) => (
           <div
             key={i}
-            className={`h-20 animate-pulse rounded-xl border border-border bg-muted shadow-lg ${
+            className={`h-20 animate-pulse rounded-xl border border-border bg-muted/30 shadow-lg backdrop-blur-md ${
               i === 4 ? "col-span-2 sm:col-span-1" : ""
             }`}
           />
@@ -107,7 +109,7 @@ function SummaryStats() {
   if (error || !stats) return null;
 
   return (
-    <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+    <div className="mb-6 grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 lg:grid-cols-5">
       <KpiCard
         label="Ofertas activas"
         value={formatNumber(stats.total_active_jobs)}

@@ -299,27 +299,33 @@
   );
   background-size: 300% 300%;
   animation: auroraFlow 4s ease infinite;
-  /* Glow sutil en reposo */
+  /* Glow en reposo */
   box-shadow:
-    0 0 20px 2px rgba(124, 255, 103, 0.2),
-    0 0 40px 4px rgba(82, 39, 255, 0.15);
+    0 0 24px 4px rgba(124, 255, 103, 0.25),
+    0 0 48px 8px rgba(82, 39, 255, 0.2);
   transition:
     box-shadow 300ms ease,
     background-color 300ms ease;
 }
 
-/* Hover: fondo oscuro + neón en box-shadow — el tamaño NO cambia */
+/* Hover: fondo oscuro con gradiente aurora como borde via clip-path trick.
+   Usamos outline con gradiente simulado: el wrapper mantiene el gradiente
+   y el inner se vuelve oscuro — el gradiente se ve como borde. */
+/* Hover: fondo oscuro, el wrapper sigue mostrando el gradiente aurora como borde.
+   padding aumenta de 2px a 4px para un borde más grueso y visible. */
+.glow-button-wrapper:hover {
+  padding: 4px;
+}
+
 .glow-button-inner:hover {
   background: hsl(249, 30%, 8%);
   background-size: unset;
   animation: none;
-  /* El neón se intensifica como borde usando box-shadow inset + outset */
+  /* Glow exterior aurora — complementa el borde del wrapper */
   box-shadow:
-    0 0 0 2px #7cff67,
-    0 0 0 3px #5227ff,
-    0 0 16px 4px rgba(124, 255, 103, 0.4),
-    0 0 32px 8px rgba(82, 39, 255, 0.3),
-    inset 0 0 20px rgba(124, 255, 103, 0.05);
+    0 0 20px 4px rgba(124, 255, 103, 0.4),
+    0 0 40px 8px rgba(82, 39, 255, 0.35),
+    0 0 60px 12px rgba(180, 151, 207, 0.2);
 }
 
 /* Variante ghost — relleno card, tamaño más pequeño */
@@ -339,8 +345,98 @@
   background: hsl(235, 25%, 10%);
   color: white;
   box-shadow:
-    0 0 0 2px #7cff67,
-    0 0 0 3px #5227ff,
-    0 0 12px 3px rgba(124, 255, 103, 0.35),
-    0 0 24px 6px rgba(82, 39, 255, 0.25);
+    0 0 0 4px #7cff67,
+    0 0 0 7px #5227ff,
+    0 0 20px 5px rgba(124, 255, 103, 0.45),
+    0 0 40px 10px rgba(82, 39, 255, 0.35);
+}
+
+/* ── Shimmer skeleton ────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+/* ── Aurora icon — efecto gradiente animado en iconos activos del BottomNav ── */
+/* Usa el mismo gradiente que GlowButton pero aplicado como filter hue-rotate */
+@keyframes auroraHue {
+  0% {
+    filter: hue-rotate(0deg) drop-shadow(0 0 4px rgba(124, 255, 103, 0.8));
+  }
+  33% {
+    filter: hue-rotate(60deg) drop-shadow(0 0 4px rgba(180, 151, 207, 0.8));
+  }
+  66% {
+    filter: hue-rotate(200deg) drop-shadow(0 0 4px rgba(82, 39, 255, 0.8));
+  }
+  100% {
+    filter: hue-rotate(360deg) drop-shadow(0 0 4px rgba(124, 255, 103, 0.8));
+  }
+}
+
+.aurora-icon {
+  display: inline-flex;
+  animation: auroraHue 3s linear infinite;
+}
+
+/* ── KPI Card — borde aurora animado igual que GlowButton ───────────────────
+   Por defecto: fondo transparente + backdrop-blur (se ve el fondo animado).
+   Hover: gradiente aurora como borde (wrapper) + fondo oscuro (inner).
+   Usa el mismo @keyframes auroraFlow del GlowButton.
+── ────────────────────────────────────────────────────────────────────────── */
+
+/* Wrapper KPI — por defecto sin borde visible, en hover aurora grueso */
+.glow-kpi-wrapper {
+  position: relative;
+  border-radius: 0.75rem;
+  display: block;
+  padding: 1.5px;
+  background: transparent;
+  transition:
+    padding 200ms ease,
+    background 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.glow-kpi-wrapper:hover {
+  padding: 3px;
+  background: linear-gradient(
+    135deg,
+    #7cff67,
+    #b497cf,
+    #5227ff,
+    #b497cf,
+    #7cff67
+  );
+  background-size: 300% 300%;
+  animation: auroraFlow 4s ease infinite;
+  box-shadow:
+    0 0 24px 6px rgba(124, 255, 103, 0.35),
+    0 0 48px 12px rgba(82, 39, 255, 0.3),
+    0 0 70px 16px rgba(180, 151, 207, 0.15);
+}
+
+/* Inner KPI — transparente por defecto, oscuro en hover */
+.glow-kpi-inner {
+  position: relative;
+  z-index: 1;
+  border-radius: 0.625rem; /* ligeramente menor que el wrapper */
+  background: transparent;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: hsl(var(--foreground));
+  transition: background 200ms ease;
+  cursor: default;
+  width: 100%;
+}
+
+.glow-kpi-wrapper:hover .glow-kpi-inner {
+  background: hsl(249, 30%, 8%);
+}
+
+/* Light mode hover — lavanda muy claro */
+:root:not(.dark) .glow-kpi-wrapper:hover .glow-kpi-inner {
+  background: hsl(249, 80%, 92%);
+  color: hsl(249, 60%, 35%);
 }
