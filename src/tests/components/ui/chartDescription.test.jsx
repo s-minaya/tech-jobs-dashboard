@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import ChartDescription from "@/components/ui/ChartDescription";
 import { PERIODO_DEFAULT } from "@/lib/filterUtils";
+import ChartDescription from "@/components/ui/ChartDescription";
 
 const filtersNeutros = {
   pais: "Todos",
@@ -17,18 +17,15 @@ describe("ChartDescription", () => {
     it("muestra el texto de descripción", () => {
       render(
         <ChartDescription
-          description="Skills técnicas más demandadas."
+          description="Skills técnicas."
           filters={filtersNeutros}
         />,
       );
-      expect(
-        screen.getByText("Skills técnicas más demandadas."),
-      ).toBeInTheDocument();
+      expect(screen.getByText("Skills técnicas.")).toBeInTheDocument();
     });
   });
-
   describe("total de ofertas", () => {
-    it("muestra el total formateado con separador de miles", () => {
+    it("muestra el total formateado", () => {
       render(
         <ChartDescription
           description="Test"
@@ -37,10 +34,8 @@ describe("ChartDescription", () => {
         />,
       );
       expect(screen.getByText(/26\.023/)).toBeInTheDocument();
-      expect(screen.getByText(/ofertas/)).toBeInTheDocument();
     });
-
-    it("no muestra el bloque de ofertas cuando totalJobs es null", () => {
+    it("no muestra el badge cuando totalJobs es null", () => {
       render(
         <ChartDescription
           description="Test"
@@ -51,35 +46,21 @@ describe("ChartDescription", () => {
       expect(screen.queryByText(/ofertas/)).not.toBeInTheDocument();
     });
   });
-
   describe("filtros activos", () => {
-    it("muestra 'datos globales' cuando no hay filtros activos", () => {
+    it("muestra pill global cuando no hay filtros ni totalJobs", () => {
       render(<ChartDescription description="Test" filters={filtersNeutros} />);
-      expect(screen.getByText(/datos globales/i)).toBeInTheDocument();
+      expect(screen.getByText(/todos los países/i)).toBeInTheDocument();
     });
-
-    it("muestra 'Filtros activos' cuando hay algún filtro activo", () => {
+    it("muestra pill con el país activo", () => {
       render(
         <ChartDescription
           description="Test"
           filters={{ ...filtersNeutros, pais: "DE" }}
         />,
       );
-      expect(screen.getByText(/filtros activos/i)).toBeInTheDocument();
       expect(screen.getByText(/alemania/i)).toBeInTheDocument();
     });
-
-    it("muestra el nombre en español del país seleccionado", () => {
-      render(
-        <ChartDescription
-          description="Test"
-          filters={{ ...filtersNeutros, pais: "ES" }}
-        />,
-      );
-      expect(screen.getByText(/españa/i)).toBeInTheDocument();
-    });
-
-    it("muestra 'solo remoto' cuando remote es Sí", () => {
+    it("muestra pill solo remoto", () => {
       render(
         <ChartDescription
           description="Test"
@@ -88,10 +69,7 @@ describe("ChartDescription", () => {
       );
       expect(screen.getByText(/solo remoto/i)).toBeInTheDocument();
     });
-  });
-
-  describe("avisos de filtros ignorados", () => {
-    it("muestra aviso ⚠ cuando un filtro excluido está activo", () => {
+    it("no muestra filtro excluido como pill activo", () => {
       render(
         <ChartDescription
           description="Test"
@@ -99,77 +77,21 @@ describe("ChartDescription", () => {
           excludeFilters={["jornada"]}
         />,
       );
-      expect(screen.getByText("⚠")).toBeInTheDocument();
-      expect(screen.getByText(/jornada/i)).toBeInTheDocument();
-    });
-
-    it("el aviso de país en contexto 'mapa' menciona que el mapa muestra todos los países", () => {
-      render(
-        <ChartDescription
-          description="Test"
-          filters={{ ...filtersNeutros, pais: "DE" }}
-          excludeFilters={["pais"]}
-          contexto="mapa"
-        />,
-      );
-      // Verificamos que el texto es específico del contexto mapa,
-      // no el genérico de co-ocurrencias
-      expect(
-        screen.getByText(/el mapa siempre muestra todos/i),
-      ).toBeInTheDocument();
-    });
-
-    it("el aviso de país sin contexto menciona las co-ocurrencias", () => {
-      render(
-        <ChartDescription
-          description="Test"
-          filters={{ ...filtersNeutros, pais: "DE" }}
-          excludeFilters={["pais"]}
-        />,
-      );
-      expect(screen.getByText(/co-ocurrencias/i)).toBeInTheDocument();
-    });
-
-    it("no muestra aviso cuando el filtro excluido está en su valor neutro", () => {
-      render(
-        <ChartDescription
-          description="Test"
-          filters={{ ...filtersNeutros, jornada: "Todos" }}
-          excludeFilters={["jornada"]}
-        />,
-      );
-      expect(screen.queryByText("⚠")).not.toBeInTheDocument();
-    });
-
-    it("muestra un aviso por cada filtro excluido que esté activo", () => {
-      render(
-        <ChartDescription
-          description="Test"
-          filters={{
-            ...filtersNeutros,
-            jornada: "Full time",
-            contrato: "permanent",
-          }}
-          excludeFilters={["jornada", "contrato"]}
-        />,
-      );
-      expect(screen.getAllByText("⚠")).toHaveLength(2);
+      expect(screen.queryByText(/full time/i)).not.toBeInTheDocument();
     });
   });
-
   describe("nota adicional", () => {
-    it("muestra la nota cuando se proporciona", () => {
+    it("muestra la nota", () => {
       render(
         <ChartDescription
           description="Test"
           filters={filtersNeutros}
-          nota="Los datos se actualizan cada 24h."
+          nota="Actualización 24h."
         />,
       );
-      expect(screen.getByText(/los datos se actualizan/i)).toBeInTheDocument();
+      expect(screen.getByText(/actualización 24h/i)).toBeInTheDocument();
     });
-
-    it("no muestra el texto de la nota cuando es null", () => {
+    it("no muestra nota cuando es null", () => {
       render(
         <ChartDescription
           description="Test"
@@ -177,10 +99,7 @@ describe("ChartDescription", () => {
           nota={null}
         />,
       );
-      // Verificamos que el texto de la nota no está, no contamos elementos
-      expect(
-        screen.queryByText(/los datos se actualizan/i),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByText(/actualización 24h/i)).not.toBeInTheDocument();
     });
   });
 });

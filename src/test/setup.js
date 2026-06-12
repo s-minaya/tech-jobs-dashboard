@@ -1,4 +1,30 @@
 import "@testing-library/jest-dom";
+
+// jsdom no implementa ResizeObserver — lo mockeamos para HeatmapSvg y DarkVeil.
+global.ResizeObserver = class ResizeObserver {
+  constructor(cb) {
+    this.cb = cb;
+  }
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
+// jsdom no implementa window.matchMedia — lo mockeamos para que
+// componentes como SkillHeatmap (useOrientation) no fallen en tests.
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  value: (query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  }),
+});
 import { beforeAll, afterEach, afterAll } from "vitest";
 import { server } from "../mocks/server.js";
 
@@ -15,3 +41,7 @@ afterEach(() => server.resetHandlers());
 
 // Para el servidor al terminar todos los tests para liberar recursos.
 afterAll(() => server.close());
+
+// Limpia localStorage entre tests para evitar que los avisos descartados
+// en un test afecten a los siguientes (FilterWarningPopover usa localStorage).
+afterEach(() => localStorage.clear());

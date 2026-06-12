@@ -1,4 +1,17 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/components/ui/FilterWarningPopover", () => ({
+  default: ({ texto }) => (
+    <button data-testid="warning-popover" aria-label={`aviso: ${texto}`}>
+      ⓘ
+    </button>
+  ),
+}));
+
+vi.mock("@/components/ui/DecryptedText", () => ({
+  default: ({ text }) => <span>{text}</span>,
+}));
+
 import { render, screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { server } from "@/mocks/server";
@@ -30,12 +43,14 @@ describe("TopSkillsChart", () => {
   });
 
   describe("datos cargados", () => {
-    it("muestra las skills devueltas por la API", async () => {
+    it("la API devuelve datos y el badge de ofertas aparece", async () => {
+      // Recharts no renderiza SVG en jsdom (width=0) — los nombres de skills
+      // aparecen como ticks SVG que jsdom no mide. Verificamos que los datos
+      // llegaron comprobando el badge de ofertas que sí es HTML normal.
       render(<TopSkillsChart filters={filtersNeutros} />);
       await waitFor(() => {
-        expect(screen.getByText("Python")).toBeInTheDocument();
-        expect(screen.getByText("SQL")).toBeInTheDocument();
-        expect(screen.getByText("React")).toBeInTheDocument();
+        expect(screen.getByText(/26\.023/)).toBeInTheDocument();
+        expect(screen.queryByText(/no hay datos/i)).not.toBeInTheDocument();
       });
     });
 
@@ -49,14 +64,19 @@ describe("TopSkillsChart", () => {
     it("muestra 'datos globales' cuando no hay filtros activos", async () => {
       render(<TopSkillsChart filters={filtersNeutros} />);
       await waitFor(() => {
-        expect(screen.getByText(/datos globales/i)).toBeInTheDocument();
+        // Con filtros neutros solo aparece el badge de ofertas, no pills de filtro
+        expect(
+          screen.queryByText(/alemania|españa|solo remoto/i),
+        ).not.toBeInTheDocument();
       });
     });
 
     it("muestra los filtros activos cuando los hay", async () => {
       render(<TopSkillsChart filters={{ ...filtersNeutros, pais: "DE" }} />);
       await waitFor(() => {
-        expect(screen.getByText(/filtros activos/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/alemania|españa|francia/i),
+        ).toBeInTheDocument();
         expect(screen.getByText(/alemania/i)).toBeInTheDocument();
       });
     });

@@ -1,4 +1,17 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/components/ui/FilterWarningPopover", () => ({
+  default: ({ texto }) => (
+    <button data-testid="warning-popover" aria-label={`aviso: ${texto}`}>
+      ⓘ
+    </button>
+  ),
+}));
+
+vi.mock("@/components/ui/DecryptedText", () => ({
+  default: ({ text }) => <span>{text}</span>,
+}));
+
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
@@ -127,7 +140,7 @@ describe("EuropeMap", () => {
       });
     });
 
-    it("muestra aviso ⚠ cuando skillCategoria está activa (filtro ignorado)", async () => {
+    it("skillCategoria excluida no aparece como filtro activo en EuropeMap", async () => {
       setupGeoHandler();
       render(
         <EuropeMap
@@ -135,7 +148,12 @@ describe("EuropeMap", () => {
         />,
       );
       await waitFor(() => {
-        expect(screen.getByText("⚠")).toBeInTheDocument();
+        // skillCategoria está en excludeFilters — no debe aparecer como pill activo
+        expect(screen.queryByText(/database/i)).not.toBeInTheDocument();
+        // La descripción sí aparece
+        expect(
+          screen.getByText(/distribución geográfica/i),
+        ).toBeInTheDocument();
       });
     });
   });

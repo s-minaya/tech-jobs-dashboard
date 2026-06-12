@@ -1,6 +1,12 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import ChartCard from "@/components/ui/ChartCard";
+
+// DecryptedText usa motion/react — lo mockeamos para simplificar
+// ya que lo que queremos testear es la lógica de ChartCard, no la animación.
+vi.mock("@/components/ui/DecryptedText", () => ({
+  default: ({ text }) => <span>{text}</span>,
+}));
 
 describe("ChartCard", () => {
   describe("título", () => {
@@ -12,6 +18,17 @@ describe("ChartCard", () => {
     it("no renderiza el h2 cuando no se proporciona título", () => {
       render(<ChartCard loading={false} />);
       expect(screen.queryByRole("heading")).not.toBeInTheDocument();
+    });
+
+    it("muestra el nodo warning junto al título si se proporciona", () => {
+      render(
+        <ChartCard
+          title="Top Skills"
+          loading={false}
+          warning={<span>⚠ aviso</span>}
+        />,
+      );
+      expect(screen.getByText("⚠ aviso")).toBeInTheDocument();
     });
   });
 
@@ -60,7 +77,6 @@ describe("ChartCard", () => {
           <p>Contenido previo</p>
         </ChartCard>,
       );
-      // El contenido sigue en el DOM para evitar saltos de scroll
       expect(screen.getByText("Contenido previo")).toBeInTheDocument();
     });
 
@@ -79,7 +95,6 @@ describe("ChartCard", () => {
           <p>Contenido previo</p>
         </ChartCard>,
       );
-      // El div wrapper del contenido tiene opacity: 0.4 cuando showStale=true
       const wrapper = screen.getByText("Contenido previo").parentElement;
       expect(wrapper).toHaveStyle({ opacity: "0.4" });
     });
@@ -126,9 +141,7 @@ describe("ChartCard", () => {
       expect(screen.queryByText("Contenido")).not.toBeInTheDocument();
     });
 
-    it("no muestra el error mientras está cargando (espera a que termine)", () => {
-      // Durante la carga no mostramos el error aunque exista —
-      // puede ser un error residual del intento anterior que se está resolviendo
+    it("no muestra el error mientras está cargando", () => {
       render(
         <ChartCard loading={true} isInitialLoad={true} error="fallo">
           <p>Contenido</p>

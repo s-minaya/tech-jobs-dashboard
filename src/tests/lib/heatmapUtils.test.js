@@ -192,3 +192,48 @@ describe("getHeatmapTextColor", () => {
     });
   });
 });
+
+// Tests para filterSkillsWithCoOccurrence — añadida en fase de heatmap dinámico
+import { filterSkillsWithCoOccurrence } from "@/lib/heatmapUtils";
+
+describe("filterSkillsWithCoOccurrence", () => {
+  const pairs = [
+    { skill: "Python", co_skill: "SQL", co_count: 890 },
+    { skill: "Python", co_skill: "AWS", co_count: 654 },
+    // React no tiene co-ocurrencias con nadie del conjunto
+  ];
+
+  it("elimina skills sin ninguna co-ocurrencia con otras del conjunto", () => {
+    const skills = ["Python", "SQL", "AWS", "React"];
+    const result = filterSkillsWithCoOccurrence(skills, pairs);
+    expect(result).not.toContain("React");
+  });
+
+  it("mantiene skills que tienen al menos una co-ocurrencia", () => {
+    const skills = ["Python", "SQL", "AWS", "React"];
+    const result = filterSkillsWithCoOccurrence(skills, pairs);
+    expect(result).toContain("Python");
+    expect(result).toContain("SQL");
+    expect(result).toContain("AWS");
+  });
+
+  it("devuelve array vacío si ninguna skill tiene co-ocurrencias", () => {
+    const skills = ["React", "Vue"];
+    const result = filterSkillsWithCoOccurrence(skills, []);
+    expect(result).toHaveLength(0);
+  });
+
+  it("devuelve el mismo array si todas tienen co-ocurrencias", () => {
+    const skills = ["Python", "SQL"];
+    const result = filterSkillsWithCoOccurrence(skills, pairs);
+    expect(result).toContain("Python");
+    expect(result).toContain("SQL");
+  });
+
+  it("es estable — resultado idéntico en múltiples llamadas", () => {
+    const skills = ["Python", "SQL", "AWS", "React"];
+    const r1 = filterSkillsWithCoOccurrence(skills, pairs);
+    const r2 = filterSkillsWithCoOccurrence(skills, pairs);
+    expect(r1).toEqual(r2);
+  });
+});

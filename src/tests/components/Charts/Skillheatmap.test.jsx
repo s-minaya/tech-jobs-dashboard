@@ -1,4 +1,17 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/components/ui/FilterWarningPopover", () => ({
+  default: ({ texto }) => (
+    <button data-testid="warning-popover" aria-label={`aviso: ${texto}`}>
+      ⓘ
+    </button>
+  ),
+}));
+
+vi.mock("@/components/ui/DecryptedText", () => ({
+  default: ({ text }) => <span>{text}</span>,
+}));
+
 import { render, screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { server } from "@/mocks/server";
@@ -116,7 +129,7 @@ describe("SkillHeatmap", () => {
     it("muestra aviso ⚠ cuando pais está activo", async () => {
       render(<SkillHeatmap filters={{ ...filtersNeutros, pais: "DE" }} />);
       await waitFor(() => {
-        expect(screen.getByText("⚠")).toBeInTheDocument();
+        expect(screen.getByTestId("warning-popover")).toBeInTheDocument();
       });
     });
 
@@ -125,7 +138,7 @@ describe("SkillHeatmap", () => {
         <SkillHeatmap filters={{ ...filtersNeutros, contrato: "permanent" }} />,
       );
       await waitFor(() => {
-        expect(screen.getByText("⚠")).toBeInTheDocument();
+        expect(screen.getByTestId("warning-popover")).toBeInTheDocument();
       });
     });
 
@@ -134,14 +147,14 @@ describe("SkillHeatmap", () => {
         <SkillHeatmap filters={{ ...filtersNeutros, jornada: "Full time" }} />,
       );
       await waitFor(() => {
-        expect(screen.getByText("⚠")).toBeInTheDocument();
+        expect(screen.getByTestId("warning-popover")).toBeInTheDocument();
       });
     });
 
     it("muestra aviso ⚠ cuando remote está activo", async () => {
       render(<SkillHeatmap filters={{ ...filtersNeutros, remote: "Sí" }} />);
       await waitFor(() => {
-        expect(screen.getByText("⚠")).toBeInTheDocument();
+        expect(screen.getByTestId("warning-popover")).toBeInTheDocument();
       });
     });
 
@@ -150,7 +163,7 @@ describe("SkillHeatmap", () => {
       await waitFor(() => {
         expect(screen.getByText(TEXTO_DESCRIPCION)).toBeInTheDocument();
       });
-      expect(screen.queryByText("⚠")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("warning-popover")).not.toBeInTheDocument();
     });
   });
 

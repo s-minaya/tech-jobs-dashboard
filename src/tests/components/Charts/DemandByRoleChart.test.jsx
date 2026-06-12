@@ -1,4 +1,17 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/components/ui/FilterWarningPopover", () => ({
+  default: ({ texto }) => (
+    <button data-testid="warning-popover" aria-label={`aviso: ${texto}`}>
+      ⓘ
+    </button>
+  ),
+}));
+
+vi.mock("@/components/ui/DecryptedText", () => ({
+  default: ({ text }) => <span>{text}</span>,
+}));
+
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
@@ -135,7 +148,7 @@ describe("DemandByRoleChart", () => {
         />,
       );
       await waitFor(() => {
-        expect(screen.getByText("⚠")).toBeInTheDocument();
+        expect(screen.getByTestId("warning-popover")).toBeInTheDocument();
       });
     });
   });
