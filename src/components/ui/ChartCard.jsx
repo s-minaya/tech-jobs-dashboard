@@ -3,17 +3,15 @@ import DecryptedText from "@/components/ui/DecryptedText";
 // ChartCard
 // Wrapper visual reutilizable para todas las gráficas del dashboard.
 //
-// El título se sitúa FUERA de la card (margin-top negativo en el wrapper)
-// para romper la monotonía de tarjetas apiladas. Sale 1.5rem por encima
-// del borde de la card.
+// El título está en el flujo normal ENCIMA de la card (no absolute),
+// así nunca se solapa independientemente del tamaño o número de líneas.
+// Centrado y con presencia — font-heading, text-xl en móvil, text-2xl en desktop.
 //
-// El ⓘ de avisos de filtros ignorados se pasa como prop `warning`
-// y se renderiza inline junto al título.
+// El ⓘ de avisos se renderiza inline junto al título.
+// El título usa DecryptedText para el efecto de descifrado al hacer hover.
 //
-// El título usa DecryptedText para un efecto de descifrado al hacer hover.
-//
-// Glassmorphism: bg-card/60 + backdrop-blur para dejar ver el fondo
-// animado (DarkVeil/Aurora) a través de las cards.
+// Borde aurora animado (chart-card-border) con interior del color del fondo
+// (chart-card-inner) — el gradiente solo es visible como borde de 3px.
 //
 // Distingue dos estados de carga:
 //   - Carga inicial (isInitialLoad=true): muestra "Cargando..."
@@ -25,18 +23,18 @@ function ChartCard({
   isInitialLoad,
   error,
   children,
-  warning, // nodo React — icono ⓘ de FilterWarningPopover
+  warning,
   className = "",
 }) {
   const showSpinner = loading && isInitialLoad;
   const showStale = loading && !isInitialLoad;
 
   return (
-    <div className={`relative mt-6 ${className}`}>
-      {/* Título fuera de la card — sobresale por arriba */}
+    <div className={`mt-6 ${className}`}>
+      {/* Título en flujo normal — nunca se solapa con la card */}
       {title && (
-        <div className="absolute -top-5 left-5 z-10 flex items-center gap-2">
-          <h2 className="cursor-default font-heading text-lg font-bold tracking-tight text-foreground">
+        <div className="mb-3 flex flex-wrap items-center justify-center gap-2 px-2">
+          <h2 className="cursor-default font-heading text-xl font-bold tracking-tight text-foreground md:text-2xl">
             <DecryptedText
               text={title}
               animateOn="hover"
@@ -53,39 +51,41 @@ function ChartCard({
         </div>
       )}
 
-      {/* Card — glassmorphism */}
-      <div className="rounded-2xl border border-white/8 bg-card/60 p-5 pt-8 shadow-lg shadow-primary/5 backdrop-blur-md transition-all duration-300 hover:border-white/15 hover:shadow-xl hover:shadow-primary/10 dark:shadow-black/40 dark:hover:shadow-black/60">
-        {!loading && error && (
-          <p className="text-sm text-destructive">Error: {error}</p>
-        )}
+      {/* Card con borde aurora */}
+      <div className="chart-card-border relative">
+        <div className="chart-card-inner p-5">
+          {!loading && error && (
+            <p className="text-sm text-destructive">Error: {error}</p>
+          )}
 
-        {/* Carga inicial */}
-        {showSpinner && (
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            Cargando...
-          </p>
-        )}
+          {/* Carga inicial */}
+          {showSpinner && (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Cargando...
+            </p>
+          )}
 
-        {/* Contenido */}
-        {!error && !showSpinner && (
-          <div
-            style={{
-              opacity: showStale ? 0.4 : 1,
-              transition: "opacity 200ms ease",
-            }}
-          >
-            {children}
-          </div>
-        )}
+          {/* Contenido */}
+          {!error && !showSpinner && (
+            <div
+              style={{
+                opacity: showStale ? 0.4 : 1,
+                transition: "opacity 200ms ease",
+              }}
+            >
+              {children}
+            </div>
+          )}
 
-        {/* Badge de actualización */}
-        {showStale && (
-          <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-3">
-            <span className="rounded-full border border-border bg-background/80 px-2 py-0.5 text-xs text-muted-foreground shadow-sm backdrop-blur-sm">
-              Actualizando...
-            </span>
-          </div>
-        )}
+          {/* Badge de actualización */}
+          {showStale && (
+            <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-3">
+              <span className="rounded-full border border-border bg-background/80 px-2 py-0.5 text-xs text-muted-foreground shadow-sm backdrop-blur-sm">
+                Actualizando...
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

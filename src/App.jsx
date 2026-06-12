@@ -47,12 +47,15 @@ function App() {
       setShowLanding(false);
       // El loader se oculta tras un breve delay para que el dashboard
       // haya tenido tiempo de renderizar su primer frame
-      setTimeout(() => setIsLoading(false), 1500);
+      setTimeout(() => setIsLoading(false), 800);
     });
   }
 
   // IntersectionObserver: detecta qué sección ocupa más espacio en el viewport
-  // y actualiza activeSection. threshold: 0.3 = sección visible al 30%.
+  // y actualiza activeSection.
+  // threshold: 0.1 — se activa cuando el 10% de la sección es visible.
+  // rootMargin: "-50% 0px -40% 0px" — la zona activa es la franja central
+  // del viewport, evitando que secciones largas activen el observer demasiado pronto.
   useEffect(() => {
     const sectionIds = ["inicio", "tendencias", "mapa", "skills"];
     const observers = [];
@@ -63,7 +66,7 @@ function App() {
         ([entry]) => {
           if (entry.isIntersecting) setActiveSection(id);
         },
-        { threshold: 0.3 },
+        { threshold: 0.1, rootMargin: "-10% 0px -60% 0px" },
       );
       observer.observe(el);
       observers.push(observer);

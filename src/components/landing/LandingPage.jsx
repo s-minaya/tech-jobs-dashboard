@@ -114,7 +114,7 @@ function LandingPage({ onEnter }) {
         </div>
 
         {/* Título */}
-        <h1 className="mb-4 text-5xl leading-tight font-bold tracking-tight text-white md:text-6xl">
+        <h1 className="mb-4 font-heading text-5xl leading-tight font-bold tracking-tight text-white md:text-6xl">
           Tech Jobs
           <span
             className="block bg-clip-text text-transparent"
@@ -153,7 +153,7 @@ function LandingPage({ onEnter }) {
           <GlowButton
             onClick={handleEnter}
             variant="solid"
-            className="group shadow-lg shadow-black/20 transition-transform duration-200 hover:scale-105"
+            className="group shadow-lg shadow-black/20"
           >
             Explorar el dashboard
             <RiArrowRightLine className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />

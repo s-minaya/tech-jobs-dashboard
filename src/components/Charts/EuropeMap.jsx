@@ -11,7 +11,9 @@ import {
 import { useChartData } from "@/hooks/useChartData";
 import { getOffersByCountry, getSkillsList } from "@/services/jobServices";
 import ChartCard from "@/components/ui/ChartCard";
-import ChartDescription from "@/components/ui/ChartDescription";
+import ChartDescription, {
+  getWarningNodes,
+} from "@/components/ui/ChartDescription";
 import SkillAutocomplete from "@/components/ui/SkillAutocomplete";
 
 const WIDTH = 600;
@@ -102,6 +104,7 @@ function EuropeMap({ filters }) {
   return (
     <ChartCard
       title="Ofertas por país en Europa"
+      warning={getWarningNodes(filters, ["pais"], "mapa")}
       loading={loading}
       isInitialLoad={isInitialLoad && geoLoading}
       error={error}
@@ -117,7 +120,6 @@ function EuropeMap({ filters }) {
         excludeFilters={["pais", "skillCategoria"]}
         contexto="mapa"
       />
-
       {/* Autocomplete de skills */}
       <div className="mb-4">
         <SkillAutocomplete
@@ -127,67 +129,71 @@ function EuropeMap({ filters }) {
           onClear={() => setSelectedSkill(null)}
         />
       </div>
+      <div className="chart-graph-area">
+        <div className="relative">
+          <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full">
+            {geographies.map((geo, i) => {
+              const id = geo.id;
+              const isIncluded = INCLUDED_ISO_NUMERIC.has(id);
+              const offers = offersByNumeric[id];
+              const countryCode = NUMERIC_TO_COUNTRY_CODE[id];
+              const isSelected =
+                selectedCountry && countryCode === selectedCountry;
 
-      <div className="relative">
-        <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full">
-          {geographies.map((geo, i) => {
-            const id = geo.id;
-            const isIncluded = INCLUDED_ISO_NUMERIC.has(id);
-            const offers = offersByNumeric[id];
-            const countryCode = NUMERIC_TO_COUNTRY_CODE[id];
-            const isSelected =
-              selectedCountry && countryCode === selectedCountry;
+              const fill = isIncluded
+                ? colorScale(offers ?? 0)
+                : "var(--muted)";
+              const opacity =
+                selectedCountry && isIncluded && !isSelected ? 0.4 : 1;
+              const stroke = isSelected ? "#ffffff" : "var(--border)";
+              const strokeWidth = isSelected ? 2 : 0.5;
 
-            const fill = isIncluded ? colorScale(offers ?? 0) : "var(--muted)";
-            const opacity =
-              selectedCountry && isIncluded && !isSelected ? 0.4 : 1;
-            const stroke = isSelected ? "#ffffff" : "var(--border)";
-            const strokeWidth = isSelected ? 2 : 0.5;
+              const path = pathGenerator(geo);
+              if (!path) return null;
 
-            const path = pathGenerator(geo);
-            if (!path) return null;
+              return (
+                <path
+                  key={geo.id ?? i}
+                  d={path}
+                  fill={fill}
+                  stroke={stroke}
+                  strokeWidth={strokeWidth}
+                  opacity={opacity}
+                  style={{ transition: "opacity 200ms ease, fill 300ms ease" }}
+                  className={isIncluded ? "cursor-pointer" : ""}
+                  onMouseEnter={(e) => {
+                    if (!isIncluded) return;
+                    setTooltip({
+                      x: e.clientX,
+                      y: e.clientY,
+                      offers,
+                      name:
+                        COUNTRY_NAMES[countryCode] ??
+                        countryCode?.toUpperCase(),
+                    });
+                  }}
+                  onMouseLeave={() => setTooltip(null)}
+                />
+              );
+            })}
+          </svg>
 
-            return (
-              <path
-                key={geo.id ?? i}
-                d={path}
-                fill={fill}
-                stroke={stroke}
-                strokeWidth={strokeWidth}
-                opacity={opacity}
-                style={{ transition: "opacity 200ms ease, fill 300ms ease" }}
-                className={isIncluded ? "cursor-pointer" : ""}
-                onMouseEnter={(e) => {
-                  if (!isIncluded) return;
-                  setTooltip({
-                    x: e.clientX,
-                    y: e.clientY,
-                    offers,
-                    name:
-                      COUNTRY_NAMES[countryCode] ?? countryCode?.toUpperCase(),
-                  });
-                }}
-                onMouseLeave={() => setTooltip(null)}
-              />
-            );
-          })}
-        </svg>
-
-        {tooltip && (
-          <div
-            className="pointer-events-none fixed z-50 rounded border border-border bg-background px-2 py-1.5 text-xs shadow-md"
-            style={{ left: tooltip.x + 12, top: tooltip.y - 28 }}
-          >
-            <span className="font-medium">{tooltip.name}</span>
-            <span className="ml-1.5 text-muted-foreground">
-              {tooltip.offers != null
-                ? `${tooltip.offers.toLocaleString("es-ES")} ofertas${selectedSkill ? ` con ${selectedSkill}` : ""}`
-                : "Sin datos"}
-            </span>
-          </div>
-        )}
-      </div>
-
+          {tooltip && (
+            <div
+              className="pointer-events-none fixed z-50 rounded border border-border bg-background px-2 py-1.5 text-xs shadow-md"
+              style={{ left: tooltip.x + 12, top: tooltip.y - 28 }}
+            >
+              <span className="font-medium">{tooltip.name}</span>
+              <span className="ml-1.5 text-muted-foreground">
+                {tooltip.offers != null
+                  ? `${tooltip.offers.toLocaleString("es-ES")} ofertas${selectedSkill ? ` con ${selectedSkill}` : ""}`
+                  : "Sin datos"}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>{" "}
+      {/* chart-graph-area */}
       {/* Leyenda */}
       <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
         <span>Menos ofertas</span>

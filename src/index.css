@@ -264,14 +264,47 @@
   }
 }
 
-/* Wrapper — sin padding, el gradiente vive en el botón interior */
+/* Wrapper — contenedor sin dimensiones propias.
+   El borde aurora se consigue con pseudo-elemento ::before que está
+   DETRÁS del inner — sin afectar al tamaño del botón en absoluto. */
 .glow-button-wrapper {
   position: relative;
   border-radius: 9999px;
   display: inline-flex;
 }
 
-/* Botón interior — gradiente aurora fluido como relleno */
+/* Pseudo-elemento invisible en reposo, aurora en hover.
+   Está detrás del inner (z-index: 0) y sale 3px por cada lado (inset: -3px). */
+.glow-button-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  background: transparent;
+  z-index: 0;
+  transition:
+    background 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.glow-button-wrapper:hover::before {
+  background: linear-gradient(
+    135deg,
+    #7cff67,
+    #b497cf,
+    #5227ff,
+    #b497cf,
+    #7cff67
+  );
+  background-size: 300% 300%;
+  animation: auroraFlow 4s ease infinite;
+  box-shadow:
+    0 0 20px 5px rgba(124, 255, 103, 0.4),
+    0 0 40px 10px rgba(82, 39, 255, 0.35),
+    0 0 60px 16px rgba(180, 151, 207, 0.2);
+}
+
+/* Botón interior — z-index: 1 para estar siempre sobre el ::before */
 .glow-button-inner {
   position: relative;
   z-index: 1;
@@ -288,7 +321,7 @@
   border: none;
   outline: none;
   color: white;
-  /* Gradiente aurora fluido */
+  /* Aurora fluido como relleno en reposo */
   background: linear-gradient(
     135deg,
     #7cff67,
@@ -299,33 +332,14 @@
   );
   background-size: 300% 300%;
   animation: auroraFlow 4s ease infinite;
-  /* Glow en reposo */
-  box-shadow:
-    0 0 24px 4px rgba(124, 255, 103, 0.25),
-    0 0 48px 8px rgba(82, 39, 255, 0.2);
-  transition:
-    box-shadow 300ms ease,
-    background-color 300ms ease;
+  transition: background 200ms ease;
 }
 
-/* Hover: fondo oscuro con gradiente aurora como borde via clip-path trick.
-   Usamos outline con gradiente simulado: el wrapper mantiene el gradiente
-   y el inner se vuelve oscuro — el gradiente se ve como borde. */
-/* Hover: fondo oscuro, el wrapper sigue mostrando el gradiente aurora como borde.
-   padding aumenta de 2px a 4px para un borde más grueso y visible. */
-.glow-button-wrapper:hover {
-  padding: 4px;
-}
-
-.glow-button-inner:hover {
+/* Hover — fondo oscuro, el ::before aurora queda visible como borde */
+.glow-button-wrapper:hover .glow-button-inner {
   background: hsl(249, 30%, 8%);
   background-size: unset;
   animation: none;
-  /* Glow exterior aurora — complementa el borde del wrapper */
-  box-shadow:
-    0 0 20px 4px rgba(124, 255, 103, 0.4),
-    0 0 40px 8px rgba(82, 39, 255, 0.35),
-    0 0 60px 12px rgba(180, 151, 207, 0.2);
 }
 
 /* Variante ghost — relleno card, tamaño más pequeño */
@@ -439,4 +453,102 @@
 :root:not(.dark) .glow-kpi-wrapper:hover .glow-kpi-inner {
   background: hsl(249, 80%, 92%);
   color: hsl(249, 60%, 35%);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CHART CARD — Solo el borde con aurora animado
+   Técnica idéntica al GlowButton en hover:
+     wrapper  → gradiente aurora fluido animado (visible como borde)
+     inner    → tapa el centro con el color del fondo, dejando solo 1.5px de borde
+   Sin hover — el efecto es estático y no cambia el tamaño.
+═══════════════════════════════════════════════════════════════════════════ */
+
+.chart-card-border {
+  position: relative;
+  border-radius: 1rem;
+  padding: 3px;
+  background: linear-gradient(
+    135deg,
+    #7cff67,
+    #b497cf,
+    #5227ff,
+    #b497cf,
+    #7cff67
+  );
+  background-size: 300% 300%;
+  animation: auroraFlow 4s ease infinite;
+}
+
+/* Interior — tapa el gradiente dejando solo el borde visible.
+   Dark: color del fondo. Light: morado claro igual que las KPI cards. */
+.chart-card-inner {
+  position: relative;
+  border-radius: calc(1rem - 3px);
+  background: var(--background);
+}
+
+:root:not(.dark) .chart-card-inner {
+  background: hsl(249, 80%, 95%);
+}
+
+/* ── Chart graph area — fondo blanco solo en el área de la gráfica ───────────
+   En light mode, la card tiene fondo morado claro (hsl(249,80%,95%)).
+   El área de la gráfica necesita fondo blanco para que los ejes y datos
+   sean legibles. mask-image difumina los bordes hacia el morado de la card.
+   En dark mode no hace nada — el fondo ya es oscuro uniformemente.
+── ────────────────────────────────────────────────────────────────────────── */
+.chart-graph-area {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+:root:not(.dark) .chart-graph-area {
+  background: white;
+  padding: 8px 12px;
+  /* Mask que difumina los 4 bordes del blanco hacia transparente,
+     dejando ver el morado claro de la card por detrás */
+  -webkit-mask-image:
+    linear-gradient(
+      to right,
+      transparent 0%,
+      black 8%,
+      black 92%,
+      transparent 100%
+    ),
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      black 8%,
+      black 92%,
+      transparent 100%
+    );
+  -webkit-mask-composite: destination-in;
+  mask-image:
+    linear-gradient(
+      to right,
+      transparent 0%,
+      black 8%,
+      black 92%,
+      transparent 100%
+    ),
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      black 8%,
+      black 92%,
+      transparent 100%
+    );
+  mask-composite: intersect;
+}
+
+/* ── Aurora text — color primary en texto del BottomNav activo ───────────── */
+.aurora-text {
+  color: hsl(249, 100%, 69%);
+  font-weight: 600;
+}
+
+/* ── GlowButton variante pequeña — para FAB y botones secundarios ─────────── */
+.glow-button-sm .glow-button-inner {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
 }

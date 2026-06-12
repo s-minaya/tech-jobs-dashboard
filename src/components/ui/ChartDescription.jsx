@@ -1,6 +1,5 @@
 import { describeFiltros } from "@/lib/filterUtils";
 import FilterWarningPopover from "@/components/ui/FilterWarningPopover";
-
 // NOTAS_FILTROS_IGNORADOS
 // Explica por qué un filtro no aplica a una gráfica concreta.
 // Cada entrada puede ser un string fijo o una función que recibe
@@ -74,9 +73,6 @@ function ChartDescription({
   contexto = "",
 }) {
   const filtrosActivos = describeFiltros(filters, excludeFilters);
-  // Avisos de filtros que el usuario tiene activos pero esta gráfica ignora
-  const warnings = getWarningNodes(filters, excludeFilters, contexto);
-
   return (
     <div className="mb-4 space-y-2.5 text-xs">
       <p className="leading-relaxed text-muted-foreground">{description}</p>
@@ -88,9 +84,6 @@ function ChartDescription({
             {Number(totalJobs).toLocaleString("es-ES")} ofertas
           </span>
         )}
-
-        {/* Avisos ⓘ — inline junto al badge de ofertas */}
-        {warnings}
 
         {/* Pills de filtros activos */}
         {filtrosActivos.map((f) => (

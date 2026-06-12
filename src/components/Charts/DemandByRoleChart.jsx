@@ -12,7 +12,9 @@ import { getDemandByRole } from "@/services/jobServices";
 import { getRoleLabel, getRoleColor } from "@/lib/roleLabels";
 import { useChartData } from "@/hooks/useChartData";
 import ChartCard from "@/components/ui/ChartCard";
-import ChartDescription from "@/components/ui/ChartDescription";
+import ChartDescription, {
+  getWarningNodes,
+} from "@/components/ui/ChartDescription";
 import RoleSelector from "@/components/ui/RoleSelector";
 
 // Periodos que tienen suficientes meses para mostrar tendencias en una
@@ -155,6 +157,11 @@ function DemandByRoleChart({ filters }) {
   return (
     <ChartCard
       title="Evolución mensual de ofertas por rol"
+      warning={getWarningNodes(
+        filters,
+        ["jornada", "skillCategoria"],
+        "demanda",
+      )}
       loading={loading}
       isInitialLoad={isInitialLoad}
       error={error}
@@ -197,81 +204,93 @@ function DemandByRoleChart({ filters }) {
               Selecciona al menos un rol para ver la evolución mensual.
             </p>
           ) : (
-            <ChartContainer config={chartConfig} className="h-72 w-full">
-              <AreaChart
-                data={pivotData(rows, mesesRango)}
-                margin={{ left: 8, right: 8, top: 20 }}
-                onMouseLeave={() => setActiveRole(null)}
-              >
-                {/* Gradientes: uno por rol, de su color al transparente. */}
-                <defs>
-                  {effectiveSelected.map((role) => {
-                    const color = getRoleColor(role);
-                    const id = `gradient-${role.replace(/[^a-z0-9]/gi, "-")}`;
-                    return (
-                      <linearGradient
-                        key={role}
-                        id={id}
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor={color}
-                          stopOpacity={0.35}
+            <div className="chart-graph-area">
+              <ChartContainer config={chartConfig} className="h-72 w-full">
+                <AreaChart
+                  data={pivotData(rows, mesesRango)}
+                  margin={{ left: 8, right: 8, top: 20 }}
+                  onMouseLeave={() => setActiveRole(null)}
+                >
+                  {/* Gradientes: uno por rol, de su color al transparente. */}
+                  <defs>
+                    {effectiveSelected.map((role) => {
+                      const color = getRoleColor(role);
+                      const id = `gradient-${role.replace(/[^a-z0-9]/gi, "-")}`;
+                      return (
+                        <linearGradient
+                          key={role}
+                          id={id}
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor={color}
+                            stopOpacity={0.35}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor={color}
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                      );
+                    })}
+                  </defs>
+
+                  <CartesianGrid vertical={false} />
+                  {/* tickColor blanco en dark para que los labels sean legibles */}
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize: 12, fill: tickColor }}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: tickColor }}
+                    width={52}
+                    tickFormatter={(v) =>
+                      `${v.toLocaleString("es-ES")} ofertas`
+                    }
+                  />
+                  <Tooltip
+                    content={<TooltipDemanda chartConfig={chartConfig} />}
+                  />
+
+                  {allRoles
+                    .filter((role) => effectiveSelected.includes(role))
+                    .map((role) => {
+                      const color = getRoleColor(role);
+                      const gradId = `gradient-${role.replace(/[^a-z0-9]/gi, "-")}`;
+                      const isActive = activeRole === role;
+                      const isOther = activeRole !== null && !isActive;
+                      const lineOpacity = isOther ? 0.15 : 1;
+                      const fillOpacity = isActive ? 1 : 0;
+
+                      return (
+                        <Area
+                          key={role}
+                          type="monotone"
+                          dataKey={role}
+                          stroke={color}
+                          strokeWidth={isActive ? 2.5 : 1.5}
+                          strokeOpacity={lineOpacity}
+                          fill={`url(#${gradId})`}
+                          fillOpacity={fillOpacity}
+                          dot={false}
+                          connectNulls={false}
+                          activeDot={{
+                            r: 4,
+                            fill: color,
+                            onMouseEnter: () => setActiveRole(role),
+                          }}
+                          onMouseEnter={() => setActiveRole(role)}
                         />
-                        <stop offset="95%" stopColor={color} stopOpacity={0} />
-                      </linearGradient>
-                    );
-                  })}
-                </defs>
-
-                <CartesianGrid vertical={false} />
-                {/* tickColor blanco en dark para que los labels sean legibles */}
-                <XAxis
-                  dataKey="month"
-                  tick={{ fontSize: 12, fill: tickColor }}
-                />
-                <YAxis tick={{ fontSize: 11, fill: tickColor }} width={52} />
-                <Tooltip
-                  content={<TooltipDemanda chartConfig={chartConfig} />}
-                />
-
-                {allRoles
-                  .filter((role) => effectiveSelected.includes(role))
-                  .map((role) => {
-                    const color = getRoleColor(role);
-                    const gradId = `gradient-${role.replace(/[^a-z0-9]/gi, "-")}`;
-                    const isActive = activeRole === role;
-                    const isOther = activeRole !== null && !isActive;
-                    const lineOpacity = isOther ? 0.15 : 1;
-                    const fillOpacity = isActive ? 1 : 0;
-
-                    return (
-                      <Area
-                        key={role}
-                        type="monotone"
-                        dataKey={role}
-                        stroke={color}
-                        strokeWidth={isActive ? 2.5 : 1.5}
-                        strokeOpacity={lineOpacity}
-                        fill={`url(#${gradId})`}
-                        fillOpacity={fillOpacity}
-                        dot={false}
-                        connectNulls={false}
-                        activeDot={{
-                          r: 4,
-                          fill: color,
-                          onMouseEnter: () => setActiveRole(role),
-                        }}
-                        onMouseEnter={() => setActiveRole(role)}
-                      />
-                    );
-                  })}
-              </AreaChart>
-            </ChartContainer>
+                      );
+                    })}
+                </AreaChart>
+              </ChartContainer>
+            </div>
           )}
         </>
       )}

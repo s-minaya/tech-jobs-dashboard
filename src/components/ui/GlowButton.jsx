@@ -19,8 +19,8 @@ const GlowButton = forwardRef(function GlowButton(
   ref,
 ) {
   return (
-    <div className={`glow-button-wrapper glow-${variant}`}>
-      <button ref={ref} className={`glow-button-inner ${className}`} {...rest}>
+    <div className={`glow-button-wrapper glow-${variant} ${className}`}>
+      <button ref={ref} className="glow-button-inner" {...rest}>
         {children}
       </button>
     </div>

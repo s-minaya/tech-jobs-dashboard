@@ -5,7 +5,9 @@ import { getSalaryByRoleAndCountry } from "@/services/jobServices";
 import { getRoleLabel, getRoleColor } from "@/lib/roleLabels";
 import { useChartData } from "@/hooks/useChartData";
 import ChartCard from "@/components/ui/ChartCard";
-import ChartDescription from "@/components/ui/ChartDescription";
+import ChartDescription, {
+  getWarningNodes,
+} from "@/components/ui/ChartDescription";
 import RoleSelector from "@/components/ui/RoleSelector";
 
 // pivotData
@@ -111,6 +113,7 @@ function SalaryChart({ filters }) {
   return (
     <ChartCard
       title="Salario mediano anual por rol y país"
+      warning={getWarningNodes(filters, ["skillCategoria"], "salario")}
       loading={loading}
       isInitialLoad={isInitialLoad}
       error={error}
@@ -140,31 +143,36 @@ function SalaryChart({ filters }) {
           Selecciona al menos un rol para ver los salarios.
         </p>
       ) : (
-        <ChartContainer config={chartConfig} className="h-72 w-full">
-          <BarChart
-            data={pivotData(rows)}
-            margin={{ left: 8, right: 8, top: 16 }}
-          >
-            <CartesianGrid vertical={false} />
-            <XAxis dataKey="country" tick={{ fontSize: 12, fill: tickColor }} />
-            <YAxis
-              tick={{ fontSize: 11, fill: tickColor }}
-              width={56}
-              tickFormatter={(v) => `${(v / 1000).toFixed(0)}k €`}
-            />
-            <Tooltip content={<TooltipSalario chartConfig={chartConfig} />} />
-            {allRoles
-              .filter((role) => effectiveSelected.includes(role))
-              .map((role) => (
-                <Bar
-                  key={role}
-                  dataKey={role}
-                  fill={getRoleColor(role)}
-                  radius={[4, 4, 0, 0]}
-                />
-              ))}
-          </BarChart>
-        </ChartContainer>
+        <div className="chart-graph-area">
+          <ChartContainer config={chartConfig} className="h-72 w-full">
+            <BarChart
+              data={pivotData(rows)}
+              margin={{ left: 8, right: 8, top: 16 }}
+            >
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="country"
+                tick={{ fontSize: 12, fill: tickColor }}
+              />
+              <YAxis
+                tick={{ fontSize: 11, fill: tickColor }}
+                width={56}
+                tickFormatter={(v) => `${(v / 1000).toFixed(0)}k €`}
+              />
+              <Tooltip content={<TooltipSalario chartConfig={chartConfig} />} />
+              {allRoles
+                .filter((role) => effectiveSelected.includes(role))
+                .map((role) => (
+                  <Bar
+                    key={role}
+                    dataKey={role}
+                    fill={getRoleColor(role)}
+                    radius={[4, 4, 0, 0]}
+                  />
+                ))}
+            </BarChart>
+          </ChartContainer>
+        </div>
       )}
     </ChartCard>
   );

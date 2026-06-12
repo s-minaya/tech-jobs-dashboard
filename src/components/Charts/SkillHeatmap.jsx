@@ -12,7 +12,9 @@ import {
   calcMaxPct,
 } from "@/lib/heatmapUtils";
 import ChartCard from "@/components/ui/ChartCard";
-import ChartDescription from "@/components/ui/ChartDescription";
+import ChartDescription, {
+  getWarningNodes,
+} from "@/components/ui/ChartDescription";
 import HeatmapSvg from "@/components/Charts/HeatmapSvg";
 import HeatmapLeyenda from "@/components/Charts/HeatmapLeyenda";
 import { RiSmartphoneLine } from "react-icons/ri";
@@ -116,6 +118,11 @@ function SkillHeatmap({ filters }) {
   return (
     <ChartCard
       title="Co-ocurrencia de skills en ofertas de empleo"
+      warning={getWarningNodes(
+        filters,
+        ["pais", "contrato", "jornada", "remote"],
+        "heatmap",
+      )}
       loading={loadingPairs}
       isInitialLoad={loadingPairs}
       error={error}
@@ -164,12 +171,14 @@ function SkillHeatmap({ filters }) {
           )}
 
           {hasPairs && (
-            <HeatmapSvg
-              skills={skills}
-              lookup={lookup}
-              jobCountMap={jobCountMap}
-              loading={loadingSkills}
-            />
+            <div className="chart-graph-area">
+              <HeatmapSvg
+                skills={skills}
+                lookup={lookup}
+                jobCountMap={jobCountMap}
+                loading={loadingSkills}
+              />
+            </div>
           )}
 
           {skills.length > 0 && !loadingSkills && (

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import FilterSection from "@/components/Filters/FilterSection";
 import { FILTERS } from "@/config/filters";
 import { RiCloseLine } from "react-icons/ri";
+import GlowButton from "@/components/ui/GlowButton";
 
 // FilterSheet
 // Panel de filtros móvil que se desliza desde la parte inferior.
@@ -184,7 +185,7 @@ function FilterSheet({ isOpen, onClose, filters, onFilterChange, onReset }) {
       {/* Panel deslizante */}
       <div
         ref={panelRef}
-        className={`fixed right-0 bottom-0 left-0 z-50 max-h-[85vh] rounded-t-2xl bg-background shadow-2xl shadow-black/40 md:hidden ${isDragging ? "overflow-hidden" : "overflow-y-auto"} `}
+        className="fixed right-0 bottom-0 left-0 z-50 flex max-h-[85vh] flex-col overflow-hidden rounded-t-2xl bg-background shadow-2xl shadow-black/40 md:hidden"
         style={panelStyle}
       >
         {/* Área de agarre — handle + cabecera inician el drag */}
@@ -219,61 +220,58 @@ function FilterSheet({ isOpen, onClose, filters, onFilterChange, onReset }) {
             </div>
           </div>
         </div>
-
         <div className="mx-4 h-px bg-border" />
+        {/* Filtros con layout fijo para móvil — scrolleable internamente */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="space-y-2 px-4 py-4">
+            {/* Fila 1: País — ancho completo */}
+            <FilterSection
+              {...byKey.pais}
+              selected={filters.pais}
+              onSelect={(v) => onFilterChange("pais", v)}
+            />
 
-        {/* Filtros con layout fijo para móvil */}
-        <div className="space-y-2 px-4 py-4">
-          {/* Fila 1: País — ancho completo */}
-          <FilterSection
-            {...byKey.pais}
-            selected={filters.pais}
-            onSelect={(v) => onFilterChange("pais", v)}
-          />
+            {/* Filas 2 y 3: dos columnas, botones en columna (fullWidth) dentro de cada una */}
+            <div className="grid grid-cols-2 gap-3">
+              <FilterSection
+                {...byKey.periodo}
+                fullWidth
+                selected={filters.periodo}
+                onSelect={(v) => onFilterChange("periodo", v)}
+              />
+              <FilterSection
+                {...byKey.contrato}
+                fullWidth
+                selected={filters.contrato}
+                onSelect={(v) => onFilterChange("contrato", v)}
+              />
+              <FilterSection
+                {...byKey.jornada}
+                fullWidth
+                selected={filters.jornada}
+                onSelect={(v) => onFilterChange("jornada", v)}
+              />
+              <FilterSection
+                {...byKey.remote}
+                fullWidth
+                selected={filters.remote}
+                onSelect={(v) => onFilterChange("remote", v)}
+              />
+            </div>
 
-          {/* Filas 2 y 3: dos columnas, botones en columna (fullWidth) dentro de cada una */}
-          <div className="grid grid-cols-2 gap-3">
+            {/* Fila 4: Categoría — ancho completo */}
             <FilterSection
-              {...byKey.periodo}
-              fullWidth
-              selected={filters.periodo}
-              onSelect={(v) => onFilterChange("periodo", v)}
-            />
-            <FilterSection
-              {...byKey.contrato}
-              fullWidth
-              selected={filters.contrato}
-              onSelect={(v) => onFilterChange("contrato", v)}
-            />
-            <FilterSection
-              {...byKey.jornada}
-              fullWidth
-              selected={filters.jornada}
-              onSelect={(v) => onFilterChange("jornada", v)}
-            />
-            <FilterSection
-              {...byKey.remote}
-              fullWidth
-              selected={filters.remote}
-              onSelect={(v) => onFilterChange("remote", v)}
+              {...byKey.skillCategoria}
+              selected={filters.skillCategoria}
+              onSelect={(v) => onFilterChange("skillCategoria", v)}
             />
           </div>
-
-          {/* Fila 4: Categoría — ancho completo */}
-          <FilterSection
-            {...byKey.skillCategoria}
-            selected={filters.skillCategoria}
-            onSelect={(v) => onFilterChange("skillCategoria", v)}
-          />
-        </div>
-
-        <div className="sticky bottom-0 flex justify-center border-t border-border bg-background px-4 py-3">
-          <button
-            onClick={onClose}
-            className="rounded-xl bg-primary px-10 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
+        </div>{" "}
+        {/* fin scroll area */}
+        <div className="flex justify-center border-t border-white/8 bg-transparent px-4 py-4">
+          <GlowButton onClick={onClose} variant="solid">
             Ver resultados
-          </button>
+          </GlowButton>
         </div>
       </div>
     </>

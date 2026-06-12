@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { RiCloseLine, RiEqualizerLine } from "react-icons/ri";
 import FilterSection from "@/components/Filters/FilterSection";
 import { FILTERS } from "@/config/filters";
+import GlowButton from "@/components/ui/GlowButton";
 
 // activeFilterCount
 // Cuenta cuántos filtros están en un valor distinto al neutro.
@@ -21,33 +22,35 @@ function activeFilterCount(filters) {
 // FilterFAB
 // Botón flotante fijo en la esquina superior izquierda.
 // Visible solo en md+ (en móvil los filtros van en el bottom nav).
+// Usa GlowButton con el mismo efecto aurora que el botón de la landing.
 // Muestra un badge con el número de filtros activos.
 // Cuando hay filtros activos, el anillo exterior pulsa para llamar la atención.
 function FilterFAB({ filters, onClick }) {
   const count = activeFilterCount(filters);
 
   return (
-    <button
-      onClick={onClick}
-      aria-label="Abrir filtros"
-      className="group fixed top-4 left-4 z-40 hidden items-center gap-2 rounded-full border border-border bg-card py-2 pr-4 pl-3 shadow-lg shadow-black/15 transition-all duration-200 hover:scale-105 hover:shadow-xl md:flex dark:shadow-black/40"
-    >
-      {/* Icono con anillo pulsante cuando hay filtros activos */}
+    <div className="fixed top-4 left-4 z-40 hidden md:block">
       <div className="relative">
-        <RiEqualizerLine className="h-4 w-4 text-primary" />
+        <GlowButton
+          onClick={onClick}
+          variant="solid"
+          className="glow-button-sm"
+        >
+          <RiEqualizerLine className="h-4 w-4" />
+          Filtros
+        </GlowButton>
+        {/* Badge con número de filtros activos */}
         {count > 0 && (
           <>
-            {/* Anillo pulsante */}
-            <span className="absolute -inset-1 animate-ping rounded-full bg-primary/20" />
-            {/* Badge con número */}
-            <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+            <span className="absolute -top-1 -right-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] font-bold text-primary shadow-md">
               {count}
             </span>
+            {/* Anillo pulsante */}
+            <span className="absolute -top-1 -right-1 h-5 w-5 animate-ping rounded-full bg-white/40" />
           </>
         )}
       </div>
-      <span className="text-sm font-medium text-foreground">Filtros</span>
-    </button>
+    </div>
   );
 }
 
@@ -80,14 +83,20 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, onReset }) {
     <>
       {/* Overlay con backdrop-blur — solo md+ */}
       <div
-        className={`fixed inset-0 z-40 hidden bg-black/40 backdrop-blur-sm transition-opacity duration-300 md:block ${isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"} `}
+        className={`fixed inset-0 z-40 hidden bg-black/40 backdrop-blur-sm transition-opacity duration-300 md:block ${
+          isOpen
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
+        }`}
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Drawer desde la izquierda — solo md+ */}
       <div
-        className={`fixed top-0 left-0 z-50 flex hidden h-full w-72 flex-col border-r border-border bg-background shadow-2xl shadow-black/20 transition-transform duration-350 ease-[cubic-bezier(0.32,0.72,0,1)] md:flex dark:shadow-black/60 ${isOpen ? "translate-x-0" : "-translate-x-full"} `}
+        className={`fixed top-0 left-0 z-50 flex hidden h-full w-72 flex-col border-r border-border bg-background shadow-2xl shadow-black/20 transition-transform duration-350 ease-[cubic-bezier(0.32,0.72,0,1)] md:flex dark:shadow-black/60 ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
         {/* Cabecera */}
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
@@ -130,14 +139,15 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, onReset }) {
           ))}
         </div>
 
-        {/* Footer con botón de aplicar */}
-        <div className="border-t border-border px-5 py-4">
-          <button
+        {/* Footer con GlowButton centrado — mismo efecto que la landing */}
+        <div className="flex justify-center border-t border-border px-5 py-4">
+          <GlowButton
             onClick={onClose}
-            className="w-full cursor-pointer rounded-xl bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/90 hover:shadow-md hover:shadow-primary/25"
+            variant="solid"
+            className="glow-button-sm"
           >
             Ver resultados
-          </button>
+          </GlowButton>
         </div>
       </div>
     </>

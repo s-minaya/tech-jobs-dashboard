@@ -8,7 +8,9 @@ import { BarChart, Bar, XAxis, YAxis } from "recharts";
 import { getTopSkills } from "@/services/jobServices";
 import { useChartData } from "@/hooks/useChartData";
 import ChartCard from "@/components/ui/ChartCard";
-import ChartDescription from "@/components/ui/ChartDescription";
+import ChartDescription, {
+  getWarningNodes,
+} from "@/components/ui/ChartDescription";
 
 const chartConfig = {
   job_count: { label: "Número de ofertas", color: "var(--chart-1)" },
@@ -69,11 +71,12 @@ function TopSkillsChart({ filters }) {
   // useIsDark con MutationObserver garantiza que el color se actualiza
   // correctamente al cambiar el tema en cualquier dirección.
   const isDark = useIsDark();
-  const tickColor = isDark ? "#ffffff" : "#64748b";
+  const tickColor = isDark ? "#ffffff" : "#374151";
 
   return (
     <ChartCard
       title="Top Skills más demandadas"
+      warning={getWarningNodes(filters, ["jornada"], "topskills")}
       loading={loading}
       isInitialLoad={isInitialLoad}
       error={error}
@@ -91,25 +94,27 @@ function TopSkillsChart({ filters }) {
           periodo o quitar algún filtro.
         </p>
       ) : (
-        <div style={{ width: "100%", height: alturaPx }}>
-          <ChartContainer config={chartConfig} className="h-full w-full">
-            <BarChart
-              data={rows}
-              layout="vertical"
-              margin={{ left: 8, right: 16, top: 4, bottom: 4 }}
-            >
-              <XAxis type="number" dataKey="job_count" hide />
-              <YAxis
-                type="category"
-                dataKey="skill"
-                width={100}
-                tick={{ fontSize: 12, fill: tickColor }}
-                interval={0}
-              />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="job_count" fill="var(--chart-1)" radius={4} />
-            </BarChart>
-          </ChartContainer>
+        <div className="chart-graph-area">
+          <div style={{ width: "100%", height: alturaPx }}>
+            <ChartContainer config={chartConfig} className="h-full w-full">
+              <BarChart
+                data={rows}
+                layout="vertical"
+                margin={{ left: 8, right: 16, top: 4, bottom: 4 }}
+              >
+                <XAxis type="number" dataKey="job_count" hide />
+                <YAxis
+                  type="category"
+                  dataKey="skill"
+                  width={100}
+                  tick={{ fontSize: 12, fill: tickColor }}
+                  interval={0}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="job_count" fill="var(--chart-1)" radius={4} />
+              </BarChart>
+            </ChartContainer>
+          </div>
         </div>
       )}
     </ChartCard>

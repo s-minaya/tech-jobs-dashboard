@@ -11,11 +11,10 @@ import Aurora from "@/components/ui/Aurora";
 // MainContent
 // Área principal del dashboard.
 // El hero tiene fondo animado distinto según el tema:
-//   dark  → DarkVeil (CPPN, colores oscuros, hueShift=0 para morado)
-//   light → Aurora (simplex noise, alpha transparente sobre fondo blanco)
+//   dark  → DarkVeil (CPPN, hueShift=0 para morado de la marca)
+//   light → Aurora (simplex noise, degradado blanco-morado)
 // overflow-hidden en el div del hero confina ambos canvas a esa área.
-// Las cards y gráficas usan bg-card/80 + backdrop-blur para el efecto
-// glassmorphism sobre el fondo animado.
+// Las cards usan bg-card/60 backdrop-blur para glassmorphism sobre el fondo.
 // Cada sección tiene un id para que BottomNav pueda hacer scroll hasta ella.
 // pb-20 en el wrapper evita que el bottom nav tape el contenido al llegar al final.
 function MainContent({ filters, isDark, toggleTheme }) {
@@ -23,12 +22,10 @@ function MainContent({ filters, isDark, toggleTheme }) {
     <main className="w-full min-w-0 flex-1 pb-20 md:pb-0">
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <div id="inicio">
-        {/* overflow-hidden confina el fondo animado a este bloque */}
-        <div className="relative w-full overflow-hidden px-6 pt-8 pb-32">
-          {/* Fondo animado según tema.
-              Ambos son absolute inset-0 z-0 y pointer-events-none.
-              DarkVeil pinta píxeles opacos → solo dark mode.
-              Aurora usa alpha transparente → solo light mode, sobre bg-white del wrapper. */}
+        {/* Hero más alto para dar más presencia al título.
+            pt-20 pb-48 en móvil, pt-28 pb-56 en desktop. */}
+        <div className="relative w-full overflow-hidden px-6 pt-20 pb-48 md:pt-28 md:pb-56">
+          {/* Fondo animado según tema — confinado por overflow-hidden */}
           <div className="pointer-events-none absolute inset-0 z-0">
             {isDark ? (
               <DarkVeil
@@ -51,22 +48,37 @@ function MainContent({ filters, isDark, toggleTheme }) {
             <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
           </div>
 
-          <div className="relative z-10 mt-2 text-center">
+          <div className="relative z-10 text-center">
+            {/* Subtítulo — pequeño y con mucho tracking para no competir con el h1 */}
             <p
-              className={`mb-1 text-xs font-medium tracking-widest uppercase drop-shadow-black ${isDark ? "text-white" : "text-white"}`}
+              className="mb-3 text-xs font-medium tracking-[0.3em] uppercase"
+              style={{
+                color: isDark ? "rgba(255,255,255,0.6)" : "var(--background)",
+              }}
             >
               Mercado tech europeo
             </p>
-            <h1
-              className={`text-3xl font-bold drop-shadow-[0_2px_16px_rgba(0,0,0,0.4)] ${isDark ? "text-white" : "text-white"}`}
-            >
-              Tech Jobs Dashboard
+            {/* Título grande con presencia — más grande en desktop */}
+            <h1 className="font-heading text-5xl leading-tight font-bold drop-shadow-lg md:text-6xl lg:text-7xl">
+              {/* Tech Jobs — blanco en dark, color background en light */}
+              <span style={{ color: isDark ? "white" : "var(--background)" }}>
+                Tech Jobs
+              </span>
+              {/* Dashboard — siempre el primary de la marca */}
+              <span
+                className="block"
+                style={{
+                  color: isDark ? "var(--primary)" : "hsl(0, 0%, 30%)",
+                }}
+              >
+                Dashboard
+              </span>
             </h1>
           </div>
         </div>
 
         {/* KPI cards: indicadores globales, independientes de los filtros */}
-        <div className="relative z-20 -mt-24 px-6">
+        <div className="relative z-20 -mt-32 px-6 md:-mt-36">
           <SummaryStats />
         </div>
       </div>
@@ -74,20 +86,23 @@ function MainContent({ filters, isDark, toggleTheme }) {
       {/* ── Gráficas ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-4 px-6 pt-2 pb-6">
         {/* Sección Inicio: Top Skills */}
-        <div id="inicio-skills">
+        <div id="inicio-skills" className="scroll-mt-16">
           <TopSkillsChart filters={filters} />
         </div>
         {/* Sección Tendencias: evolución mensual + salario */}
-        <section id="tendencias" className="grid grid-cols-1 gap-4">
+        <section
+          id="tendencias"
+          className="grid scroll-mt-16 grid-cols-1 gap-4"
+        >
           <DemandByRoleChart filters={filters} />
           <SalaryChart filters={filters} />
         </section>
         {/* Sección Mapa */}
-        <section id="mapa">
+        <section id="mapa" className="scroll-mt-16">
           <EuropeMap filters={filters} />
         </section>
         {/* Sección Skills: heatmap */}
-        <section id="skills">
+        <section id="skills" className="scroll-mt-16">
           <SkillHeatmap filters={filters} />
         </section>
       </div>
