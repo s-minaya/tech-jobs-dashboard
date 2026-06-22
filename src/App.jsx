@@ -45,9 +45,9 @@ function App() {
     // Damos un frame para que el loader se pinte antes de montar el dashboard
     requestAnimationFrame(() => {
       setShowLanding(false);
-      // El loader se oculta tras un breve delay para que el dashboard
+      // El loader se oculta tras un delay para que el dashboard
       // haya tenido tiempo de renderizar su primer frame
-      setTimeout(() => setIsLoading(false), 800);
+      setTimeout(() => setIsLoading(false), 3000);
     });
   }
 
