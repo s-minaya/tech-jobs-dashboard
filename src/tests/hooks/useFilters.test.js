@@ -5,8 +5,11 @@ import { PERIODO_DEFAULT } from "@/lib/filterUtils";
 
 // useFilters
 // Testamos el estado inicial, que cada campo se actualiza de forma
-// independiente y que resetFilters restaura todo correctamente.
+// independiente, que resetFilters restaura todo correctamente,
+// y que los filtros se persisten y recuperan de localStorage.
 // No hay fetch ni efectos secundarios, así que no necesitamos MSW.
+
+// El setup.js ya limpia localStorage entre tests con afterEach.
 
 describe("useFilters", () => {
   describe("estado inicial", () => {
@@ -136,6 +139,88 @@ describe("useFilters", () => {
       });
 
       expect(result.current.filters.pais).toBe("NL");
+    });
+  });
+
+  describe("persistencia en localStorage", () => {
+    it("guarda los filtros en localStorage al cambiar un valor", () => {
+      const { result } = renderHook(() => useFilters());
+
+      act(() => {
+        result.current.handleFilterChange("pais", "DE");
+      });
+
+      const saved = JSON.parse(localStorage.getItem("dashboard_filters"));
+      expect(saved.pais).toBe("DE");
+    });
+
+    it("recupera los filtros guardados al montar el hook de nuevo", () => {
+      // Simulamos una sesión anterior guardando filtros en localStorage
+      localStorage.setItem(
+        "dashboard_filters",
+        JSON.stringify({
+          pais: "FR",
+          periodo: PERIODO_DEFAULT,
+          contrato: "Todos",
+          jornada: "Todos",
+          remote: "Todos",
+          skillCategoria: "Todas",
+        }),
+      );
+
+      const { result } = renderHook(() => useFilters());
+
+      // El hook debe arrancar con el filtro guardado
+      expect(result.current.filters.pais).toBe("FR");
+    });
+
+    it("resetFilters limpia también localStorage", () => {
+      const { result } = renderHook(() => useFilters());
+
+      act(() => {
+        result.current.handleFilterChange("pais", "ES");
+      });
+      act(() => {
+        result.current.resetFilters();
+      });
+
+      const saved = JSON.parse(localStorage.getItem("dashboard_filters"));
+      expect(saved.pais).toBe("Todos");
+    });
+
+    it("si localStorage tiene datos corruptos arranca con los valores iniciales", () => {
+      localStorage.setItem("dashboard_filters", "esto no es json válido {{");
+
+      const { result } = renderHook(() => useFilters());
+
+      expect(result.current.filters.pais).toBe("Todos");
+      expect(result.current.filters.periodo).toBe(PERIODO_DEFAULT);
+    });
+
+    it("si localStorage tiene filtros parciales fusiona con los iniciales", () => {
+      // Solo guardamos 'pais' — el resto debe coger los valores iniciales
+      localStorage.setItem("dashboard_filters", JSON.stringify({ pais: "IT" }));
+
+      const { result } = renderHook(() => useFilters());
+
+      expect(result.current.filters.pais).toBe("IT");
+      expect(result.current.filters.periodo).toBe(PERIODO_DEFAULT);
+      expect(result.current.filters.contrato).toBe("Todos");
+    });
+
+    it("persiste todos los campos cuando se cambian varios", () => {
+      const { result } = renderHook(() => useFilters());
+
+      act(() => {
+        result.current.handleFilterChange("pais", "DE");
+        result.current.handleFilterChange("remote", "Sí");
+        result.current.handleFilterChange("skillCategoria", "Database");
+      });
+
+      const saved = JSON.parse(localStorage.getItem("dashboard_filters"));
+      expect(saved.pais).toBe("DE");
+      expect(saved.remote).toBe("Sí");
+      expect(saved.skillCategoria).toBe("Database");
     });
   });
 });

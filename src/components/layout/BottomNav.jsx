@@ -31,17 +31,35 @@ const NAV_ITEMS = [
   },
 ];
 
+// Valores neutros de cada filtro — mismos que en useFilters.
+// Los usamos para contar cuántos filtros están activos.
+const NEUTRAL = {
+  pais: "Todos",
+  periodo: "Últimos 90 días",
+  contrato: "Todos",
+  jornada: "Todos",
+  remote: "Todos",
+  skillCategoria: "Todas",
+};
+
+function activeFilterCount(filters) {
+  if (!filters) return 0;
+  return Object.entries(filters).filter(([k, v]) => v !== NEUTRAL[k]).length;
+}
+
 // BottomNav
 // Barra de navegación inferior fija, solo visible en móvil (md:hidden).
 // Cada botón hace scroll suave hasta la sección correspondiente.
-// El botón de Filtros abre el panel de filtros (onOpenFilters).
-// El item activo muestra icono y texto con el efecto aurora animado
-// (gradiente de texto + filter hue-rotate en el icono).
+// El botón de Filtros abre el panel de filtros (onOpenFilters) y muestra
+// un badge con el número de filtros activos, igual que el FAB de desktop.
+// El item activo muestra icono y texto con el efecto aurora animado.
 //
 // position: fixed bottom-0 garantiza que siempre esté visible
 // aunque el usuario haga scroll. pb-safe respeta el área segura
 // de iPhones con notch inferior.
-function BottomNav({ activeSection, onOpenFilters }) {
+function BottomNav({ activeSection, onOpenFilters, filters }) {
+  const filterCount = activeFilterCount(filters);
+
   function handleClick(item) {
     if (item.id === "filtros") {
       onOpenFilters();
@@ -59,22 +77,30 @@ function BottomNav({ activeSection, onOpenFilters }) {
           {NAV_ITEMS.map((item) => {
             const isActive = activeSection === item.id;
             const Icon = isActive ? item.iconActive : item.icon;
+            const isFiltros = item.id === "filtros";
+
             return (
               <button
                 key={item.id}
                 onClick={() => handleClick(item)}
-                className="flex flex-col items-center gap-0.5 px-3 py-1 transition-transform duration-150 active:scale-90"
+                className="relative flex flex-col items-center gap-0.5 px-3 py-1 transition-transform duration-150 outline-none active:scale-90"
               >
                 {/* Icono — aurora animado si activo */}
-                <span className={isActive ? "aurora-icon" : ""}>
+                <span className={`relative ${isActive ? "aurora-icon" : ""}`}>
                   <Icon
                     className={`h-5 w-5 transition-colors ${
                       isActive ? "text-primary" : "text-muted-foreground"
                     }`}
                   />
+                  {/* Badge de filtros activos — solo en el botón Filtros */}
+                  {isFiltros && filterCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground shadow-md">
+                      {filterCount}
+                    </span>
+                  )}
                 </span>
 
-                {/* Texto — gradiente aurora si activo */}
+                {/* Texto — aurora si activo */}
                 {isActive ? (
                   <span className="aurora-text text-[10px] font-semibold">
                     {item.label}

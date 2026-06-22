@@ -273,32 +273,12 @@
   display: inline-flex;
 }
 
-/* Pseudo-elemento invisible en reposo, aurora en hover.
-   Está detrás del inner (z-index: 0) y sale 3px por cada lado (inset: -3px). */
-.glow-button-wrapper::before {
-  content: "";
-  position: absolute;
-  inset: -3px;
-  border-radius: 9999px;
-  background: transparent;
-  z-index: 0;
-  transition:
-    background 200ms ease,
-    box-shadow 200ms ease;
-}
-
-.glow-button-wrapper:hover::before {
-  background: linear-gradient(
-    135deg,
-    #7cff67,
-    #b497cf,
-    #5227ff,
-    #b497cf,
-    #7cff67
-  );
-  background-size: 300% 300%;
-  animation: auroraFlow 4s ease infinite;
+/* En hover: outline aurora usando box-shadow — no requiere salir del contenedor,
+   compatible con overflow: hidden/auto de los paneles. */
+.glow-button-wrapper:hover {
   box-shadow:
+    0 0 0 3px #7cff67,
+    0 0 0 5px #5227ff,
     0 0 20px 5px rgba(124, 255, 103, 0.4),
     0 0 40px 10px rgba(82, 39, 255, 0.35),
     0 0 60px 16px rgba(180, 151, 207, 0.2);
@@ -505,40 +485,7 @@
 :root:not(.dark) .chart-graph-area {
   background: white;
   padding: 8px 12px;
-  /* Mask que difumina los 4 bordes del blanco hacia transparente,
-     dejando ver el morado claro de la card por detrás */
-  -webkit-mask-image:
-    linear-gradient(
-      to right,
-      transparent 0%,
-      black 8%,
-      black 92%,
-      transparent 100%
-    ),
-    linear-gradient(
-      to bottom,
-      transparent 0%,
-      black 8%,
-      black 92%,
-      transparent 100%
-    );
-  -webkit-mask-composite: destination-in;
-  mask-image:
-    linear-gradient(
-      to right,
-      transparent 0%,
-      black 8%,
-      black 92%,
-      transparent 100%
-    ),
-    linear-gradient(
-      to bottom,
-      transparent 0%,
-      black 8%,
-      black 92%,
-      transparent 100%
-    );
-  mask-composite: intersect;
+  /* Fondo blanco con corte limpio contra el lila de la card — sin difuminado */
 }
 
 /* ── Aurora text — color primary en texto del BottomNav activo ───────────── */

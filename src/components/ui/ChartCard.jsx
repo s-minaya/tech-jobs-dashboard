@@ -5,9 +5,7 @@ import DecryptedText from "@/components/ui/DecryptedText";
 //
 // El título está en el flujo normal ENCIMA de la card (no absolute),
 // así nunca se solapa independientemente del tamaño o número de líneas.
-// Centrado y con presencia — font-heading, text-xl en móvil, text-2xl en desktop.
-//
-// El ⓘ de avisos se renderiza inline junto al título.
+// Centrado cuando no hay aviso, alineado a la izquierda cuando hay ⓘ.
 // El título usa DecryptedText para el efecto de descifrado al hacer hover.
 //
 // Borde aurora animado (chart-card-border) con interior del color del fondo
@@ -33,8 +31,14 @@ function ChartCard({
     <div className={`mt-6 ${className}`}>
       {/* Título en flujo normal — nunca se solapa con la card */}
       {title && (
-        <div className="mb-3 flex flex-wrap items-center justify-center gap-2 px-2">
-          <h2 className="cursor-default font-heading text-xl font-bold tracking-tight text-foreground md:text-2xl">
+        <div className="mb-3 flex items-start justify-center gap-2 px-2">
+          {/* ⓘ a la izquierda — shrink-0 para que nunca se comprima */}
+          {warning && <span className="mt-0.5 shrink-0">{warning}</span>}
+          {/* Título ocupa el espacio que necesite — text-center sin aviso,
+              text-left con aviso para que fluya naturalmente */}
+          <h2
+            className={`cursor-default font-heading text-xl font-bold tracking-tight text-foreground md:text-2xl ${warning ? "text-left" : "text-center"}`}
+          >
             <DecryptedText
               text={title}
               animateOn="hover"
@@ -46,8 +50,6 @@ function ChartCard({
               encryptedClassName="text-primary/50"
             />
           </h2>
-          {/* Icono ⓘ de aviso de filtro ignorado, si lo hay */}
-          {warning && <span className="flex items-center">{warning}</span>}
         </div>
       )}
 
