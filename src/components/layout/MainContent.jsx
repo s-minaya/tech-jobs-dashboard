@@ -53,7 +53,9 @@ function MainContent({ filters, isDark, toggleTheme }) {
             <p
               className="mb-3 text-xs font-medium tracking-[0.3em] uppercase"
               style={{
-                color: isDark ? "rgba(255,255,255,0.6)" : "var(--background)",
+                color: isDark
+                  ? "rgba(255,255,255,0.6)"
+                  : "var(--color-background)",
               }}
             >
               Mercado tech europeo
@@ -61,14 +63,16 @@ function MainContent({ filters, isDark, toggleTheme }) {
             {/* Título grande con presencia — más grande en desktop */}
             <h1 className="font-heading text-5xl leading-tight font-bold drop-shadow-lg md:text-6xl lg:text-7xl">
               {/* Tech Jobs — blanco en dark, color background en light */}
-              <span style={{ color: isDark ? "white" : "var(--background)" }}>
+              <span
+                style={{ color: isDark ? "white" : "var(--color-background)" }}
+              >
                 Tech Jobs
               </span>
               {/* Dashboard — siempre el primary de la marca */}
               <span
                 className="block"
                 style={{
-                  color: isDark ? "var(--primary)" : "hsl(0, 0%, 30%)",
+                  color: isDark ? "var(--color-primary)" : "hsl(0, 0%, 30%)",
                 }}
               >
                 Dashboard

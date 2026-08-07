@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChartContainer } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { getSalaryByRoleAndCountry } from "@/services/jobServices";
-import { getRoleLabel, getRoleColor } from "@/lib/roleLabels";
+import { getRoleLabel, getRoleColor, extractRoles } from "@/lib/roleLabels";
 import { useChartData } from "@/hooks/useChartData";
 import ChartCard from "@/components/ui/ChartCard";
 import ChartDescription, {
@@ -22,10 +22,6 @@ function pivotData(rows) {
     byCountry[code][role_category] = Number(median_salary_eur);
   }
   return Object.values(byCountry);
-}
-
-function extractRoles(rows) {
-  return [...new Set(rows.map((r) => r.role_category))];
 }
 
 // TooltipSalario

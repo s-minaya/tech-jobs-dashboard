@@ -2,12 +2,12 @@ import { RiSunFill, RiMoonFill } from "react-icons/ri";
 
 // ThemeToggle
 // DARK MODE:  píldora oscura | [ ○  🌙 ]
-//   - círculo izquierda con color primary (var(--primary))
+//   - círculo izquierda con color primary (var(--color-primary))
 //   - luna blanca derecha
 //
 // LIGHT MODE: píldora blanca | [ ☀️  ○ ]
 //   - sol izquierda
-//   - círculo derecha con color primary (var(--primary))
+//   - círculo derecha con color primary (var(--color-primary))
 function ThemeToggle({ isDark, onToggle }) {
   return (
     <button
@@ -20,7 +20,7 @@ function ThemeToggle({ isDark, onToggle }) {
         {isDark ? (
           <span
             className="h-4 w-4 rounded-full"
-            style={{ backgroundColor: "var(--primary)" }}
+            style={{ backgroundColor: "var(--color-primary)" }}
           />
         ) : (
           <RiSunFill className="h-5 w-5 bg-background" />
@@ -34,7 +34,7 @@ function ThemeToggle({ isDark, onToggle }) {
         ) : (
           <span
             className="h-4 w-4 rounded-full"
-            style={{ backgroundColor: "var(--primary)" }}
+            style={{ backgroundColor: "var(--color-primary)" }}
           />
         )}
       </span>

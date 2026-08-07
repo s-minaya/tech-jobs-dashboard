@@ -11,13 +11,13 @@
 import * as d3 from "d3";
 
 /**
- * HeatmapLeyenda
+ * HeatmapLegend
  * Leyenda visual que explica la escala de color del heatmap.
  * Usa el mismo interpolador d3.interpolateRdYlGn que HeatmapSvg.
  *
  * @param {number} maxPct - El porcentaje más alto del dataset (para el label del extremo)
  */
-function HeatmapLeyenda({ maxPct }) {
+function HeatmapLegend({ maxPct }) {
   // Mismo interpolador que HeatmapSvg: RdYlGn (rojo → amarillo → verde)
   const steps = [0, 0.2, 0.4, 0.6, 0.8, 1];
   // dark: fondo oscuro azulado / light: gris claro — igual que las celdas vacías del SVG
@@ -63,4 +63,4 @@ function HeatmapLeyenda({ maxPct }) {
   );
 }
 
-export default HeatmapLeyenda;
+export default HeatmapLegend;

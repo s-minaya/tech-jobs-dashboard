@@ -46,17 +46,3 @@ export const COUNTRY_NAMES = {
   at: "Austria",
   be: "Bélgica",
 };
-
-// Colores para la escala del mapa coroplético.
-// Usamos d3.interpolateYlGn (amarillo → verde oscuro), que es un subconjunto
-// de la misma familia RdYlGn que usa el heatmap de skills.
-// Esto da consistencia visual: ambas gráficas usan la misma paleta D3.
-// No usamos rojo en el extremo inferior porque pocas ofertas no es "malo",
-// solo significa menos datos. Amarillo transmite "hay algo" sin negatividad.
-export const MAP_COLOR_INTERPOLATOR = "YlGn"; // nombre de la paleta D3
-
-// Color de resaltado para el país seleccionado en el sidebar.
-// Usamos la variable CSS del sistema de diseño para que respete el tema.
-export const SELECTED_COUNTRY_STROKE = "var(--primary)";
-export const SELECTED_COUNTRY_STROKE_WIDTH = 2.5;
-export const UNSELECTED_OPACITY_WHEN_FILTERED = 0.45;

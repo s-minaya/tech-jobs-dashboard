@@ -6,9 +6,15 @@ _(anterior al rediseño Halo)_
 
 1. **000 · Dashboard v1** — visualizaciones dinámicas completas, filtros, persistencia localStorage, tests unitarios, E2E y CI.
 
+2. **001 · Halo tokens + auditoría** — variables CSS sustituidas por los tokens
+   Halo (dual dark/light), Inter + JetBrains Mono instaladas, auditoría de
+   organización/nomenclatura/duplicación aplicada. Ver
+   `spec/features/001-halo-tokens/audit.md` para el detalle y los hallazgos
+   diferidos a fases 004/005/006/007.
+
 ## En curso 🔜
 
-2. **001 · Halo tokens + auditoría** — sustituir variables CSS, instalar fuentes, resolver malas prácticas de organización y nomenclatura.
+_(ninguna — siguiente: 002)_
 
 ## Backlog 💡
 

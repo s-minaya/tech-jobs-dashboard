@@ -20,7 +20,7 @@ function formatDate(iso) {
 // KpiCard
 // Tarjeta individual flotante sobre el hero.
 // Por defecto fondo transparente + backdrop-blur para dejar ver el fondo animado.
-// Al hacer hover: relleno oscuro (hsl(249,30%,8%)) + borde aurora animado
+// Al hacer hover: relleno oscuro (#0A0B0F) + borde aurora animado
 // con el mismo efecto que GlowButton — mismas clases CSS definidas en index.css.
 // La prop fullWidth permite que una card ocupe dos columnas en el grid.
 // La prop icon permite añadir un icono decorativo centrado a la derecha.

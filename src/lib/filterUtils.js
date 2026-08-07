@@ -66,3 +66,28 @@ export function describeFiltros(filters, excludeKeys = []) {
 
   return partes;
 }
+
+// NEUTRAL_FILTERS
+// Valores neutros de cada filtro — mismos que initialFilters en useFilters.
+// Centralizado aquí (y no repetido en cada componente) para que
+// activeFilterCount use siempre PERIODO_DEFAULT y nunca se desincronice
+// si cambia el valor por defecto del periodo.
+const NEUTRAL_FILTERS = {
+  pais: "Todos",
+  periodo: PERIODO_DEFAULT,
+  contrato: "Todos",
+  jornada: "Todos",
+  remote: "Todos",
+  skillCategoria: "Todas",
+};
+
+// activeFilterCount
+// Cuenta cuántos filtros están en un valor distinto al neutro.
+// Usado por los badges del FAB, el FilterDrawer y el BottomNav para
+// mostrar cuántos filtros tiene activos el usuario.
+export function activeFilterCount(filters) {
+  if (!filters) return 0;
+  return Object.entries(filters).filter(
+    ([key, value]) => value !== NEUTRAL_FILTERS[key],
+  ).length;
+}

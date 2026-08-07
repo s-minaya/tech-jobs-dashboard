@@ -10,6 +10,7 @@ import {
   RiEqualizerLine,
   RiEqualizerFill,
 } from "react-icons/ri";
+import { activeFilterCount } from "@/lib/filterUtils";
 
 // Secciones del dashboard con sus anclas de navegación.
 // Cada id debe coincidir con el id del elemento en MainContent.
@@ -30,22 +31,6 @@ const NAV_ITEMS = [
     iconActive: RiEqualizerFill,
   },
 ];
-
-// Valores neutros de cada filtro — mismos que en useFilters.
-// Los usamos para contar cuántos filtros están activos.
-const NEUTRAL = {
-  pais: "Todos",
-  periodo: "Últimos 90 días",
-  contrato: "Todos",
-  jornada: "Todos",
-  remote: "Todos",
-  skillCategoria: "Todas",
-};
-
-function activeFilterCount(filters) {
-  if (!filters) return 0;
-  return Object.entries(filters).filter(([k, v]) => v !== NEUTRAL[k]).length;
-}
 
 // BottomNav
 // Barra de navegación inferior fija, solo visible en móvil (md:hidden).

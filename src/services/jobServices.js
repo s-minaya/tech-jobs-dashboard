@@ -2,12 +2,12 @@
 const API_URL = import.meta.env.VITE_API_URL;
 
 async function fetchJson(path) {
-  const res = await fetch(`${API_URL}${path}`);
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail ?? `Error ${res.status} en ${path}`);
+  const response = await fetch(`${API_URL}${path}`);
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.detail ?? `Error ${response.status} en ${path}`);
   }
-  return res.json();
+  return response.json();
 }
 
 // buildParams

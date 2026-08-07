@@ -2,22 +2,8 @@ import { useEffect } from "react";
 import { RiCloseLine, RiEqualizerLine } from "react-icons/ri";
 import FilterSection from "@/components/Filters/FilterSection";
 import { FILTERS } from "@/config/filters";
+import { activeFilterCount } from "@/lib/filterUtils";
 import GlowButton from "@/components/ui/GlowButton";
-
-// activeFilterCount
-// Cuenta cuántos filtros están en un valor distinto al neutro.
-// Sirve para mostrar el badge en el FAB y darle feedback al usuario.
-const NEUTRAL = {
-  pais: "Todos",
-  periodo: "Últimos 90 días",
-  contrato: "Todos",
-  jornada: "Todos",
-  remote: "Todos",
-  skillCategoria: "Todas",
-};
-function activeFilterCount(filters) {
-  return Object.entries(filters).filter(([k, v]) => v !== NEUTRAL[k]).length;
-}
 
 // FilterFAB
 // Botón flotante fijo en la esquina superior izquierda.

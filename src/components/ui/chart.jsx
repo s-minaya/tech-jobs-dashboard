@@ -74,7 +74,7 @@ function ChartContainer({
 }
 
 // Inyecta un bloque <style> en el DOM con las variables CSS de color
-// de esta gráfica concreta (ej: --color-count: hsl(249, 100%, 69%)).
+// de esta gráfica concreta (ej: --color-count: #5b6bff).
 // Se genera para cada tema (light/dark) usando el selector correspondiente,
 // lo que permite que los colores cambien automáticamente al cambiar de tema.
 const ChartStyle = ({

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getRoleLabel, ROLE_LABELS } from "@/lib/roleLabels";
+import { getRoleLabel, ROLE_LABELS, extractRoles } from "@/lib/roleLabels";
 
 describe("ROLE_LABELS", () => {
   it("contiene los roles principales del dashboard", () => {
@@ -47,5 +47,30 @@ describe("getRoleLabel", () => {
 
   it("el fallback funciona con strings vacíos y valores edge case", () => {
     expect(getRoleLabel("")).toBe("");
+  });
+});
+
+describe("extractRoles", () => {
+  it("devuelve los roles únicos presentes en las filas", () => {
+    const rows = [
+      { role_category: "backend" },
+      { role_category: "frontend" },
+      { role_category: "backend" },
+    ];
+    expect(extractRoles(rows)).toEqual(["backend", "frontend"]);
+  });
+
+  it("devuelve array vacío si no hay filas", () => {
+    expect(extractRoles([])).toEqual([]);
+  });
+
+  it("mantiene el orden de primera aparición de cada rol", () => {
+    const rows = [
+      { role_category: "data_science" },
+      { role_category: "backend" },
+      { role_category: "data_science" },
+      { role_category: "devops" },
+    ];
+    expect(extractRoles(rows)).toEqual(["data_science", "backend", "devops"]);
   });
 });

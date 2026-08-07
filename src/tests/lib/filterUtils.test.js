@@ -3,6 +3,7 @@ import {
   describeFiltros,
   NOMBRES_PAISES,
   PERIODO_DEFAULT,
+  activeFilterCount,
 } from "@/lib/filterUtils";
 
 // filtersNeutros usa los valores que producen array vacío en describeFiltros.
@@ -181,5 +182,34 @@ describe("describeFiltros", () => {
       expect(resultado.some((r) => r.includes("cloud"))).toBe(true);
       expect(resultado.length).toBeGreaterThanOrEqual(5);
     });
+  });
+});
+
+describe("activeFilterCount", () => {
+  it("devuelve 0 cuando todos los filtros están en su valor neutro", () => {
+    expect(activeFilterCount(filtersNeutros)).toBe(0);
+  });
+
+  it("devuelve 0 con filters undefined o null", () => {
+    expect(activeFilterCount(undefined)).toBe(0);
+    expect(activeFilterCount(null)).toBe(0);
+  });
+
+  it("cuenta un único filtro activo", () => {
+    expect(activeFilterCount({ ...filtersNeutros, pais: "DE" })).toBe(1);
+  });
+
+  it("cuenta varios filtros activos a la vez", () => {
+    expect(
+      activeFilterCount({ ...filtersNeutros, pais: "DE", remote: "Sí" }),
+    ).toBe(2);
+  });
+
+  it("trata PERIODO_DEFAULT como neutro en vez de un string hardcodeado", () => {
+    // Usa PERIODO_DEFAULT (no un literal) para que este test detecte si
+    // activeFilterCount alguna vez deja de sincronizarse con el default real.
+    expect(
+      activeFilterCount({ ...filtersNeutros, periodo: PERIODO_DEFAULT }),
+    ).toBe(0);
   });
 });

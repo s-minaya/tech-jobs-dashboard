@@ -166,8 +166,8 @@ function HeatmapSvg({ skills, lookup, jobCountMap, loading = false }) {
         Object.assign(tip.style, {
           position: "fixed",
           display: "none",
-          background: "var(--background)",
-          border: "1px solid var(--border)",
+          background: "var(--color-background)",
+          border: "1px solid var(--color-border)",
           borderRadius: "6px",
           padding: "8px 12px",
           fontSize: "12px",
@@ -200,19 +200,19 @@ function HeatmapSvg({ skills, lookup, jobCountMap, loading = false }) {
           if (co > 0) {
             tip.innerHTML = `
               <strong>${d.row}</strong>
-              <span style="color:var(--muted-foreground)"> + </span>
+              <span style="color:var(--color-text-muted)"> + </span>
               <strong>${d.col}</strong><br>
-              <strong style="color:var(--foreground)">${formatPct(co, jcA)}</strong>
-              <span style="color:var(--muted-foreground)"> de ofertas con <em>${d.row}</em> también piden <em>${d.col}</em></span><br>
-              <strong style="color:var(--foreground)">${formatPct(co, jcB)}</strong>
-              <span style="color:var(--muted-foreground)"> de ofertas con <em>${d.col}</em> también piden <em>${d.row}</em></span><br>
-              <span style="color:var(--muted-foreground);font-size:10px">${co.toLocaleString("es-ES")} co-ocurrencias absolutas</span>`;
+              <strong style="color:var(--color-text-primary)">${formatPct(co, jcA)}</strong>
+              <span style="color:var(--color-text-muted)"> de ofertas con <em>${d.row}</em> también piden <em>${d.col}</em></span><br>
+              <strong style="color:var(--color-text-primary)">${formatPct(co, jcB)}</strong>
+              <span style="color:var(--color-text-muted)"> de ofertas con <em>${d.col}</em> también piden <em>${d.row}</em></span><br>
+              <span style="color:var(--color-text-muted);font-size:10px">${co.toLocaleString("es-ES")} co-ocurrencias absolutas</span>`;
           } else {
             tip.innerHTML = `
               <strong>${d.row}</strong>
-              <span style="color:var(--muted-foreground)"> + </span>
+              <span style="color:var(--color-text-muted)"> + </span>
               <strong>${d.col}</strong><br>
-              <span style="color:var(--muted-foreground)">Sin co-ocurrencias en el dataset</span>`;
+              <span style="color:var(--color-text-muted)">Sin co-ocurrencias en el dataset</span>`;
           }
           tip.style.display = "block";
           tip.style.left = event.clientX + 14 + "px";

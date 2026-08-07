@@ -66,3 +66,11 @@ export const ROLE_COLORS = {
 export function getRoleColor(key) {
   return ROLE_COLORS[key] ?? "var(--chart-1)";
 }
+
+// extractRoles
+// Devuelve la lista de roles únicos presentes en las filas que llegan de la
+// API, en el orden en que aparecen. La usan DemandByRoleChart y SalaryChart
+// para saber qué roles hay disponibles antes de calcular la selección activa.
+export function extractRoles(rows) {
+  return [...new Set(rows.map((row) => row.role_category))];
+}

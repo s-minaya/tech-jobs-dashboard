@@ -142,7 +142,7 @@ function EuropeMap({ filters }) {
 
               const fill = isIncluded
                 ? colorScale(offers ?? 0)
-                : "var(--muted)";
+                : "var(--color-border-strong)";
               const opacity =
                 selectedCountry && isIncluded && !isSelected ? 0.4 : 1;
               const stroke = isSelected ? "#ffffff" : "var(--border)";

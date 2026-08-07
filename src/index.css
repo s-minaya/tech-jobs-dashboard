@@ -1,230 +1,248 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist/index.css"; /* Variable font — pesos 100-900 en un solo archivo */
-@import "@fontsource/space-mono/400.css"; /* Títulos — monospace con personalidad */
-@import "@fontsource/space-mono/700.css";
 
 @plugin "@tailwindcss/forms";
 
 @custom-variant dark (&:is(.dark *));
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   PUENTE TAILWIND — expone los tokens Halo bajo los nombres que Tailwind v4
+   usa para generar utilidades (bg-primary, text-muted-foreground, rounded-lg…).
+   Referencia los --color-* de Halo DIRECTAMENTE (no hay capa intermedia con
+   nombres shadcn sueltos tipo "primary"/"background"/"muted": nada en el
+   proyecto los necesita ya, y mantenerlos solo para este puente habría
+   reintroducido justo las variables del sistema antiguo que esta fase
+   elimina).
+   "inline" hace que cada nombre sea una referencia var() en vivo: el valor
+   real vive en :root/.light/.dark y aquí solo se re-expone.
+═══════════════════════════════════════════════════════════════════════════ */
 @theme inline {
-  --font-heading: "Space Mono", monospace;
-  --font-sans: "Geist Variable", "Geist", sans-serif;
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
+  --font-heading: "Inter", sans-serif;
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --color-foreground: var(--foreground);
-  --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --color-ring: var(--color-primary);
+  --color-input: var(--color-border);
+  --color-border: var(--color-border);
+  --color-destructive: var(--color-danger);
+  --color-accent-foreground: var(--color-primary);
+  --color-accent: var(--color-primary-soft);
+  --color-muted-foreground: var(--color-text-muted);
+  --color-muted: var(--color-surface);
+  --color-secondary-foreground: var(--color-text-primary);
+  --color-secondary: var(--color-surface);
+  --color-primary-foreground: var(--color-text-inverse);
+  --color-primary: var(--color-primary);
+  --color-popover-foreground: var(--color-text-primary);
+  --color-popover: var(--color-elevated);
+  --color-card-foreground: var(--color-text-primary);
+  --color-card: var(--color-surface);
+  --color-foreground: var(--color-text-primary);
+  --color-background: var(--color-background);
+  /* radios: bridge directo a los tokens Halo definidos abajo — nada de calc().
+     2xl/3xl/4xl no están en la escala Halo: se dejan caer a los valores por
+     defecto de Tailwind (afecta solo a rounded-t-2xl del FilterSheet, un
+     cambio de 18px→16px imperceptible). */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   MODO CLARO
+   HALO — TOKENS BASE
+   Tipografía, espaciado, radio, elevación y motion: no cambian entre temas.
+   --color-primary y --color-text-inverse tampoco varían — el primary de marca
+   es el mismo en dark y light, y el texto "inverso" (sobre botones primary)
+   siempre es blanco en ambos.
 ═══════════════════════════════════════════════════════════════════════════ */
 :root {
-  /* Superficie y texto */
-  --background: hsl(240, 20%, 98%);
-  --foreground: hsl(240, 10%, 15%);
-  --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(240, 10%, 15%);
-  --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(240, 10%, 15%);
+  /* Tipografía */
+  --font-body: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 
-  /* Primary → morado marca hsl(249, 100%, 69%) */
-  --primary: hsl(249, 100%, 69%);
-  --primary-foreground: hsl(240, 20%, 98%);
+  --text-display-size: 3rem;
+  --text-display-leading: 1.1;
+  --text-h1-size: 2.25rem;
+  --text-h1-leading: 1.2;
+  --text-h2-size: 1.5rem;
+  --text-h2-leading: 1.3;
+  --text-h3-size: 1.125rem;
+  --text-h3-leading: 1.4;
+  --text-body-size: 0.875rem;
+  --text-body-leading: 1.5;
+  --text-caption-size: 0.75rem;
+  --text-caption-leading: 1.4;
 
-  /* Secondary → morado muy claro para hover/selección suave */
-  --secondary: hsl(270, 40%, 94%);
-  --secondary-foreground: hsl(249, 100%, 69%);
+  /* Espaciado — misma escala numérica que Tailwind (space-1 = 4px) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 1.75rem;
+  --space-8: 2rem;
+  --space-9: 2.25rem;
+  --space-10: 2.5rem;
+  --space-11: 2.75rem;
+  --space-12: 3rem;
 
-  /* Muted → gris azulado para textos secundarios y fondos de descripción */
-  --muted: hsl(240, 10%, 95%);
-  --muted-foreground: hsl(240, 8%, 52%);
+  /* Radio — sm 6px / md 10px / lg 16px / xl 20px / full píldora */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-full: 999px;
 
-  --accent: hsl(270, 50%, 92%);
-  --accent-foreground: hsl(249, 100%, 69%);
+  /* Elevación — sombras neutras; --elevation-focus hereda el primary-soft
+     del tema activo automáticamente (referencia var() diferida). */
+  --elevation-sm: 0 1px 2px rgba(0, 0, 0, 0.24);
+  --elevation-md: 0 6px 16px rgba(0, 0, 0, 0.28);
+  --elevation-lg: 0 16px 40px rgba(0, 0, 0, 0.36);
+  --elevation-focus: 0 0 0 3px var(--color-primary-soft);
 
-  --destructive: hsl(14, 100%, 57%);
-  --border: hsl(240, 8%, 91%);
-  --input: hsl(240, 8%, 91%);
-  --ring: hsl(249, 100%, 69%);
-  --radius: 0.625rem;
+  /* Motion */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* ── Chart colors ────────────────────────────────────────────────────────
-     chart-1..5 para componentes genéricos que no distinguen por rol.
-     Coinciden con --role-backend/data-science/devops/ai-ml/management
-     para mantener coherencia visual sin duplicar valores.
-  ── ────────────────────────────────────────────────────────────────────── */
-  --chart-1: hsl(249, 100%, 69%); /* = role-backend   */
-  --chart-2: hsl(162, 60%, 35%); /* = role-data-science */
-  --chart-3: hsl(55, 60%, 42%); /* = role-devops    */
-  --chart-4: hsl(330, 75%, 40%); /* = role-ai-ml     */
-  --chart-5: hsl(240, 15%, 40%); /* = role-management */
+  /* Marca — igual en dark y light */
+  --color-primary: #5b6bff;
+  --color-primary-hover: #7482ff;
+  --color-primary-pressed: #4550d6;
+  --color-text-inverse: #ffffff;
+}
 
-  /* ── Colores de rol — familia Dev (índigos) ──────────────────────────────
-     backend: índigo saturado y oscuro → el más común, debe destacar
-     frontend: índigo medio
-     fullstack: índigo claro/lavanda
-  ── ────────────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   HALO — MODO CLARO (por defecto, sin clase — mantiene la mecánica actual
+   de useTheme.js/ThemeToggle.jsx, que solo alterna la clase "dark").
+   Se añade .light explícita para cumplir el checklist de la fase y dejar
+   la puerta abierta a activarla por clase si algún día se necesita; hoy
+   actúa vía :root porque no hay clase "light" en el DOM.
+═══════════════════════════════════════════════════════════════════════════ */
+:root,
+.light {
+  --color-background: #f6f6fc;
+  --color-surface: #ffffff;
+  --color-elevated: #ffffff;
+  --color-overlay: rgba(23, 23, 43, 0.45);
+
+  --color-border: rgba(23, 23, 43, 0.1);
+  --color-border-strong: rgba(23, 23, 43, 0.18);
+  --color-border-soft: rgba(23, 23, 43, 0.06);
+
+  --color-text-primary: #17172b;
+  --color-text-secondary: #4b4b63;
+  --color-text-muted: #83839c;
+
+  --color-primary-soft: rgba(91, 107, 255, 0.12);
+
+  --color-success: #16a34a;
+  --color-success-soft: rgba(22, 163, 74, 0.12);
+  --color-warning: #d97706;
+  --color-warning-soft: rgba(217, 119, 6, 0.12);
+  --color-info: #2563eb;
+  --color-info-soft: rgba(37, 99, 235, 0.12);
+  --color-danger: #dc2626;
+  --color-danger-soft: rgba(220, 38, 38, 0.12);
+
+  /* TODO: fase 007 (Halo Charts Internals) — paleta de colores de rol y
+     chart-N. Se mantienen intactos: no es rediseño visual, es la paleta
+     que ya usan roleLabels.js y las gráficas; solo chart-1..5 ahora
+     referencian --role-* en vez de duplicar el valor (ver audit.md #3). */
+  --chart-1: var(--role-backend);
+  --chart-2: var(--role-data-science);
+  --chart-3: var(--role-devops);
+  --chart-4: var(--role-ai-ml);
+  --chart-5: var(--role-management);
+
   --role-backend: hsl(258, 80%, 38%);
   --role-frontend: hsl(260, 70%, 48%);
   --role-fullstack: hsl(263, 55%, 60%);
 
-  /* ── Familia Data (esmeraldas/teales) ────────────────────────────────────
-     data_engineering: teal oscuro
-     data_science: esmeralda media
-     data_analyst: verde menta claro
-  ── ────────────────────────────────────────────────────────────────────── */
   --role-data-engineering: hsl(175, 60%, 32%);
   --role-data-science: hsl(162, 55%, 38%);
   --role-data-analyst: hsl(148, 45%, 46%);
 
-  /* ── Familia Infra (ámbar/naranja) ───────────────────────────────────────
-     devops: ámbar oscuro/mostaza
-     cloud: ámbar brillante
-     sysadmin: ámbar claro/dorado pálido
-  ── ────────────────────────────────────────────────────────────────────── */
   --role-devops: hsl(55, 55%, 42%);
   --role-cloud: hsl(70, 58%, 48%);
   --role-sysadmin: hsl(85, 48%, 56%);
 
-  /* ── Familia AI/Especialidad (rosas, corales, fucsias) ───────────────────
-     ai_ml: rosa vibrante — el más "especial", merece el color más llamativo
-     security: fucsia/magenta
-     mobile: coral
-     qa_testing: rosa pálido/salmón
-     erp_sap: rosa terroso/marrón rosado
-  ── ────────────────────────────────────────────────────────────────────── */
   --role-ai-ml: hsl(330, 75%, 40%);
   --role-security: hsl(310, 65%, 38%);
   --role-mobile: hsl(20, 68%, 45%);
   --role-qa-testing: hsl(350, 48%, 50%);
   --role-erp-sap: hsl(5, 42%, 44%);
 
-  /* ── Cajones de sastre (neutros azulados) ────────────────────────────────
-     management: slate azulado medio — importante pero no técnico
-     other: gris azulado apagado — residual, no debe llamar la atención
-  ── ────────────────────────────────────────────────────────────────────── */
   --role-management: hsl(240, 22%, 42%);
   --role-other: hsl(240, 10%, 52%);
-
-  /* Sidebar — mismos valores que la superficie principal */
-  --sidebar: hsl(240, 20%, 98%);
-  --sidebar-foreground: hsl(240, 10%, 15%);
-  --sidebar-primary: hsl(249, 100%, 69%);
-  --sidebar-primary-foreground: hsl(0, 0%, 98%);
-  --sidebar-accent: hsl(270, 50%, 92%);
-  --sidebar-accent-foreground: hsl(249, 100%, 69%);
-  --sidebar-border: hsl(240, 8%, 91%);
-  --sidebar-ring: hsl(249, 100%, 69%);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   MODO OSCURO
-   Fondo azul marino oscuro. Todos los colores de rol se hacen más
-   luminosos para contrastar sobre el fondo oscuro.
+   HALO — MODO OSCURO
+   Fondo #0A0B0F, superficies #14151C / #1E2029 (valores exactos de
+   tech-stack.md). Solo se sobreescriben los tokens de color: tipografía,
+   espaciado, radio, elevación y motion son los mismos de :root.
 ═══════════════════════════════════════════════════════════════════════════ */
 .dark {
-  --background: hsl(235, 25%, 14%);
-  --foreground: hsl(240, 10%, 94%);
-  --card: hsl(237, 22%, 18%);
-  --card-foreground: hsl(240, 10%, 94%);
-  --popover: hsl(237, 22%, 18%);
-  --popover-foreground: hsl(240, 10%, 94%);
+  --color-background: #0a0b0f;
+  --color-surface: #14151c;
+  --color-elevated: #1e2029;
+  --color-overlay: rgba(5, 5, 9, 0.72);
 
-  --primary: hsl(249, 100%, 69%);
-  --primary-foreground: hsl(240, 15%, 10%);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+  --color-border-soft: rgba(255, 255, 255, 0.05);
 
-  --secondary: hsl(240, 18%, 22%);
-  --secondary-foreground: hsl(263, 55%, 68%);
+  --color-text-primary: #f5f6f8;
+  --color-text-secondary: #b4b7c5;
+  --color-text-muted: #7b7f8e;
 
-  --muted: hsl(240, 12%, 22%);
-  --muted-foreground: hsl(240, 8%, 65%);
+  --color-primary-soft: rgba(91, 107, 255, 0.18);
 
-  --accent: hsl(255, 20%, 26%);
-  --accent-foreground: hsl(263, 55%, 68%);
+  --color-success: #22c55e;
+  --color-success-soft: rgba(34, 197, 94, 0.16);
+  --color-warning: #f59e0b;
+  --color-warning-soft: rgba(245, 158, 11, 0.16);
+  --color-info: #3b82f6;
+  --color-info-soft: rgba(59, 130, 246, 0.16);
+  --color-danger: #ef4444;
+  --color-danger-soft: rgba(239, 68, 68, 0.16);
 
-  --destructive: hsl(20, 80%, 58%);
-  --border: hsl(0, 0%, 100%, 0.08);
-  --input: hsl(0, 0%, 100%, 0.1);
-  --ring: hsl(249, 100%, 69%);
+  /* TODO: fase 007 (Halo Charts Internals) — ver nota de arriba en :root */
+  --chart-1: var(--role-backend);
+  --chart-2: var(--role-data-science);
+  --chart-3: var(--role-devops);
+  --chart-4: var(--role-ai-ml);
+  --chart-5: var(--role-management);
 
-  /* Chart colors en dark: más luminosos para contrastar sobre fondo oscuro */
-  --chart-1: hsl(258, 70%, 58%); /* = role-backend dark   */
-  --chart-2: hsl(162, 52%, 48%); /* = role-data-science dark */
-  --chart-3: hsl(55, 55%, 55%); /* = role-devops dark    */
-  --chart-4: hsl(330, 68%, 52%); /* = role-ai-ml dark     */
-  --chart-5: hsl(240, 18%, 55%); /* = role-management dark */
-
-  /* Dev */
   --role-backend: hsl(258, 70%, 58%);
   --role-frontend: hsl(260, 62%, 62%);
   --role-fullstack: hsl(263, 48%, 70%);
 
-  /* Data */
   --role-data-engineering: hsl(175, 52%, 42%);
   --role-data-science: hsl(162, 48%, 48%);
   --role-data-analyst: hsl(148, 38%, 56%);
 
-  /* Infra */
   --role-devops: hsl(55, 50%, 52%);
   --role-cloud: hsl(70, 52%, 58%);
   --role-sysadmin: hsl(85, 42%, 64%);
 
-  /* AI/Especialidad */
   --role-ai-ml: hsl(330, 68%, 52%);
   --role-security: hsl(310, 58%, 48%);
   --role-mobile: hsl(20, 62%, 52%);
   --role-qa-testing: hsl(350, 42%, 58%);
   --role-erp-sap: hsl(5, 38%, 52%);
 
-  /* Cajones de sastre */
   --role-management: hsl(240, 18%, 55%);
   --role-other: hsl(240, 8%, 60%);
-
-  --sidebar: hsl(237, 22%, 18%);
-  --sidebar-foreground: hsl(240, 10%, 94%);
-  --sidebar-primary: hsl(249, 100%, 69%);
-  --sidebar-primary-foreground: hsl(240, 10%, 94%);
-  --sidebar-accent: hsl(255, 20%, 26%);
-  --sidebar-accent-foreground: hsl(263, 55%, 68%);
-  --sidebar-border: hsl(0, 0%, 100%, 0.08);
-  --sidebar-ring: hsl(249, 100%, 69%);
 }
 
 @layer base {
@@ -242,11 +260,14 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    GLOW BUTTON — Efecto aurora fluido animado
    Colores: #7cff67 → #B497CF → #5227FF
-   
+   Se conserva tal cual (AGENTS.md: "efecto visual que se mantiene") — el
+   degradado multicolor es el efecto característico, no un color semántico
+   Halo. Solo se actualizan radios/colores de texto que sí son tokens.
+
    Técnica: linear-gradient con background-size 200% animado en X,
    igual que el Aurora del hero — da efecto de fluido en movimiento,
    no de rueda giratoria.
-   
+
    Por defecto: gradiente fluido como relleno completo
    Hover:       relleno oscuro + gradiente en box-shadow (borde neón)
                 El tamaño del botón NO cambia — evita huecos en los extremos
@@ -269,7 +290,7 @@
    DETRÁS del inner — sin afectar al tamaño del botón en absoluto. */
 .glow-button-wrapper {
   position: relative;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   display: inline-flex;
 }
 
@@ -288,7 +309,7 @@
 .glow-button-inner {
   position: relative;
   z-index: 1;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   cursor: pointer;
   font-weight: 600;
   font-size: 0.875rem;
@@ -300,7 +321,7 @@
   width: 100%;
   border: none;
   outline: none;
-  color: white;
+  color: var(--color-text-inverse);
   /* Aurora fluido como relleno en reposo */
   background: linear-gradient(
     135deg,
@@ -312,22 +333,24 @@
   );
   background-size: 300% 300%;
   animation: auroraFlow 4s ease infinite;
-  transition: background 200ms ease;
+  transition: background var(--duration-base) ease;
 }
 
-/* Hover — fondo oscuro, el ::before aurora queda visible como borde */
+/* Hover — fondo casi negro constante (no sigue el tema: el borde aurora
+   necesita máximo contraste tanto en dark como en light), el ::before
+   aurora queda visible como borde. */
 .glow-button-wrapper:hover .glow-button-inner {
-  background: hsl(249, 30%, 8%);
+  background: #0a0b0f;
   background-size: unset;
   animation: none;
 }
 
 /* Variante ghost — relleno card, tamaño más pequeño */
 .glow-ghost .glow-button-inner {
-  background: hsl(var(--card));
+  background: var(--color-surface);
   background-size: unset;
   animation: none;
-  color: hsl(var(--foreground));
+  color: var(--color-text-primary);
   font-size: 0.75rem;
   padding: 0.375rem 0.875rem;
   box-shadow:
@@ -352,7 +375,8 @@
   }
 }
 
-/* ── Aurora icon — efecto gradiente animado en iconos activos del BottomNav ── */
+/* ── Aurora icon — efecto gradiente animado en iconos activos del BottomNav ──
+   TODO: rediseñar en fase 005 (Halo BottomNav). */
 /* Usa el mismo gradiente que GlowButton pero aplicado como filter hue-rotate */
 @keyframes auroraHue {
   0% {
@@ -375,6 +399,7 @@
 }
 
 /* ── KPI Card — borde aurora animado igual que GlowButton ───────────────────
+   TODO: rediseñar en fase 003 (Halo Stat Tiles).
    Por defecto: fondo transparente + backdrop-blur (se ve el fondo animado).
    Hover: gradiente aurora como borde (wrapper) + fondo oscuro (inner).
    Usa el mismo @keyframes auroraFlow del GlowButton.
@@ -383,14 +408,14 @@
 /* Wrapper KPI — por defecto sin borde visible, en hover aurora grueso */
 .glow-kpi-wrapper {
   position: relative;
-  border-radius: 0.75rem;
+  border-radius: var(--radius-lg);
   display: block;
   padding: 1.5px;
   background: transparent;
   transition:
-    padding 200ms ease,
-    background 200ms ease,
-    box-shadow 200ms ease;
+    padding var(--duration-base) ease,
+    background var(--duration-base) ease,
+    box-shadow var(--duration-base) ease;
 }
 
 .glow-kpi-wrapper:hover {
@@ -415,28 +440,30 @@
 .glow-kpi-inner {
   position: relative;
   z-index: 1;
-  border-radius: 0.625rem; /* ligeramente menor que el wrapper */
+  border-radius: var(--radius-md);
   background: transparent;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  color: hsl(var(--foreground));
-  transition: background 200ms ease;
+  color: var(--color-text-primary);
+  transition: background var(--duration-base) ease;
   cursor: default;
   width: 100%;
 }
 
 .glow-kpi-wrapper:hover .glow-kpi-inner {
-  background: hsl(249, 30%, 8%);
+  background: #0a0b0f;
 }
 
-/* Light mode hover — lavanda muy claro */
+/* Light mode hover — igual que chart-card-inner, necesita ser opaco para
+   tapar el degradado del borde (--color-primary-soft es semitransparente). */
 :root:not(.dark) .glow-kpi-wrapper:hover .glow-kpi-inner {
-  background: hsl(249, 80%, 92%);
-  color: hsl(249, 60%, 35%);
+  background: var(--color-background);
+  color: var(--color-primary-pressed);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CHART CARD — Solo el borde con aurora animado
+   TODO: rediseñar en fase 002 (Halo ChartCard).
    Técnica idéntica al GlowButton en hover:
      wrapper  → gradiente aurora fluido animado (visible como borde)
      inner    → tapa el centro con el color del fondo, dejando solo 1.5px de borde
@@ -445,7 +472,7 @@
 
 .chart-card-border {
   position: relative;
-  border-radius: 1rem;
+  border-radius: var(--radius-xl);
   padding: 3px;
   background: linear-gradient(
     135deg,
@@ -459,38 +486,40 @@
   animation: auroraFlow 4s ease infinite;
 }
 
-/* Interior — tapa el gradiente dejando solo el borde visible.
-   Dark: color del fondo. Light: morado claro igual que las KPI cards. */
+/* Interior — tapa el gradiente dejando solo el borde visible. */
 .chart-card-inner {
   position: relative;
-  border-radius: calc(1rem - 3px);
-  background: var(--background);
+  border-radius: calc(var(--radius-xl) - 3px);
+  background: var(--color-background);
 }
 
+/* Debe ser opaco (no --color-primary-soft, que es semitransparente) para
+   tapar completamente el degradado del wrapper — si no, el gradiente
+   "sangra" a través en vez de quedar como un borde nítido de 3px. */
 :root:not(.dark) .chart-card-inner {
-  background: hsl(249, 80%, 95%);
+  background: var(--color-background);
 }
 
 /* ── Chart graph area — fondo blanco solo en el área de la gráfica ───────────
-   En light mode, la card tiene fondo morado claro (hsl(249,80%,95%)).
+   En light mode, la card tiene fondo lila claro (--color-primary-soft).
    El área de la gráfica necesita fondo blanco para que los ejes y datos
-   sean legibles. mask-image difumina los bordes hacia el morado de la card.
-   En dark mode no hace nada — el fondo ya es oscuro uniformemente.
+   sean legibles. En dark mode no hace nada — el fondo ya es oscuro uniformemente.
 ── ────────────────────────────────────────────────────────────────────────── */
 .chart-graph-area {
-  border-radius: 0.5rem;
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
 :root:not(.dark) .chart-graph-area {
-  background: white;
+  background: var(--color-surface);
   padding: 8px 12px;
   /* Fondo blanco con corte limpio contra el lila de la card — sin difuminado */
 }
 
-/* ── Aurora text — color primary en texto del BottomNav activo ───────────── */
+/* ── Aurora text — color primary en texto del BottomNav activo ─────────────
+   TODO: rediseñar en fase 005 (Halo BottomNav). */
 .aurora-text {
-  color: hsl(249, 100%, 69%);
+  color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -498,4 +527,27 @@
 .glow-button-sm .glow-button-inner {
   padding: 0.5rem 1rem;
   font-size: 0.8rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HERO BACKGROUNDS
+   TODO: rediseñar/aplicar en fase 006 (Halo Hero). Definidas ya para que esa
+   fase no tenga que inventar la nomenclatura — MainContent.jsx sigue usando
+   Aurora/DarkVeil como fondo animado del hero; estas clases quedan listas
+   para cuando se integre el fondo estático detrás de ambos efectos.
+═══════════════════════════════════════════════════════════════════════════ */
+.hero-bg-dark {
+  background: radial-gradient(
+    ellipse 120% 80% at top,
+    var(--color-primary-soft),
+    #0a0b0f 65%
+  );
+}
+
+.hero-bg-light {
+  background: radial-gradient(
+    ellipse 120% 80% at top,
+    var(--color-primary-soft),
+    #f6f6fc 65%
+  );
 }

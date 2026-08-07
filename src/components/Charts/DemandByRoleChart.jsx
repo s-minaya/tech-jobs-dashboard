@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from "recharts";
 import { getDemandByRole } from "@/services/jobServices";
-import { getRoleLabel, getRoleColor } from "@/lib/roleLabels";
+import { getRoleLabel, getRoleColor, extractRoles } from "@/lib/roleLabels";
 import { useChartData } from "@/hooks/useChartData";
 import ChartCard from "@/components/ui/ChartCard";
 import ChartDescription, {
@@ -39,9 +39,9 @@ function generarMesesRango(nMeses) {
   const meses = [];
   const ahora = new Date();
   for (let i = nMeses - 1; i >= 0; i--) {
-    const d = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
+    const date = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
     meses.push(
-      d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" }),
+      date.toLocaleDateString("es-ES", { month: "short", year: "2-digit" }),
     );
   }
   return meses;
@@ -63,10 +63,6 @@ function pivotData(rows, mesesRango) {
     byMonth[label][role_category] = Number(job_count);
   }
   return Object.values(byMonth);
-}
-
-function extractRoles(rows) {
-  return [...new Set(rows.map((r) => r.role_category))];
 }
 
 // Tooltip personalizado que muestra "175 ofertas" en vez de solo "175".

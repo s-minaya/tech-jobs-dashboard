@@ -16,7 +16,7 @@ import ChartDescription, {
   getWarningNodes,
 } from "@/components/ui/ChartDescription";
 import HeatmapSvg from "@/components/Charts/HeatmapSvg";
-import HeatmapLeyenda from "@/components/Charts/HeatmapLeyenda";
+import HeatmapLegend from "@/components/Charts/HeatmapLegend";
 import { RiSmartphoneLine } from "react-icons/ri";
 
 const FILTROS_IGNORADOS = ["pais", "contrato", "jornada", "remote"];
@@ -182,7 +182,7 @@ function SkillHeatmap({ filters }) {
           )}
 
           {skills.length > 0 && !loadingSkills && (
-            <HeatmapLeyenda maxPct={maxPct} />
+            <HeatmapLegend maxPct={maxPct} />
           )}
         </>
       )}
