@@ -74,7 +74,7 @@
 
 ## Cierre
 
-- [ ] Validar contra todos los criterios de aceptación de `spec.md`.
-- [ ] Actualizar `spec/features/001-halo-tokens/audit.md` con el estado final de cada hallazgo.
-- [ ] Mover la feature a "Hecho" en `spec/constitution/roadmap.md`.
-- [ ] Commit: `feat: apply Halo design tokens and dual theme, audit and fix project structure`
+- [x] Validar contra todos los criterios de aceptación de `spec.md`.
+- [x] Actualizar `spec/features/001-halo-tokens/audit.md` con el estado final de cada hallazgo.
+- [x] Mover la feature a "Hecho" en `spec/constitution/roadmap.md`.
+- [x] Commit: `feat: apply Halo design tokens and dual theme, audit and fix project structure`
