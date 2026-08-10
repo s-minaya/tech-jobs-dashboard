@@ -57,7 +57,7 @@ function BottomNav({ activeSection, onOpenFilters, filters }) {
   return (
     <nav className="fixed right-0 bottom-0 left-0 z-50 md:hidden">
       {/* Fondo con blur para separar visualmente del contenido */}
-      <div className="border-t border-white/8 bg-background/95 backdrop-blur-md">
+      <div className="border-t border-border bg-elevated/95 backdrop-blur-md">
         <div className="pb-safe flex items-center justify-around px-2 py-2">
           {NAV_ITEMS.map((item) => {
             const isActive = activeSection === item.id;

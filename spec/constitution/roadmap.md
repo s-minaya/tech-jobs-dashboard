@@ -36,13 +36,17 @@ _(anterior al rediseño Halo)_
    `FilterDrawer.test.jsx`, que desde su creación testeaba por error
    `SummaryStats` (contenido duplicado) en vez de `FilterDrawer`.
 
+6. **005 · Halo BottomNav** — última barra con valores hardcodeados:
+   `bg-background/95` → `bg-elevated/95` (mismo nivel de superficie que
+   drawer/sheet), `border-white/8` → `border-border`. Cambio mínimo, sin
+   tocar lógica ni tests.
+
 ## En curso 🔜
 
-_(ninguna — siguiente: 005)_
+_(ninguna — siguiente: 006)_
 
 ## Backlog 💡
 
-6. **005 · Halo BottomNav** — barra de navegación móvil con estética Halo.
 7. **006 · Halo Hero** — sección hero del dashboard con Aurora, fondos dual-theme y ThemeToggle.
 8. **007 · Halo Charts Internals** — colores internos de todas las gráficas adaptados a la paleta Halo.
 9. **008 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
