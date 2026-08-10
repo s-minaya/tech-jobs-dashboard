@@ -8,8 +8,10 @@ import DecryptedText from "@/components/ui/DecryptedText";
 // Centrado cuando no hay aviso, alineado a la izquierda cuando hay ⓘ.
 // El título usa DecryptedText para el efecto de descifrado al hacer hover.
 //
-// Borde aurora animado (chart-card-border) con interior del color del fondo
-// (chart-card-inner) — el gradiente solo es visible como borde de 3px.
+// Card con superficie Halo (chart-card): fondo --color-surface y borde
+// hairline 1px --color-border — sin gradiente animado. El aurora se
+// reserva para elementos interactivos (GlowButton, hero); esta card es
+// contenido pasivo.
 //
 // Distingue dos estados de carga:
 //   - Carga inicial (isInitialLoad=true): muestra "Cargando..."
@@ -53,41 +55,39 @@ function ChartCard({
         </div>
       )}
 
-      {/* Card con borde aurora */}
-      <div className="chart-card-border relative">
-        <div className="chart-card-inner p-5">
-          {!loading && error && (
-            <p className="text-sm text-destructive">Error: {error}</p>
-          )}
+      {/* Card con superficie Halo y borde hairline */}
+      <div className="chart-card relative p-5">
+        {!loading && error && (
+          <p className="text-sm text-destructive">Error: {error}</p>
+        )}
 
-          {/* Carga inicial */}
-          {showSpinner && (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              Cargando...
-            </p>
-          )}
+        {/* Carga inicial */}
+        {showSpinner && (
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            Cargando...
+          </p>
+        )}
 
-          {/* Contenido */}
-          {!error && !showSpinner && (
-            <div
-              style={{
-                opacity: showStale ? 0.4 : 1,
-                transition: "opacity 200ms ease",
-              }}
-            >
-              {children}
-            </div>
-          )}
+        {/* Contenido */}
+        {!error && !showSpinner && (
+          <div
+            style={{
+              opacity: showStale ? 0.4 : 1,
+              transition: "opacity 200ms ease",
+            }}
+          >
+            {children}
+          </div>
+        )}
 
-          {/* Badge de actualización */}
-          {showStale && (
-            <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-3">
-              <span className="rounded-full border border-border bg-background/80 px-2 py-0.5 text-xs text-muted-foreground shadow-sm backdrop-blur-sm">
-                Actualizando...
-              </span>
-            </div>
-          )}
-        </div>
+        {/* Badge de actualización */}
+        {showStale && (
+          <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-3">
+            <span className="rounded-full border border-border bg-elevated px-2 py-0.5 text-xs text-muted-foreground">
+              Actualizando...
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

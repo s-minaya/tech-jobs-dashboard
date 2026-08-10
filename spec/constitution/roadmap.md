@@ -12,13 +12,18 @@ _(anterior al rediseño Halo)_
    `spec/features/001-halo-tokens/audit.md` para el detalle y los hallazgos
    diferidos a fases 004/005/006/007.
 
+3. **002 · Halo ChartCard** — borde aurora animado sustituido por hairline
+   1px `--color-border` estático; fondo de card a `--color-surface`; badge
+   "Actualizando..." con tokens Halo (`--color-elevated`). El aurora queda
+   reservado a GlowButton/hero. Sin cambios en `DecryptedText`, el ⓘ de
+   filtros ni la lógica de estados.
+
 ## En curso 🔜
 
-_(ninguna — siguiente: 002)_
+_(ninguna — siguiente: 003)_
 
 ## Backlog 💡
 
-3. **002 · Halo ChartCard** — rediseñar el wrapper visual de las gráficas (conservando DecryptedText).
 4. **003 · Halo Stat Tiles** — KPI cards con patrón stat-tile de Halo y signal colors.
 5. **004 · Halo Filtros** — FilterDrawer, FilterSheet y FilterSection con estética Halo (conservando GlowButton en CTAs).
 6. **005 · Halo BottomNav** — barra de navegación móvil con estética Halo.

@@ -40,6 +40,7 @@
   --color-primary: var(--color-primary);
   --color-popover-foreground: var(--color-text-primary);
   --color-popover: var(--color-elevated);
+  --color-elevated: var(--color-elevated);
   --color-card-foreground: var(--color-text-primary);
   --color-card: var(--color-surface);
   --color-foreground: var(--color-text-primary);
@@ -454,50 +455,23 @@
   background: #0a0b0f;
 }
 
-/* Light mode hover — igual que chart-card-inner, necesita ser opaco para
-   tapar el degradado del borde (--color-primary-soft es semitransparente). */
+/* Light mode hover — debe ser opaco: --color-primary-soft es semitransparente
+   y dejaría ver el degradado del wrapper por debajo. */
 :root:not(.dark) .glow-kpi-wrapper:hover .glow-kpi-inner {
   background: var(--color-background);
   color: var(--color-primary-pressed);
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   CHART CARD — Solo el borde con aurora animado
-   TODO: rediseñar en fase 002 (Halo ChartCard).
-   Técnica idéntica al GlowButton en hover:
-     wrapper  → gradiente aurora fluido animado (visible como borde)
-     inner    → tapa el centro con el color del fondo, dejando solo 1.5px de borde
-   Sin hover — el efecto es estático y no cambia el tamaño.
-═══════════════════════════════════════════════════════════════════════════ */
-
-.chart-card-border {
-  position: relative;
+/* ── Chart card — superficie Halo con borde hairline ─────────────────────
+   Nivel de superficie 2 (--color-surface) sobre el fondo de página
+   (--color-background), separados por borde 1px --color-border.
+   Tanto dark como light mode usan el mismo token — solo cambia el valor.
+   Sin gradiente animado: el aurora se reserva para elementos interactivos
+   (GlowButton, hero) — esta card es contenido pasivo, sin hover. ── ─────── */
+.chart-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  padding: 3px;
-  background: linear-gradient(
-    135deg,
-    #7cff67,
-    #b497cf,
-    #5227ff,
-    #b497cf,
-    #7cff67
-  );
-  background-size: 300% 300%;
-  animation: auroraFlow 4s ease infinite;
-}
-
-/* Interior — tapa el gradiente dejando solo el borde visible. */
-.chart-card-inner {
-  position: relative;
-  border-radius: calc(var(--radius-xl) - 3px);
-  background: var(--color-background);
-}
-
-/* Debe ser opaco (no --color-primary-soft, que es semitransparente) para
-   tapar completamente el degradado del wrapper — si no, el gradiente
-   "sangra" a través en vez de quedar como un borde nítido de 3px. */
-:root:not(.dark) .chart-card-inner {
-  background: var(--color-background);
 }
 
 /* ── Chart graph area — fondo blanco solo en el área de la gráfica ───────────

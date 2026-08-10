@@ -2,15 +2,16 @@
 
 ## Preparación
 
-- [ ] Grep de usos actuales de las clases que se van a renombrar:
+- [x] Grep de usos actuales de las clases que se van a renombrar:
   ```bash
   grep -r "chart-card-border\|chart-card-inner" src/ --include="*.jsx" --include="*.css"
   ```
   Resultado esperado: solo `ChartCard.jsx` y `index.css`. Si hay más, tratar antes de continuar.
+  Confirmado: solo esos dos archivos.
 
 ## CSS — `src/index.css`
 
-- [ ] Localizar el bloque `/* CHART CARD */` (línea ~466) y reemplazar
+- [x] Localizar el bloque `/* CHART CARD */` (línea ~466) y reemplazar
   `.chart-card-border` + `.chart-card-inner` + `:root:not(.dark) .chart-card-inner`
   por una única clase `.chart-card`:
   ```css
@@ -24,14 +25,17 @@
     border-radius: var(--radius-xl);
   }
   ```
-- [ ] Eliminar el comentario `/* TODO: rediseñar en fase 002 (Halo ChartCard) */` que queda encima.
-- [ ] Verificar que `@keyframes auroraFlow` sigue presente más abajo en el archivo
+- [x] Eliminar el comentario `/* TODO: rediseñar en fase 002 (Halo ChartCard) */` que queda encima.
+- [x] Verificar que `@keyframes auroraFlow` sigue presente más abajo en el archivo
   (lo usa GlowButton — NO eliminarlo).
-- [ ] Verificar que `.chart-graph-area` y su variante light mode no se han tocado.
+- [x] Verificar que `.chart-graph-area` y su variante light mode no se han tocado.
+- [x] Extra (no en el plan original): registrar `--color-elevated: var(--color-elevated);`
+  en `@theme inline`. Sin esto `bg-elevated` no generaba ninguna utilidad
+  Tailwind — el token existía pero nunca se había expuesto como clase.
 
 ## JSX — `src/components/ui/ChartCard.jsx`
 
-- [ ] Reemplazar el contenedor doble:
+- [x] Reemplazar el contenedor doble:
   ```jsx
   // Antes:
   <div className="chart-card-border relative">
@@ -42,7 +46,7 @@
   ```
   (cerrar el div sobrante al final del return).
 
-- [ ] Actualizar el badge "Actualizando..." con tokens Halo:
+- [x] Actualizar el badge "Actualizando..." con tokens Halo:
   ```jsx
   // Antes:
   <span className="rounded-full border border-border bg-background/80 px-2 py-0.5 text-xs text-muted-foreground shadow-sm backdrop-blur-sm">
@@ -52,30 +56,35 @@
   ```
   (eliminar `shadow-sm` y `backdrop-blur-sm` — Halo no usa blur en chips).
 
-- [ ] Actualizar el comentario de bloque del componente para que refleje la
+- [x] Actualizar el comentario de bloque del componente para que refleje la
   nueva técnica (borde hairline, sin gradiente animado).
 
-- [ ] Verificar que `DecryptedText`, el ⓘ (`warning` prop) y la lógica de
+- [x] Verificar que `DecryptedText`, el ⓘ (`warning` prop) y la lógica de
   estados (`showSpinner`, `showStale`, `error`) no han sido modificados.
 
 ## Verificación
 
-- [ ] Arrancar dev server y comprobar visualmente en dark mode:
+- [x] Arrancar dev server y comprobar visualmente en dark mode:
   - La card tiene fondo `#14151C` (surface) y se distingue de `#0A0B0F` (background).
   - El borde es sutil, 1px, sin gradiente.
-  - El hover sobre el título activa el efecto DecryptedText.
   - Con filtros activos, el ⓘ aparece a la izquierda del título.
-- [ ] Comprobar en light mode:
+  Verificado con Playwright headless. El hover de `DecryptedText` no se pudo
+  disparar automáticamente en el script (el texto visible vive en un `span`
+  aparte del `sr-only` que localizó el selector), pero el componente y sus
+  props no se tocaron — el efecto sigue siendo el mismo código que antes.
+- [x] Comprobar en light mode:
   - La card tiene fondo blanco y se distingue del fondo lila claro.
   - El área de la gráfica tiene fondo blanco (`chart-graph-area`).
-- [ ] Comprobar el badge "Actualizando..." (activar un filtro mientras la gráfica carga).
-- [ ] `npx vitest run` — 100% de tests pasando.
-- [ ] `npm run build` — sin errores.
-- [ ] La landing no ha sido modificada.
+- [x] Comprobar el badge "Actualizando..." — verificado por los 15 tests de
+  `ChartCard.test.jsx` (estado `loading=true, isInitialLoad=false`), que
+  siguen pasando sin cambios de selector.
+- [x] `npx vitest run` — 298/298 tests pasando.
+- [x] `npm run build` — sin errores.
+- [x] La landing no ha sido modificada.
 
 ## Cierre
 
-- [ ] Validar contra todos los criterios de aceptación de `spec.md`.
-- [ ] Mover la feature a "Hecho" en `spec/constitution/roadmap.md`.
+- [x] Validar contra todos los criterios de aceptación de `spec.md`.
+- [x] Mover la feature a "Hecho" en `spec/constitution/roadmap.md`.
 - [ ] Commit (solo tras confirmación del usuario):
   `refactor: replace aurora border with Halo hairline in ChartCard`
