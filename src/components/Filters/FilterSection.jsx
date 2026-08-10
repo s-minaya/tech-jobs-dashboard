@@ -75,7 +75,7 @@ function FilterChip({ children, icon: Icon, isActive, onClick }) {
       className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150 ${
         isActive
           ? "border-primary bg-primary text-primary-foreground shadow-sm shadow-primary/25"
-          : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+          : "border-border bg-surface text-muted-foreground hover:border-primary/40 hover:text-foreground"
       } `}
     >
       {Icon && <Icon className="h-3.5 w-3.5 shrink-0" />}
@@ -125,7 +125,7 @@ function FilterSection({
 }) {
   return (
     <div className="mb-5">
-      <p className="mb-2 text-xs font-semibold tracking-wider text-muted-foreground/70 uppercase">
+      <p className="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
         {title}
       </p>
       {fullWidth ? (

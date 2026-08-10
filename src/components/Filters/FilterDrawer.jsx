@@ -28,11 +28,11 @@ function FilterFAB({ filters, onClick }) {
         {/* Badge con número de filtros activos */}
         {count > 0 && (
           <>
-            <span className="absolute -top-1 -right-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] font-bold text-primary shadow-md">
+            <span className="absolute -top-1 -right-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-md">
               {count}
             </span>
             {/* Anillo pulsante */}
-            <span className="absolute -top-1 -right-1 h-5 w-5 animate-ping rounded-full bg-white/40" />
+            <span className="absolute -top-1 -right-1 h-5 w-5 animate-ping rounded-full bg-primary/40" />
           </>
         )}
       </div>
@@ -80,7 +80,7 @@ function FilterDrawer({ isOpen, onClose, filters, onFilterChange, onReset }) {
 
       {/* Drawer desde la izquierda — solo md+ */}
       <div
-        className={`fixed top-0 left-0 z-50 flex hidden h-full w-72 flex-col border-r border-border bg-background shadow-2xl shadow-black/20 transition-transform duration-350 ease-[cubic-bezier(0.32,0.72,0,1)] md:flex dark:shadow-black/60 ${
+        className={`fixed top-0 left-0 z-50 flex hidden h-full w-72 flex-col border-r border-border bg-elevated shadow-2xl shadow-black/20 transition-transform duration-350 ease-[cubic-bezier(0.32,0.72,0,1)] md:flex dark:shadow-black/60 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

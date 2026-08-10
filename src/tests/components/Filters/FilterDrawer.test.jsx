@@ -1,98 +1,157 @@
-import { describe, it, expect } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import { http, HttpResponse } from "msw";
-import { server } from "@/mocks/server";
-import SummaryStats from "@/components/layout/SummaryStats";
+import { describe, it, expect, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import FilterDrawer, { FilterFAB } from "@/components/Filters/FilterDrawer";
+import { PERIODO_DEFAULT } from "@/lib/filterUtils";
 
-describe("SummaryStats", () => {
-  describe("estado de carga", () => {
-    it("muestra 5 skeletons mientras carga", () => {
-      render(<SummaryStats />);
-      // Los skeletons tienen animate-pulse, es la única forma de identificarlos
-      // ya que no tienen texto ni rol semántico propio
-      expect(document.querySelectorAll(".animate-pulse")).toHaveLength(5);
+// Nota: este archivo testeaba por error SummaryStats (contenido duplicado
+// desde el commit que lo creó) — FilterDrawer nunca tuvo tests propios.
+// Reescrito en la fase 004 al modificar el componente.
+
+const filtersNeutros = {
+  pais: "Todos",
+  periodo: PERIODO_DEFAULT,
+  contrato: "Todos",
+  jornada: "Todos",
+  remote: "Todos",
+  skillCategoria: "Todas",
+};
+
+function renderDrawer(props = {}) {
+  const onClose = vi.fn();
+  const onFilterChange = vi.fn();
+  const onReset = vi.fn();
+  const utils = render(
+    <FilterDrawer
+      isOpen={true}
+      onClose={onClose}
+      filters={filtersNeutros}
+      onFilterChange={onFilterChange}
+      onReset={onReset}
+      {...props}
+    />,
+  );
+  return { ...utils, onClose, onFilterChange, onReset };
+}
+
+describe("FilterDrawer", () => {
+  describe("estructura", () => {
+    it("muestra el título Filtros en la cabecera", () => {
+      renderDrawer();
+      expect(screen.getByText("Filtros")).toBeInTheDocument();
     });
 
-    it("los skeletons desaparecen cuando los datos llegan", async () => {
-      render(<SummaryStats />);
-      // Primero verificamos que los skeletons SÍ están (para evitar falso positivo)
-      expect(document.querySelectorAll(".animate-pulse")).toHaveLength(5);
-      // Luego esperamos a que desaparezcan
-      await waitFor(() => {
-        expect(document.querySelectorAll(".animate-pulse")).toHaveLength(0);
-      });
-    });
-  });
-
-  describe("datos cargados correctamente", () => {
-    it("muestra el total de ofertas activas formateado con separador de miles", async () => {
-      render(<SummaryStats />);
-      await waitFor(() => {
-        expect(screen.getByText("26.023")).toBeInTheDocument();
-      });
+    it("renderiza una sección por cada filtro configurado", () => {
+      renderDrawer();
+      expect(screen.getByText("País")).toBeInTheDocument();
+      expect(screen.getByText("Periodo")).toBeInTheDocument();
+      expect(screen.getByText("Tipo de contrato")).toBeInTheDocument();
+      expect(screen.getByText("Jornada")).toBeInTheDocument();
+      expect(screen.getByText("Remote")).toBeInTheDocument();
+      expect(screen.getByText("Categoría de skills")).toBeInTheDocument();
     });
 
-    it("muestra el número de países cubiertos", async () => {
-      render(<SummaryStats />);
-      await waitFor(() => {
-        expect(screen.getByText("8")).toBeInTheDocument();
-      });
-    });
-
-    it("muestra el número de skills rastreadas", async () => {
-      render(<SummaryStats />);
-      await waitFor(() => {
-        expect(screen.getByText("312")).toBeInTheDocument();
-      });
-    });
-
-    it("muestra el porcentaje de ofertas con salario", async () => {
-      render(<SummaryStats />);
-      await waitFor(() => {
-        expect(screen.getByText("34.5%")).toBeInTheDocument();
-      });
-    });
-
-    it("muestra la fecha de última actualización formateada", async () => {
-      render(<SummaryStats />);
-      // El handler devuelve "2025-05-15T10:30:00.000Z"
-      // /may/i cubre "may", "May", "mayo" según el locale del sistema
-      await waitFor(() => {
-        expect(screen.getByText(/may/i)).toBeInTheDocument();
-      });
-    });
-
-    it("muestra las 5 etiquetas de los KPI cards", async () => {
-      render(<SummaryStats />);
-      await waitFor(() => {
-        expect(screen.getByText("Ofertas activas")).toBeInTheDocument();
-        expect(screen.getByText("Países cubiertos")).toBeInTheDocument();
-        expect(screen.getByText("Skills rastreadas")).toBeInTheDocument();
-        expect(screen.getByText("Con salario declarado")).toBeInTheDocument();
-        expect(screen.getByText("Última actualización")).toBeInTheDocument();
-      });
+    it("muestra el botón Ver resultados", () => {
+      renderDrawer();
+      expect(screen.getByText("Ver resultados")).toBeInTheDocument();
     });
   });
 
-  describe("manejo de errores", () => {
-    it("no rompe la UI si el endpoint falla y no muestra KPI cards", async () => {
-      server.use(http.get("/api/stats/summary", () => HttpResponse.error()));
-
-      render(<SummaryStats />);
-
-      // Primero verificamos que los skeletons SÍ aparecen al montar.
-      // Sin esta comprobación el test podría pasar trivialmente si el
-      // componente devuelve null desde el principio por algún otro motivo.
-      expect(document.querySelectorAll(".animate-pulse")).toHaveLength(5);
-
-      // Esperamos a que el estado de carga termine (los skeletons desaparecen)
-      await waitFor(() => {
-        expect(document.querySelectorAll(".animate-pulse")).toHaveLength(0);
-      });
-
-      // Después del error el componente devuelve null: no hay KPI cards
-      expect(screen.queryByText("Ofertas activas")).not.toBeInTheDocument();
-      expect(screen.queryByText("26.023")).not.toBeInTheDocument();
+  describe("estado abierto/cerrado", () => {
+    it("aplica translate-x-0 cuando isOpen=true", () => {
+      const { container } = renderDrawer({ isOpen: true });
+      const panel = container.querySelector(".w-72");
+      expect(panel).toHaveClass("translate-x-0");
     });
+
+    it("aplica -translate-x-full cuando isOpen=false", () => {
+      const { container } = renderDrawer({ isOpen: false });
+      const panel = container.querySelector(".w-72");
+      expect(panel).toHaveClass("-translate-x-full");
+    });
+  });
+
+  describe("badge de filtros activos", () => {
+    it("no muestra badge cuando todos los filtros están en su valor neutro", () => {
+      renderDrawer();
+      expect(screen.queryByText("1")).not.toBeInTheDocument();
+    });
+
+    it("muestra el badge con el número de filtros activos", () => {
+      renderDrawer({
+        filters: { ...filtersNeutros, pais: "DE", remote: "Sí" },
+      });
+      expect(screen.getByText("2")).toBeInTheDocument();
+    });
+  });
+
+  describe("interacciones", () => {
+    it("llama a onClose al pulsar el botón de cerrar", async () => {
+      const user = userEvent.setup();
+      const { onClose } = renderDrawer();
+      await user.click(screen.getByLabelText("Cerrar filtros"));
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("llama a onClose al pulsar el overlay", async () => {
+      const user = userEvent.setup();
+      const { onClose, container } = renderDrawer();
+      const overlay = container.querySelector('[aria-hidden="true"]');
+      await user.click(overlay);
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("llama a onClose al pulsar Ver resultados", async () => {
+      const user = userEvent.setup();
+      const { onClose } = renderDrawer();
+      await user.click(screen.getByText("Ver resultados"));
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("llama a onReset al pulsar Resetear", async () => {
+      const user = userEvent.setup();
+      const { onReset } = renderDrawer();
+      await user.click(screen.getByText("Resetear"));
+      expect(onReset).toHaveBeenCalledTimes(1);
+    });
+
+    it("llama a onFilterChange con la key y el valor al elegir una opción", async () => {
+      const user = userEvent.setup();
+      const { onFilterChange } = renderDrawer();
+      await user.click(screen.getByText("DE"));
+      expect(onFilterChange).toHaveBeenCalledWith("pais", "DE");
+    });
+  });
+});
+
+describe("FilterFAB", () => {
+  function renderFAB(props = {}) {
+    const onClick = vi.fn();
+    const utils = render(
+      <FilterFAB filters={filtersNeutros} onClick={onClick} {...props} />,
+    );
+    return { ...utils, onClick };
+  }
+
+  it("muestra el texto Filtros", () => {
+    renderFAB();
+    expect(screen.getByText("Filtros")).toBeInTheDocument();
+  });
+
+  it("llama a onClick al pulsar", async () => {
+    const user = userEvent.setup();
+    const { onClick } = renderFAB();
+    await user.click(screen.getByText("Filtros"));
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("no muestra badge cuando no hay filtros activos", () => {
+    renderFAB();
+    expect(screen.queryByText("1")).not.toBeInTheDocument();
+  });
+
+  it("muestra el badge con el número de filtros activos", () => {
+    renderFAB({ filters: { ...filtersNeutros, pais: "DE" } });
+    expect(screen.getByText("1")).toBeInTheDocument();
   });
 });

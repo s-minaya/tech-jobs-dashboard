@@ -26,13 +26,22 @@ _(anterior al rediseño Halo)_
    patrón eyebrow, icono de calendario eliminado. Sin cambios en el
    fetching ni el grid responsive.
 
+5. **004 · Halo Filtros** — `FilterDrawer`/`FilterSheet` pasan de
+   `bg-background` a `bg-elevated` (nivel de superficie propio de un panel
+   superpuesto); badge del FAB y anillo pulsante a `bg-primary`; chips
+   inactivos de `FilterSection` a `bg-surface`; label de sección sin
+   opacidad `/70`. Corregido un bug preexistente de la fase 001: `key`
+   spreadeado en `FilterSheet` (warning de React 19). `GlowButton` y la
+   lógica de drag no se tocaron. De paso se descubrió y arregló
+   `FilterDrawer.test.jsx`, que desde su creación testeaba por error
+   `SummaryStats` (contenido duplicado) en vez de `FilterDrawer`.
+
 ## En curso 🔜
 
-_(ninguna — siguiente: 004)_
+_(ninguna — siguiente: 005)_
 
 ## Backlog 💡
 
-5. **004 · Halo Filtros** — FilterDrawer, FilterSheet y FilterSection con estética Halo (conservando GlowButton en CTAs).
 6. **005 · Halo BottomNav** — barra de navegación móvil con estética Halo.
 7. **006 · Halo Hero** — sección hero del dashboard con Aurora, fondos dual-theme y ThemeToggle.
 8. **007 · Halo Charts Internals** — colores internos de todas las gráficas adaptados a la paleta Halo.

@@ -173,6 +173,16 @@ function FilterSheet({ isOpen, onClose, filters, onFilterChange, onReset }) {
 
   const byKey = Object.fromEntries(FILTERS.map((f) => [f.key, f]));
 
+  // filterRest
+  // Devuelve las props de un filtro sin la propiedad "key" — spreadear un
+  // objeto que contiene "key" directamente en JSX genera un warning en
+  // React 19 ("A props object containing a key prop is being spread...").
+  // El key= se pasa aparte, explícito, en cada <FilterSection>.
+  function filterRest(key) {
+    const { key: _k, ...rest } = byKey[key];
+    return rest;
+  }
+
   return (
     <>
       {/* Overlay — sin blur durante el drag para ver las gráficas de fondo */}
@@ -185,7 +195,7 @@ function FilterSheet({ isOpen, onClose, filters, onFilterChange, onReset }) {
       {/* Panel deslizante */}
       <div
         ref={panelRef}
-        className="fixed right-0 bottom-0 left-0 z-50 flex max-h-[85vh] flex-col overflow-hidden rounded-t-2xl bg-background shadow-2xl shadow-black/40 md:hidden"
+        className="fixed right-0 bottom-0 left-0 z-50 flex max-h-[85vh] flex-col overflow-hidden rounded-t-2xl bg-elevated shadow-2xl shadow-black/40 md:hidden"
         style={panelStyle}
       >
         {/* Área de agarre — handle + cabecera inician el drag */}
@@ -226,7 +236,8 @@ function FilterSheet({ isOpen, onClose, filters, onFilterChange, onReset }) {
           <div className="space-y-2 px-4 py-4">
             {/* Fila 1: País — ancho completo */}
             <FilterSection
-              {...byKey.pais}
+              key="pais"
+              {...filterRest("pais")}
               selected={filters.pais}
               onSelect={(v) => onFilterChange("pais", v)}
             />
@@ -234,25 +245,29 @@ function FilterSheet({ isOpen, onClose, filters, onFilterChange, onReset }) {
             {/* Filas 2 y 3: dos columnas, botones en columna (fullWidth) dentro de cada una */}
             <div className="grid grid-cols-2 gap-3">
               <FilterSection
-                {...byKey.periodo}
+                key="periodo"
+                {...filterRest("periodo")}
                 fullWidth
                 selected={filters.periodo}
                 onSelect={(v) => onFilterChange("periodo", v)}
               />
               <FilterSection
-                {...byKey.contrato}
+                key="contrato"
+                {...filterRest("contrato")}
                 fullWidth
                 selected={filters.contrato}
                 onSelect={(v) => onFilterChange("contrato", v)}
               />
               <FilterSection
-                {...byKey.jornada}
+                key="jornada"
+                {...filterRest("jornada")}
                 fullWidth
                 selected={filters.jornada}
                 onSelect={(v) => onFilterChange("jornada", v)}
               />
               <FilterSection
-                {...byKey.remote}
+                key="remote"
+                {...filterRest("remote")}
                 fullWidth
                 selected={filters.remote}
                 onSelect={(v) => onFilterChange("remote", v)}
@@ -261,14 +276,15 @@ function FilterSheet({ isOpen, onClose, filters, onFilterChange, onReset }) {
 
             {/* Fila 4: Categoría — ancho completo */}
             <FilterSection
-              {...byKey.skillCategoria}
+              key="skillCategoria"
+              {...filterRest("skillCategoria")}
               selected={filters.skillCategoria}
               onSelect={(v) => onFilterChange("skillCategoria", v)}
             />
           </div>
         </div>{" "}
         {/* fin scroll area */}
-        <div className="flex justify-center border-t border-white/8 bg-transparent px-4 py-4">
+        <div className="flex justify-center border-t border-border bg-transparent px-4 py-4">
           <GlowButton onClick={onClose} variant="solid">
             Ver resultados
           </GlowButton>
