@@ -14,6 +14,11 @@ import Aurora from "@/components/ui/Aurora";
 //   dark  → DarkVeil (CPPN, hueShift=0 para morado de la marca)
 //   light → Aurora (simplex noise, degradado blanco-morado)
 // overflow-hidden en el div del hero confina ambos canvas a esa área.
+// El título usa font-sans (Inter, tamaño display) y tokens Halo de color
+// en ambos temas: --color-text-primary para "Tech Jobs", --color-primary
+// para "Dashboard", --color-text-secondary para el subtítulo — ya no hay
+// lógica isDark en los estilos del texto (isDark solo decide qué fondo
+// animado renderizar, DarkVeil o Aurora).
 // Las cards usan bg-card/60 backdrop-blur para glassmorphism sobre el fondo.
 // Cada sección tiene un id para que BottomNav pueda hacer scroll hasta ella.
 // pb-20 en el wrapper evita que el bottom nav tape el contenido al llegar al final.
@@ -50,33 +55,18 @@ function MainContent({ filters, isDark, toggleTheme }) {
 
           <div className="relative z-10 text-center">
             {/* Subtítulo — pequeño y con mucho tracking para no competir con el h1 */}
-            <p
-              className="mb-3 text-xs font-medium tracking-[0.3em] uppercase"
-              style={{
-                color: isDark
-                  ? "rgba(255,255,255,0.6)"
-                  : "var(--color-background)",
-              }}
-            >
+            <p className="mb-3 text-xs font-medium tracking-[0.3em] text-(--color-text-secondary) uppercase">
               Mercado tech europeo
             </p>
             {/* Título grande con presencia — más grande en desktop */}
-            <h1 className="font-heading text-5xl leading-tight font-bold drop-shadow-lg md:text-6xl lg:text-7xl">
-              {/* Tech Jobs — blanco en dark, color background en light */}
-              <span
-                style={{ color: isDark ? "white" : "var(--color-background)" }}
-              >
+            <h1 className="font-sans text-5xl leading-tight font-bold drop-shadow-lg md:text-6xl lg:text-7xl">
+              {/* Tech Jobs — mismo token en ambos temas: casi blanco en dark,
+                  oscuro y legible sobre Aurora en light */}
+              <span style={{ color: "var(--color-text-primary)" }}>
                 Tech Jobs
               </span>
-              {/* Dashboard — siempre el primary de la marca */}
-              <span
-                className="block"
-                style={{
-                  color: isDark ? "var(--color-primary)" : "hsl(0, 0%, 30%)",
-                }}
-              >
-                Dashboard
-              </span>
+              {/* Dashboard — siempre el primary de la marca, en ambos temas */}
+              <span className="block text-primary">Dashboard</span>
             </h1>
           </div>
         </div>

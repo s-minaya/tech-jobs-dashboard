@@ -41,13 +41,24 @@ _(anterior al rediseño Halo)_
    drawer/sheet), `border-white/8` → `border-border`. Cambio mínimo, sin
    tocar lógica ni tests.
 
+7. **006 · Halo Hero** — título del hero: `font-heading` (Space Mono,
+   desinstalado en 001) → `font-sans` (Inter); colores hardcodeados/con
+   ternario `isDark ? ... : ...` de "Tech Jobs", "Dashboard" y el subtítulo
+   → un único token Halo por elemento en ambos temas
+   (`--color-text-primary`, `--color-primary`, `--color-text-secondary`).
+   `DarkVeil`/`Aurora`/`ThemeToggle` sin cambios. Durante la verificación se
+   investigaron (solo lectura) dos reportes del usuario ajenos a esta
+   feature: un título de gráfica no reproducible como desaparecido, y un
+   timeout de Postgres en la query de salario (confirmado lento — 5-14s —
+   probable falta de índice; es trabajo de `api/`, zona congelada, no
+   tocado). Ver `006-tasks.md` para el detalle.
+
 ## En curso 🔜
 
-_(ninguna — siguiente: 006)_
+_(ninguna — siguiente: 007)_
 
 ## Backlog 💡
 
-7. **006 · Halo Hero** — sección hero del dashboard con Aurora, fondos dual-theme y ThemeToggle.
 8. **007 · Halo Charts Internals** — colores internos de todas las gráficas adaptados a la paleta Halo.
 9. **008 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
 
