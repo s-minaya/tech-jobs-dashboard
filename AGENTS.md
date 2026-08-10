@@ -25,6 +25,9 @@ PostgreSQL real (Supabase).
 4. Confirmar cada tarea con el usuario antes de pasar a la siguiente.
 5. No tocar archivos fuera del alcance de la feature activa.
 6. Al terminar: actualizar `roadmap.md` y hacer commit con Conventional Commits.
+7. **NUNCA hagas commit ni push sin confirmación explícita del usuario.**
+Al terminar una tarea o un bloque, presenta un resumen de los cambios
+y espera aprobación antes de ejecutar `git commit` o `git push`.
 
 **Nunca empieces una feature nueva sin que el usuario lo confirme explícitamente.**
 

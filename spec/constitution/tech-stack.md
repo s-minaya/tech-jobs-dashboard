@@ -59,6 +59,9 @@
 - **Idioma del código:** inglés — nombres de variables, funciones, componentes, props y archivos en inglés.
 - **Idioma de comentarios:** español — los comentarios inline y de bloque explican el "por qué" en español.
 - **Idioma de la spec:** español — toda la documentación en `spec/` está en español.
+- **Commits y push:** el agente NUNCA ejecuta `git commit` ni `git push` sin
+  confirmación explícita del usuario. Al terminar cada bloque, presenta un
+  resumen de cambios y espera aprobación.
 - **Commits:** inglés, siguiendo Conventional Commits (`feat:`, `fix:`, `refactor:`, `test:`, `chore:`, `docs:`).
 - **Nombres:** camelCase para variables y funciones; PascalCase para componentes y tipos; kebab-case para archivos no-componente.
 - **Archivos de componente:** PascalCase (`ChartCard.jsx`). Archivos de utilidad: camelCase (`filterUtils.js`).
@@ -123,9 +126,33 @@ src/
 - **No tocar `src/components/landing/`** — zona congelada.
 - **No hardcodear datos** — todo viene de la API.
 - **No añadir nuevas dependencias de gráficas** — usar Recharts y D3.
-- **No subir `.env*` ni `.env.local`** al repo — las credenciales de la BD y la API van únicamente en variables de entorno. El archivo `.env.example` documenta qué variables se necesitan sin valores reales.
-- **Las variables de entorno sensibles en CI/CD** (DATABASE_URL, VITE_API_URL) se configuran como GitHub Secrets — nunca en el código ni en la spec.
+- **No subir `.env*`** al repo.
 - **No eliminar tests existentes** — si un componente cambia, su test se actualiza.
 - **No mezclar tokens del sistema anterior con tokens Halo** — en cada fase se reemplaza por completo.
 - **No usar efectos WebGL (Aurora, DarkVeil, Lightfall) fuera de la landing y del hero del dashboard** — el resto del dashboard usa CSS puro.
 - **No eliminar GlowButton, DecryptedText ni ThemeToggle** — son elementos visuales que se conservan y adaptan.
+
+## Filosofía de diseño — aclaración importante
+
+Este proyecto **no implementa Halo tal cual** — usa Halo como base
+estructural y lo fusiona con los efectos visuales propios del proyecto.
+El resultado es una versión propia con personalidad definida.
+
+**Qué viene de Halo:** tokens de color, tipografía (Inter/JetBrains Mono),
+niveles de superficie, bordes hairline, radios, espaciado y signal colors.
+
+**Qué es propio del proyecto (se mantiene en dark Y light mode):**
+- Aurora animado en el hero del dashboard y en GlowButton.
+- GlowButton con efecto iridiscente en CTAs y acciones principales.
+- DecryptedText con efecto de descifrado en hover en títulos de gráficas.
+- ThemeToggle — el dashboard tiene dual theme (dark y light).
+- Fondos del hero con gradiente radial (`.hero-bg-dark`, `.hero-bg-light`).
+
+**Light mode:** sigue los tokens Halo definidos en `index.css` (`:root, .light`),
+no el estilo anterior del proyecto. Adaptar ≠ replicar — se puede ajustar
+si el resultado no convence, pero siempre usando los tokens como base.
+
+**Criterio de decisión para efectos visuales:** los efectos animados
+(aurora, glow, decrypt) se usan en elementos **interactivos o de foco**
+(botones, hero, títulos de sección). Las cards de **contenido pasivo**
+(ChartCard, stat tiles) usan superficies y bordes estáticos de Halo.
