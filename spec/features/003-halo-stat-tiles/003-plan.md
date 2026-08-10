@@ -62,15 +62,28 @@ Verificar que pasa al 100%.
 
 ## Decisiones
 
-- **Custom property `--accent-color` inline** en vez de clases por color
+> **Actualización tras revisión con el usuario:** el plan original usaba
+> `border-top` sólido + `--accent-color` inline (un signal color distinto
+> por KPI). El usuario pidió sustituir esos colores por el degradado
+> aurora animado de `GlowButton`, más grueso, recortado a las esquinas
+> redondeadas — ver criterios actualizados en `003-spec.md`. Los puntos de
+> abajo marcados con ~~tachado~~ quedaron obsoletos; el resto sigue vigente.
+
+- ~~**Custom property `--accent-color` inline** en vez de clases por color
   (`stat-tile-primary`, `stat-tile-info`...) — menos CSS, más flexible.
   El `var()` con fallback garantiza que si se olvida pasar `accentColor`,
-  la card muestra el borde neutro sin romperse.
+  la card muestra el borde neutro sin romperse.~~ Sustituido: las 5 cards
+  comparten la misma franja aurora, no hace falta un color por instancia.
 - **Eliminar el icono** — en Halo los stat tiles son texto puro. El icono
   de calendario añadía complejidad de layout sin valor informativo real
   (la label "Última actualización" ya lo dice todo).
-- **`border-top` sobre el `border` shorthand** — técnica CSS estándar para
-  accent bars. No requiere pseudo-elementos ni wrappers extra.
+- ~~**`border-top` sobre el `border` shorthand** — técnica CSS estándar para
+  accent bars. No requiere pseudo-elementos ni wrappers extra.~~ Sustituido:
+  un color sólido sí se puede poner en `border-top`, pero un degradado
+  animado no (`border-image` no respeta `border-radius`, así que las
+  esquinas quedarían cuadradas). Técnica final: `::before` absoluto +
+  `overflow: hidden` en `.stat-tile`, que recorta el pseudo-elemento a las
+  esquinas redondeadas de la card.
 - **Misma superficie que ChartCard** — coherencia visual: todas las cards
   del dashboard usan `--color-surface` + `--color-border`.
 

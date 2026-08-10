@@ -18,13 +18,20 @@ _(anterior al rediseño Halo)_
    reservado a GlowButton/hero. Sin cambios en `DecryptedText`, el ⓘ de
    filtros ni la lógica de estados.
 
+4. **003 · Halo Stat Tiles** — KPI cards del hero pasan de wrapper/inner con
+   hover aurora a `.stat-tile` (misma superficie que `ChartCard`) con una
+   franja aurora animada de 3px en la parte superior, recortada a las
+   esquinas redondeadas (a petición del usuario, en vez del accent bar de
+   signal color plano del plan original). Valor en JetBrains Mono, label en
+   patrón eyebrow, icono de calendario eliminado. Sin cambios en el
+   fetching ni el grid responsive.
+
 ## En curso 🔜
 
-_(ninguna — siguiente: 003)_
+_(ninguna — siguiente: 004)_
 
 ## Backlog 💡
 
-4. **003 · Halo Stat Tiles** — KPI cards con patrón stat-tile de Halo y signal colors.
 5. **004 · Halo Filtros** — FilterDrawer, FilterSheet y FilterSection con estética Halo (conservando GlowButton en CTAs).
 6. **005 · Halo BottomNav** — barra de navegación móvil con estética Halo.
 7. **006 · Halo Hero** — sección hero del dashboard con Aurora, fondos dual-theme y ThemeToggle.

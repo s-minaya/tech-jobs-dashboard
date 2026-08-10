@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { getSummaryStats } from "@/services/jobServices";
-import { RiCalendarLine } from "react-icons/ri";
 
 // Formatea un número grande con separador de miles: 26023 → "26.023"
 function formatNumber(n) {
@@ -18,50 +17,26 @@ function formatDate(iso) {
 }
 
 // KpiCard
-// Tarjeta individual flotante sobre el hero.
-// Por defecto fondo transparente + backdrop-blur para dejar ver el fondo animado.
-// Al hacer hover: relleno oscuro (#0A0B0F) + borde aurora animado
-// con el mismo efecto que GlowButton — mismas clases CSS definidas en index.css.
+// Stat tile Halo: superficie --color-surface, borde hairline y franja
+// aurora animada arriba (mismo degradado que GlowButton, ver .stat-tile
+// en index.css) — sustituye al signal color plano por KPI. Sin hover
+// animado — es contenido informativo, no una acción.
+// El valor va en JetBrains Mono (font-mono), coherente con el resto de
+// datos tabulares del dashboard. El label sigue el patrón eyebrow de Halo:
+// uppercase, tracking amplio, texto muted.
 // La prop fullWidth permite que una card ocupe dos columnas en el grid.
-// La prop icon permite añadir un icono decorativo centrado a la derecha.
-function KpiCard({ label, value, description, fullWidth = false, icon: Icon }) {
+function KpiCard({ label, value, description, fullWidth = false }) {
   return (
-    <div
-      className={`glow-kpi-wrapper group ${fullWidth ? "col-span-2 sm:col-span-1" : ""}`}
-    >
-      <div className="glow-kpi-inner h-full w-full rounded-xl px-4 py-3">
-        {Icon ? (
-          /* Layout con icono: texto a la izquierda, icono grande centrado a la derecha */
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-muted-foreground">
-                {label}
-              </p>
-              <p className="mt-0.5 text-2xl font-semibold tracking-tight text-foreground">
-                {value}
-              </p>
-              {description && (
-                <p className="mt-0.5 text-xs text-muted-foreground/70">
-                  {description}
-                </p>
-              )}
-            </div>
-            <Icon className="h-10 w-10 shrink-0 text-primary/40 transition-colors duration-300 group-hover:text-primary/70" />
-          </div>
-        ) : (
-          <>
-            <p className="text-xs font-medium text-muted-foreground">{label}</p>
-            <p className="mt-0.5 text-2xl font-semibold tracking-tight text-foreground">
-              {value}
-            </p>
-            {description && (
-              <p className="mt-0.5 text-xs text-muted-foreground/70">
-                {description}
-              </p>
-            )}
-          </>
-        )}
-      </div>
+    <div className={`stat-tile ${fullWidth ? "col-span-2 sm:col-span-1" : ""}`}>
+      <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+        {label}
+      </p>
+      <p className="font-mono text-2xl font-semibold text-foreground">
+        {value}
+      </p>
+      {description && (
+        <p className="text-xs text-muted-foreground">{description}</p>
+      )}
     </div>
   );
 }
@@ -97,7 +72,7 @@ function SummaryStats() {
         {[...Array(5)].map((_, i) => (
           <div
             key={i}
-            className={`h-20 animate-pulse rounded-xl border border-border bg-muted/30 shadow-lg backdrop-blur-md ${
+            className={`h-22 animate-pulse rounded-xl border border-border bg-surface/50 ${
               i === 4 ? "col-span-2 sm:col-span-1" : ""
             }`}
           />
@@ -137,7 +112,6 @@ function SummaryStats() {
         value={formatDate(stats.last_updated)}
         description="oferta más reciente"
         fullWidth
-        icon={RiCalendarLine}
       />
     </div>
   );

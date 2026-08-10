@@ -43,6 +43,7 @@
   --color-elevated: var(--color-elevated);
   --color-card-foreground: var(--color-text-primary);
   --color-card: var(--color-surface);
+  --color-surface: var(--color-surface);
   --color-foreground: var(--color-text-primary);
   --color-background: var(--color-background);
   /* radios: bridge directo a los tokens Halo definidos abajo — nada de calc().
@@ -399,28 +400,34 @@
   animation: auroraHue 3s linear infinite;
 }
 
-/* ── KPI Card — borde aurora animado igual que GlowButton ───────────────────
-   TODO: rediseñar en fase 003 (Halo Stat Tiles).
-   Por defecto: fondo transparente + backdrop-blur (se ve el fondo animado).
-   Hover: gradiente aurora como borde (wrapper) + fondo oscuro (inner).
-   Usa el mismo @keyframes auroraFlow del GlowButton.
-── ────────────────────────────────────────────────────────────────────────── */
-
-/* Wrapper KPI — por defecto sin borde visible, en hover aurora grueso */
-.glow-kpi-wrapper {
+/* ── Stat tile — KPI card con franja aurora superior ─────────────────────
+   Mismo nivel de superficie que ChartCard (--color-surface / --color-border).
+   La franja superior usa el mismo degradado animado que GlowButton
+   (@keyframes auroraFlow, definido más arriba) en vez de un signal color
+   plano por card. Técnica: ::before absoluto + overflow:hidden en el tile,
+   así la franja respeta las esquinas redondeadas — border-image no
+   respeta border-radius, por eso no se usa esa vía. border-top: none deja
+   que la franja ocupe el borde superior sin un hairline neutro debajo. */
+.stat-tile {
   position: relative;
-  border-radius: var(--radius-lg);
-  display: block;
-  padding: 1.5px;
-  background: transparent;
-  transition:
-    padding var(--duration-base) ease,
-    background var(--duration-base) ease,
-    box-shadow var(--duration-base) ease;
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: none;
+  border-radius: var(--radius-xl);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
-.glow-kpi-wrapper:hover {
-  padding: 3px;
+.stat-tile::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
   background: linear-gradient(
     135deg,
     #7cff67,
@@ -431,35 +438,6 @@
   );
   background-size: 300% 300%;
   animation: auroraFlow 4s ease infinite;
-  box-shadow:
-    0 0 24px 6px rgba(124, 255, 103, 0.35),
-    0 0 48px 12px rgba(82, 39, 255, 0.3),
-    0 0 70px 16px rgba(180, 151, 207, 0.15);
-}
-
-/* Inner KPI — transparente por defecto, oscuro en hover */
-.glow-kpi-inner {
-  position: relative;
-  z-index: 1;
-  border-radius: var(--radius-md);
-  background: transparent;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  color: var(--color-text-primary);
-  transition: background var(--duration-base) ease;
-  cursor: default;
-  width: 100%;
-}
-
-.glow-kpi-wrapper:hover .glow-kpi-inner {
-  background: #0a0b0f;
-}
-
-/* Light mode hover — debe ser opaco: --color-primary-soft es semitransparente
-   y dejaría ver el degradado del wrapper por debajo. */
-:root:not(.dark) .glow-kpi-wrapper:hover .glow-kpi-inner {
-  background: var(--color-background);
-  color: var(--color-primary-pressed);
 }
 
 /* ── Chart card — superficie Halo con borde hairline ─────────────────────

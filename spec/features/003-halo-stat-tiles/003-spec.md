@@ -11,17 +11,17 @@ Halo, manteniendo el comportamiento de datos dinámicos y el grid responsive.
 Lo que **cambia**:
 
 - El efecto hover aurora (borde animado + relleno oscuro) se reemplaza por
-  un stat-tile Halo estático: superficie `--color-surface`, borde hairline
-  1px `--color-border`, sin hover animado — las KPI cards son contenido
-  informativo, no acciones. El criterio es el mismo que en la fase 002
-  (efectos animados solo en elementos interactivos).
-- Cada KPI card añade una **accent bar de 2px** en la parte superior con
-  el signal color correspondiente a su tipo de dato:
-  - Ofertas activas → `--color-primary` (acción/brand)
-  - Países cubiertos → `--color-info`
-  - Skills rastreadas → `--color-warning`
-  - Con salario declarado → `--color-success`
-  - Última actualización → `--color-border-strong` (dato neutro/temporal)
+  un stat-tile Halo con superficie `--color-surface` y borde hairline 1px
+  `--color-border` en los tres lados no superiores — sin hover animado, las
+  KPI cards son contenido informativo, no acciones.
+- Cada KPI card mantiene una **franja de 3px en la parte superior**, pero
+  en vez de un signal color plano por tipo de dato usa el mismo degradado
+  animado que `GlowButton` (`@keyframes auroraFlow`) — decisión tomada
+  durante la implementación: las 5 cards comparten la misma franja aurora,
+  recortada a las esquinas redondeadas de la card (`overflow: hidden` +
+  `::before`, ya que `border-image` no respeta `border-radius`). Esto es
+  una excepción deliberada al criterio de "aurora solo en elementos
+  interactivos" de la fase 002 — aquí decora, no indica una acción.
 - El **valor numérico** pasa a JetBrains Mono (`font-mono`) — los datos
   tabulares y métricas usan la fuente mono en Halo.
 - El **label** (eyebrow) pasa a `text-xs uppercase tracking-wider
@@ -45,17 +45,20 @@ Lo que **no cambia**:
 
 Las KPI cards son lo primero que ve el usuario al entrar al dashboard.
 Con la fase 002 las gráficas ya tienen superficie Halo; las KPIs deben
-seguir el mismo lenguaje visual para que el dashboard sea coherente. Las
-accent bars de color dan información semántica inmediata (qué tipo de
-dato es cada KPI) sin necesidad de iconos.
+seguir el mismo lenguaje visual para que el dashboard sea coherente. La
+franja aurora superior conserva algo del carácter distintivo del diseño
+anterior (aurora era el efecto de marca de las KPI cards) sin el hover
+animado ni el relleno oscuro, que sí chocaban con "contenido informativo,
+no acción".
 
 ## Criterios de aceptación
 
 - [ ] Cada KPI card tiene fondo `--color-surface`, borde 1px
-      `--color-border` y radio `--radius-xl` — igual que `ChartCard`.
-- [ ] Cada card tiene una accent bar de 2px en la parte superior con su
-      signal color correspondiente (primary / info / warning / success /
-      border-strong).
+      `--color-border` (excepto el lado superior) y radio `--radius-xl` —
+      igual que `ChartCard`.
+- [ ] Cada card tiene una franja de 3px en la parte superior con el
+      degradado aurora animado (`@keyframes auroraFlow`), recortada a las
+      esquinas redondeadas de la card.
 - [ ] El valor numérico usa `font-mono` (JetBrains Mono).
 - [ ] El label usa el patrón eyebrow: `text-xs uppercase tracking-wider
       font-medium` y color `--color-text-muted`.
