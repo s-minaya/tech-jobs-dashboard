@@ -1,8 +1,11 @@
 /* eslint-disable no-unused-vars */
 const API_URL = import.meta.env.VITE_API_URL;
 
-async function fetchJson(path) {
-  const response = await fetch(`${API_URL}${path}`);
+// signal (fase 010): permite a useChartData cancelar la petición con
+// AbortController cuando cambian los filtros antes de que la anterior
+// resuelva. Opcional — sin él, fetch simplemente no se cancela.
+async function fetchJson(path, { signal } = {}) {
+  const response = await fetch(`${API_URL}${path}`, { signal });
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     throw new Error(body.detail ?? `Error ${response.status} en ${path}`);
@@ -44,29 +47,33 @@ export function buildParams(filters = {}) {
   return params;
 }
 
-export async function getTopSkills(filters = {}) {
+export async function getTopSkills(filters = {}, signal) {
   const { jornada: _j, ...rest } = filters;
   const params = buildParams(rest);
   if (filters.skillCategoria && filters.skillCategoria !== "Todas")
     params.set("category", filters.skillCategoria.toLowerCase());
-  return fetchJson(`/api/skills/top?${params}`);
+  return fetchJson(`/api/skills/top?${params}`, { signal });
 }
 
-export async function getDemandByRole(filters = {}) {
+export async function getDemandByRole(filters = {}, signal) {
   const { jornada: _j, skillCategoria: _s, ...rest } = filters;
-  return fetchJson(`/api/jobs/demand-by-role?${buildParams(rest)}`);
+  return fetchJson(`/api/jobs/demand-by-role?${buildParams(rest)}`, {
+    signal,
+  });
 }
 
-export async function getSalaryByRoleAndCountry(filters = {}) {
+export async function getSalaryByRoleAndCountry(filters = {}, signal) {
   const { skillCategoria: _s, ...rest } = filters;
-  return fetchJson(`/api/salary/by-role-country?${buildParams(rest)}`);
+  return fetchJson(`/api/salary/by-role-country?${buildParams(rest)}`, {
+    signal,
+  });
 }
 
-export async function getOffersByCountry(filters = {}, skill = null) {
+export async function getOffersByCountry(filters = {}, skill = null, signal) {
   const { pais: _p, skillCategoria: _s, ...rest } = filters;
   const params = buildParams(rest);
   if (skill) params.set("skill", skill);
-  return fetchJson(`/api/jobs/offers-by-country?${params}`);
+  return fetchJson(`/api/jobs/offers-by-country?${params}`, { signal });
 }
 
 export async function getSkillCoOccurrence(filters = {}) {

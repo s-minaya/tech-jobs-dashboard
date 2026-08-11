@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import ChartCard from "@/components/ui/ChartCard";
 
 // DecryptedText usa motion/react — lo mockeamos para simplificar
@@ -148,6 +148,101 @@ describe("ChartCard", () => {
         </ChartCard>,
       );
       expect(screen.queryByText(/Error:/)).not.toBeInTheDocument();
+    });
+
+    // describeError — añadido en la fase 010 (Salary Chart Quality) para
+    // traducir errores crudos de Postgres reproducidos en esta sesión.
+    it("traduce un error de statement timeout, sin el prefijo 'Error:' crudo", () => {
+      render(
+        <ChartCard
+          loading={false}
+          error="canceling statement due to statement timeout"
+        >
+          <p>Contenido</p>
+        </ChartCard>,
+      );
+      expect(
+        screen.getByText(/está tardando demasiado/i),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText(/canceling statement/i),
+      ).not.toBeInTheDocument();
+    });
+
+    it("traduce un error de pool de conexiones agotado", () => {
+      render(
+        <ChartCard
+          loading={false}
+          error="unable to check out connection from the pool after 15000ms"
+        >
+          <p>Contenido</p>
+        </ChartCard>,
+      );
+      expect(
+        screen.getByText(/muchas peticiones a la vez/i),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe("slowHint", () => {
+    it("no aparece si el chart no pasa la prop", () => {
+      vi.useFakeTimers();
+      render(
+        <ChartCard loading={true} isInitialLoad={true}>
+          <p>Contenido</p>
+        </ChartCard>,
+      );
+      act(() => {
+        vi.advanceTimersByTime(10000);
+      });
+      expect(screen.queryByText(/esto puede tardar/i)).not.toBeInTheDocument();
+      vi.useRealTimers();
+    });
+
+    it("no aparece antes de 6 segundos", () => {
+      vi.useFakeTimers();
+      render(
+        <ChartCard loading={true} isInitialLoad={true} slowHint="esto puede tardar">
+          <p>Contenido</p>
+        </ChartCard>,
+      );
+      act(() => {
+        vi.advanceTimersByTime(5000);
+      });
+      expect(screen.queryByText("esto puede tardar")).not.toBeInTheDocument();
+      vi.useRealTimers();
+    });
+
+    it("aparece tras 6 segundos de carga inicial", () => {
+      vi.useFakeTimers();
+      render(
+        <ChartCard loading={true} isInitialLoad={true} slowHint="esto puede tardar">
+          <p>Contenido</p>
+        </ChartCard>,
+      );
+      act(() => {
+        vi.advanceTimersByTime(6000);
+      });
+      expect(screen.getByText("esto puede tardar")).toBeInTheDocument();
+      vi.useRealTimers();
+    });
+
+    it("no aparece durante una recarga (isInitialLoad=false), solo en carga inicial", () => {
+      vi.useFakeTimers();
+      render(
+        <ChartCard
+          loading={true}
+          isInitialLoad={false}
+          slowHint="esto puede tardar"
+        >
+          <p>Contenido previo</p>
+        </ChartCard>,
+      );
+      act(() => {
+        vi.advanceTimersByTime(10000);
+      });
+      expect(screen.queryByText("esto puede tardar")).not.toBeInTheDocument();
+      vi.useRealTimers();
     });
   });
 });

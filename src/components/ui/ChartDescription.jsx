@@ -77,7 +77,10 @@ function ChartDescription({
     <div className="mb-4 space-y-2.5 text-xs">
       <p className="leading-relaxed text-muted-foreground">{description}</p>
 
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div
+        data-testid="chart-filter-pills"
+        className="flex flex-wrap items-center gap-1.5"
+      >
         {/* Badge de ofertas */}
         {totalJobs != null && (
           <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary ring-1 ring-primary/20">

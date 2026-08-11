@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   describeFiltros,
   NOMBRES_PAISES,
+  CONTRATO_LABELS,
   PERIODO_DEFAULT,
   activeFilterCount,
 } from "@/lib/filterUtils";
@@ -31,6 +32,13 @@ describe("NOMBRES_PAISES", () => {
       expect(typeof nombre).toBe("string");
       expect(nombre.length).toBeGreaterThan(0);
     });
+  });
+});
+
+describe("CONTRATO_LABELS", () => {
+  it("mapea los dos valores reales del filtro a español", () => {
+    expect(CONTRATO_LABELS.Permanent).toBe("permanente");
+    expect(CONTRATO_LABELS.Contract).toBe("temporal");
   });
 });
 
@@ -103,6 +111,45 @@ describe("describeFiltros", () => {
         periodo: undefined,
       });
       expect(resultado).toEqual([]);
+    });
+  });
+
+  describe("filtro de contrato", () => {
+    // Añadido en la fase 010 (Salary Chart Quality): antes describeFiltros
+    // usaba filters.contrato.toLowerCase() directamente, y como los valores
+    // reales del filtro son "Permanent"/"Contract" (en inglés, coinciden
+    // con el CHECK de Postgres), la nota de SalaryChart mostraba
+    // literalmente 'contratos "contract"' mezclado con texto en español.
+    it("'Permanent' produce 'contrato permanente' en español", () => {
+      const resultado = describeFiltros({
+        ...filtersNeutros,
+        contrato: "Permanent",
+      });
+      expect(resultado).toContain("contrato permanente");
+    });
+
+    it("'Contract' produce 'contrato temporal' en español", () => {
+      const resultado = describeFiltros({
+        ...filtersNeutros,
+        contrato: "Contract",
+      });
+      expect(resultado).toContain("contrato temporal");
+    });
+
+    it("ningún resultado contiene los valores crudos en inglés", () => {
+      const resultado = describeFiltros({
+        ...filtersNeutros,
+        contrato: "Contract",
+      });
+      expect(resultado.some((r) => r.includes("contract"))).toBe(false);
+    });
+
+    it("'Todos' no aparece en el resultado", () => {
+      const resultado = describeFiltros({
+        ...filtersNeutros,
+        contrato: "Todos",
+      });
+      expect(resultado.some((r) => r.includes("contrato"))).toBe(false);
     });
   });
 

@@ -166,4 +166,60 @@ describe("useChartData", () => {
       expect(fetchFn).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe("AbortController (fase 010)", () => {
+    // Antes, cambiar de filtro rápido (dos veces seguidas) dejaba varias
+    // peticiones vivas en paralelo contra la misma BD — confirmado en esta
+    // sesión como una causa real de agotamiento del pool de conexiones de
+    // Postgres con queries lentas.
+    it("pasa un AbortSignal a fetchFn", async () => {
+      const fetchFn = vi.fn().mockResolvedValue([]);
+      renderHook(() => useChartData(fetchFn, []));
+      await waitFor(() => expect(fetchFn).toHaveBeenCalledTimes(1));
+      expect(fetchFn.mock.calls[0][0]).toBeInstanceOf(AbortSignal);
+    });
+
+    it("aborta la señal de la petición anterior cuando cambian las deps", async () => {
+      const signals = [];
+      const fetchFn = vi.fn((signal) => {
+        signals.push(signal);
+        return new Promise(() => {}); // nunca resuelve — solo nos interesa el abort
+      });
+      const { rerender } = renderHook(
+        ({ dep }) => useChartData(fetchFn, [dep]),
+        { initialProps: { dep: "a" } },
+      );
+      await waitFor(() => expect(signals).toHaveLength(1));
+      expect(signals[0].aborted).toBe(false);
+
+      rerender({ dep: "b" });
+      await waitFor(() => expect(signals).toHaveLength(2));
+      expect(signals[0].aborted).toBe(true);
+      expect(signals[1].aborted).toBe(false);
+    });
+
+    it("aborta la petición en marcha al desmontar", async () => {
+      const signals = [];
+      const fetchFn = vi.fn((signal) => {
+        signals.push(signal);
+        return new Promise(() => {});
+      });
+      const { unmount } = renderHook(() => useChartData(fetchFn, []));
+      await waitFor(() => expect(signals).toHaveLength(1));
+      unmount();
+      expect(signals[0].aborted).toBe(true);
+    });
+
+    it("un rechazo con name='AbortError' no se expone como error", async () => {
+      const abortError = new Error("The user aborted a request.");
+      abortError.name = "AbortError";
+      const fetchFn = vi.fn().mockRejectedValue(abortError);
+      const { result } = renderHook(() => useChartData(fetchFn, []));
+      // Esperamos un tick para que la promesa se resuelva; error debe
+      // seguir siendo null, nunca el mensaje de AbortError.
+      await waitFor(() => expect(fetchFn).toHaveBeenCalled());
+      await new Promise((r) => setTimeout(r, 0));
+      expect(result.current.error).toBeNull();
+    });
+  });
 });

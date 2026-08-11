@@ -63,7 +63,7 @@ function EuropeMap({ filters }) {
     isInitialLoad,
     error,
   } = useChartData(
-    () => getOffersByCountry(filters, selectedSkill),
+    (signal) => getOffersByCountry(filters, selectedSkill, signal),
     [
       filters.periodo,
       filters.contrato,

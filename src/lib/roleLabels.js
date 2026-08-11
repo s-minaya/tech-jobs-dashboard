@@ -69,8 +69,30 @@ export function getRoleColor(key) {
 
 // extractRoles
 // Devuelve la lista de roles únicos presentes en las filas que llegan de la
-// API, en el orden en que aparecen. La usan DemandByRoleChart y SalaryChart
-// para saber qué roles hay disponibles antes de calcular la selección activa.
+// API, en el orden en que aparecen. La usa DemandByRoleChart para saber qué
+// roles hay disponibles antes de calcular la selección activa.
 export function extractRoles(rows) {
   return [...new Set(rows.map((row) => row.role_category))];
+}
+
+// rankRolesByVolume
+// Devuelve los roles presentes en las filas, ordenados de mayor a menor
+// según el total de ofertas agregado (sumando job_count entre todos los
+// países) — no el orden de llegada de la API, que en SalaryChart responde
+// al ORDER BY del backend (país alfabético, salario descendente dentro de
+// cada país) y no tiene relación con qué roles son más demandados.
+// Ejemplo real (periodo=90d, Austria): con el orden de llegada, "qa_testing"
+// entraba en el "top 5" con solo 3 ofertas mientras "backend" con 62
+// quedaba fuera — ver spec/features/010-salary-chart-quality/010-spec.md.
+export function rankRolesByVolume(rows) {
+  const totals = new Map();
+  for (const { role_category, job_count } of rows) {
+    totals.set(
+      role_category,
+      (totals.get(role_category) ?? 0) + Number(job_count ?? 0),
+    );
+  }
+  return [...totals.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([role]) => role);
 }

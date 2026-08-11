@@ -21,7 +21,8 @@ spec/
     ├── 007-halo-charts-internals/     ← Fase 7: colores internos de gráficas
     ├── 008-skills-cooccurrence/       ← Fase 8: integridad de datos del heatmap de co-ocurrencia
     ├── 009-skills-list-quality/       ← Fase 9: calidad de datos del autocomplete de skills del mapa
-    └── 010-halo-responsive-pulido/    ← Fase 10: responsive y pulido final
+    ├── 010-salary-chart-quality/      ← Fase 10: calidad de datos y rendimiento del salario por rol y país
+    └── 011-halo-responsive-pulido/    ← Fase 11: responsive y pulido final
 ```
 
 ## Flujo para cada feature

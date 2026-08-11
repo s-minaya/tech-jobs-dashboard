@@ -30,7 +30,7 @@ function TopSkillsChart({ filters }) {
     isInitialLoad,
     error,
   } = useChartData(
-    () => getTopSkills(filters),
+    (signal) => getTopSkills(filters, signal),
     [
       filters.pais,
       filters.periodo,

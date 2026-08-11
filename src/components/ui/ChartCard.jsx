@@ -1,4 +1,10 @@
+/* eslint-disable react-hooks/set-state-in-effect */
+import { useEffect, useState } from "react";
 import DecryptedText from "@/components/ui/DecryptedText";
+import { describeError } from "@/lib/errorMessages";
+
+// Tras cuántos ms de carga inicial se muestra slowHint (si el chart lo pasa).
+const SLOW_LOADING_MS = 6000;
 
 // ChartCard
 // Wrapper visual reutilizable para todas las gráficas del dashboard.
@@ -17,6 +23,13 @@ import DecryptedText from "@/components/ui/DecryptedText";
 //   - Carga inicial (isInitialLoad=true): muestra "Cargando..."
 //   - Recarga por filtro (loading=true, isInitialLoad=false): opacidad
 //     reducida + badge "Actualizando..." sin cambiar el layout
+//
+// slowHint (opcional): texto adicional que aparece bajo "Cargando..." si
+// la carga inicial lleva más de SLOW_LOADING_MS. Opt-in — sin esta prop,
+// cero cambio de comportamiento. Solo en carga inicial, no en recargas
+// (ahí ya hay datos anteriores visibles, menos ansiedad de "¿esto está
+// roto?"). Pensado para gráficas con queries lentas conocidas (ver
+// SalaryChart, fase 010).
 function ChartCard({
   title,
   loading,
@@ -25,9 +38,20 @@ function ChartCard({
   children,
   warning,
   className = "",
+  slowHint,
 }) {
   const showSpinner = loading && isInitialLoad;
   const showStale = loading && !isInitialLoad;
+
+  const [showSlowHint, setShowSlowHint] = useState(false);
+  useEffect(() => {
+    if (!showSpinner || !slowHint) {
+      setShowSlowHint(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowSlowHint(true), SLOW_LOADING_MS);
+    return () => clearTimeout(timer);
+  }, [showSpinner, slowHint]);
 
   return (
     <div className={`mt-6 ${className}`}>
@@ -58,14 +82,21 @@ function ChartCard({
       {/* Card con superficie Halo y borde hairline */}
       <div className="chart-card relative p-5">
         {!loading && error && (
-          <p className="text-sm text-destructive">Error: {error}</p>
+          <p className="text-sm text-destructive">
+            {describeError(error) ?? `Error: ${error}`}
+          </p>
         )}
 
         {/* Carga inicial */}
         {showSpinner && (
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            Cargando...
-          </p>
+          <div className="py-8 text-center text-sm text-muted-foreground">
+            <p>Cargando...</p>
+            {showSlowHint && (
+              <p className="mt-2 text-xs text-muted-foreground/70">
+                {slowHint}
+              </p>
+            )}
+          </div>
         )}
 
         {/* Contenido */}

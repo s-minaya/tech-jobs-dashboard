@@ -32,3 +32,7 @@ coverage/
 # Schema de referencia de la BD real (compartido para depuración puntual,
 # no es del propio repo — no debe subirse a GitHub).
 api/schema.sql
+
+# Caché temporal de desarrollo (api/src/devCache.js) — respuestas de la
+# API cacheadas en disco mientras la BD real está lenta/inestable.
+api/.dev-cache/

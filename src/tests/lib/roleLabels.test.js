@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { getRoleLabel, ROLE_LABELS, extractRoles } from "@/lib/roleLabels";
+import {
+  getRoleLabel,
+  ROLE_LABELS,
+  extractRoles,
+  rankRolesByVolume,
+} from "@/lib/roleLabels";
 
 describe("ROLE_LABELS", () => {
   it("contiene los roles principales del dashboard", () => {
@@ -72,5 +77,50 @@ describe("extractRoles", () => {
       { role_category: "devops" },
     ];
     expect(extractRoles(rows)).toEqual(["data_science", "backend", "devops"]);
+  });
+});
+
+// rankRolesByVolume — añadida en la fase 010 (Salary Chart Quality).
+// Reemplaza a extractRoles como criterio de "roles por defecto" en
+// SalaryChart: ordena por job_count total, no por orden de llegada.
+describe("rankRolesByVolume", () => {
+  it("ordena por job_count total de mayor a menor, no por orden de llegada", () => {
+    // Reproduce el caso real detectado en Austria (periodo=90d): en el
+    // orden de llegada de la API, "qa_testing" (3 ofertas) aparecía antes
+    // que "backend" (62 ofertas) porque el backend ordena por salario
+    // mediano descendente, no por volumen.
+    const rows = [
+      { role_category: "qa_testing", job_count: 3 },
+      { role_category: "cloud", job_count: 18 },
+      { role_category: "backend", job_count: 62 },
+      { role_category: "other", job_count: 124 },
+    ];
+    expect(rankRolesByVolume(rows)).toEqual([
+      "other",
+      "backend",
+      "cloud",
+      "qa_testing",
+    ]);
+  });
+
+  it("suma job_count del mismo rol entre distintos países", () => {
+    const rows = [
+      { role_category: "backend", job_count: 30 },
+      { role_category: "frontend", job_count: 50 },
+      { role_category: "backend", job_count: 40 }, // mismo rol, otro país
+    ];
+    expect(rankRolesByVolume(rows)).toEqual(["backend", "frontend"]);
+  });
+
+  it("trata job_count ausente o no numérico como 0", () => {
+    const rows = [
+      { role_category: "backend", job_count: 10 },
+      { role_category: "frontend" },
+    ];
+    expect(rankRolesByVolume(rows)).toEqual(["backend", "frontend"]);
+  });
+
+  it("devuelve array vacío si no hay filas", () => {
+    expect(rankRolesByVolume([])).toEqual([]);
   });
 });

@@ -110,7 +110,7 @@ function DemandByRoleChart({ filters }) {
     isInitialLoad,
     error,
   } = useChartData(
-    () => getDemandByRole(filters),
+    (signal) => getDemandByRole(filters, signal),
     [filters.pais, filters.periodo, filters.contrato, filters.remote],
   );
 

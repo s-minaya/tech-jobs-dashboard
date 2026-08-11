@@ -5,6 +5,8 @@ import cors from "cors";
 import pg from "pg";
 import dotenv from "dotenv";
 import { buildFilters } from "./buildFilters.js";
+import { buildSalaryByRoleCountryQuery, shapeSalaryRows } from "./salaryQuery.js";
+import { devCacheMiddleware } from "./devCache.js";
 
 dotenv.config({ path: ".env.local" });
 
@@ -12,6 +14,9 @@ const { Pool } = pg;
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: "25Mb" }));
+// ⚠️ TEMPORAL — quitar esta línea (y devCache.js) cuando ya no haga
+// falta. Ver el comentario de cabecera de devCache.js.
+app.use(devCacheMiddleware);
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -161,6 +166,11 @@ app.get("/api/jobs/demand-by-role", async (req, res) => {
 // GET /api/salary/by-role-country
 // Salario mediano por rol y país.
 // Excluye salary_mid < 1000 (datos corruptos del pipeline).
+//
+// Una sola query en vez de dos (antes: Promise.all con la agregación +
+// un COUNT(DISTINCT j.id) aparte, mismo WHERE, dos escaneos de `jobs`
+// por cada carga/recarga del gráfico) — total_matching_jobs viaja como
+// columna vía SUM(COUNT(*)) OVER(), ver salaryQuery.js.
 app.get("/api/salary/by-role-country", async (req, res) => {
   try {
     const { conditions, values } = buildFilters(req.query);
@@ -169,35 +179,9 @@ app.get("/api/salary/by-role-country", async (req, res) => {
     conditions.push("j.salary_is_predicted = FALSE");
     conditions.push("j.salary_mid >= 1000");
 
-    const [salaryResult, totalResult] = await Promise.all([
-      pool.query(
-        `SELECT
-           j.country_code,
-           c.name AS country_name,
-           j.role_category,
-           COUNT(*) AS job_count,
-           ROUND(AVG(j.salary_mid)) AS avg_salary_eur,
-           ROUND(
-             PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY j.salary_mid)::numeric
-           ) AS median_salary_eur
-         FROM jobs j
-         JOIN countries c ON c.code = j.country_code
-         WHERE ${conditions.join(" AND ")}
-         GROUP BY j.country_code, c.name, j.role_category
-         ORDER BY j.country_code, median_salary_eur DESC NULLS LAST`,
-        values,
-      ),
-      pool.query(
-        `SELECT COUNT(DISTINCT j.id)::int AS total
-         FROM jobs j WHERE ${conditions.join(" AND ")}`,
-        values,
-      ),
-    ]);
-
-    res.json({
-      rows: salaryResult.rows,
-      total_matching_jobs: totalResult.rows[0].total,
-    });
+    const { text } = buildSalaryByRoleCountryQuery(conditions);
+    const result = await pool.query(text, values);
+    res.json(shapeSalaryRows(result.rows));
   } catch (err) {
     errorHandler(res, err, "salary-by-role-country");
   }

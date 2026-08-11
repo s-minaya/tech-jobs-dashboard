@@ -82,22 +82,61 @@ _(anterior al rediseño Halo)_
    pequeños), 100% dinámico con la BD. Ver
    `spec/features/008-skills-cooccurrence/008-tasks.md` para el detalle.
 
+9. **009 · Calidad de datos en el autocomplete de skills del mapa** —
+   fix de datos en `EuropeMap`. El autocomplete sugería miles de
+   entradas de `skills` sin ningún uso real (fragmentos de texto,
+   nombres compuestos como "React/Angular", títulos de puesto) porque
+   `GET /api/skills/list` volcaba la tabla `skills` completa (4557 filas)
+   sin filtrar. Verificado con datos reales: 34 de 35 coincidencias de
+   "react" tenían 0 ofertas activas. `GET /api/skills/list` ahora exige
+   al menos 1 oferta activa real vinculada vía `job_skills`, 100%
+   dinámico, sin parsear ni redistribuir nombres compuestos — de 4557 a
+   688 skills reales. Mismo fix aplicado al KPI "Skills rastreadas"
+   (`total_skills` en `/api/stats/summary`, visible en el hero y en la
+   landing), que tenía el mismo root cause y quedó inconsistente con el
+   autocomplete ya limpio; calculado con `COUNT(DISTINCT)` sobre un
+   `JOIN` en vez de un `EXISTS` correlacionado, más barato bajo carga
+   concurrente. De paso se investigaron dos 500 reportados por el
+   usuario en devtools: uno preexistente y ajeno (query de salario sin
+   índice, fase 006), otro confirmado como degradación general de la
+   conexión a la BD real del sandbox, no un bug. Ver
+   `spec/features/009-skills-list-quality/009-tasks.md` para el detalle.
+
+10. **010 · Calidad de datos y rendimiento — Salario por rol y país** —
+    tercera ronda "tabla por tabla", primera con acceso completo a
+    `api/` (deja de ser zona congelada — ver `AGENTS.md`, única excepción
+    permanente: `.env.local`). Auditoría exhaustiva de `SalaryChart` y
+    `GET /api/salary/by-role-country`: el "top 5 de roles por defecto"
+    dejaba de ser un efecto colateral del `ORDER BY` del backend
+    (confirmado con datos reales: en Austria, `qa_testing` con 3 ofertas
+    entraba en el top 5 mientras `backend` con 62 quedaba fuera) y pasa a
+    calcularse por volumen real; `job_count`/`avg_salary_eur` (ya
+    calculados, descartados hasta ahora) se muestran en el tooltip, con
+    aviso visual para muestras con menos de 5 ofertas (13.2% de las
+    celdas reales); eje X en español (`NOMBRES_PAISES` — `country_name`
+    del backend resultó estar en inglés, hallazgo propio del diseño);
+    nota de contrato sin mezclar idiomas; mensajes de error/carga lenta
+    traducidos y genéricos en `ChartCard`; `AbortController` en
+    `useChartData` (las 4 gráficas que lo usan); backend: índice que
+    faltaba (ya sugerido en fase 006) + una sola query en vez de dos;
+    vista SQL duplicada y sin usar eliminada; `schema.sql` sincronizado
+    con los 16 `role_category` reales. El índice no se pudo aplicar
+    contra la BD real desde este entorno (mismo bloqueo de conexión
+    directa ya visto en la fase 009) — queda documentado como script
+    standalone para aplicación manual. Verificado con 347/347 tests de
+    frontend y 28/28 de `api/`; la verificación en vivo de la query
+    combinada no fue posible por el mismo `statement_timeout`
+    preexistente que esta feature soluciona (justo la ausencia del
+    índice). Ver `spec/features/010-salary-chart-quality/010-tasks.md`
+    para el detalle completo.
+
 ## En curso 🔜
 
-9. **009 · Calidad de datos en el autocomplete de skills del mapa** —
-   fix de datos en `EuropeMap`.
-   El autocomplete sugería miles de entradas de `skills` sin ningún uso
-   real (fragmentos de texto, nombres compuestos como "React/Angular",
-   títulos de puesto) porque `GET /api/skills/list` volcaba la tabla
-   `skills` completa (4557 filas) sin filtrar. Verificado con datos
-   reales: 34 de 35 coincidencias de "react" tenían 0 ofertas activas.
-   `GET /api/skills/list` ahora exige al menos 1 oferta activa real
-   vinculada vía `job_skills` (`WHERE EXISTS`), 100% dinámico, sin
-   parsear ni redistribuir nombres compuestos. Ver
-   `spec/features/009-skills-list-quality/009-tasks.md` para el detalle.
+_(ninguna — siguiente: 011, o una feature de restructuración de carga
+del dashboard aún sin planificar, en discusión con el usuario)_
 
 ## Backlog 💡
 
-10. **010 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
+11. **011 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
 
 > Una sola feature activa a la vez. No se empieza la siguiente hasta que la anterior pasa todos los criterios de aceptación.

@@ -60,8 +60,15 @@ y espera aprobación antes de ejecutar `git commit` o `git push`.
 ## Zonas congeladas — no tocar
 
 - `src/components/landing/` — la landing está congelada. Ninguna modificación.
-- `api/` — el backend es responsabilidad de otra persona. Solo leer si es necesario para entender la API.
-- Ningún archivo `.env*` — solo lectura de `.env.example`.
+- Ningún archivo `.env*` (incluye `.env.local`) — **nunca leer ni
+  imprimir su contenido**, ni siquiera para depurar. Es la única
+  excepción permanente de este proyecto. Solo lectura de
+  `.env.example`, que no contiene valores reales.
+
+> `api/` dejó de estar congelado a partir de la feature 010: el usuario
+> dio acceso completo para leer y editar el backend (`api/src/`,
+> `api/schema.sql`, tests). Sigue aplicando el resto de reglas del flujo
+> de trabajo (spec → plan → tasks, una feature activa a la vez).
 
 ---
 

@@ -12,6 +12,18 @@ export const NOMBRES_PAISES = {
   BE: "Bélgica",
 };
 
+// CONTRATO_LABELS
+// El backend usa los valores crudos del CHECK de Postgres ('permanent'/
+// 'contract'), y el filtro del sidebar expone esos mismos valores en
+// inglés (config/filters.js) porque coinciden 1:1 con la API. Mapeo a
+// español para pills y notas — mismo patrón que NOMBRES_PAISES. Antes de
+// esto, la nota de SalaryChart mezclaba idiomas: "contratos 'contract'.
+// Los salarios varían entre contrato permanente y temporal."
+export const CONTRATO_LABELS = {
+  Permanent: "permanente",
+  Contract: "temporal",
+};
+
 // PERIODO_DEFAULT
 // El periodo que useFilters usa como estado inicial.
 // describeFiltros lo trata como "sin filtro activo": si el usuario
@@ -43,7 +55,9 @@ export function describeFiltros(filters, excludeKeys = []) {
     filters.contrato &&
     filters.contrato !== "Todos"
   )
-    partes.push(`contrato ${filters.contrato.toLowerCase()}`);
+    partes.push(
+      `contrato ${CONTRATO_LABELS[filters.contrato] ?? filters.contrato.toLowerCase()}`,
+    );
 
   if (
     !excludeKeys.includes("jornada") &&
