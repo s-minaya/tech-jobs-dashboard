@@ -53,7 +53,7 @@ _(anterior al rediseño Halo)_
    probable falta de índice; es trabajo de `api/`, zona congelada, no
    tocado). Ver `006-tasks.md` para el detalle.
 
-7. **007 · Halo Charts Internals** — colores hardcodeados dentro de las
+8. **007 · Halo Charts Internals** — colores hardcodeados dentro de las
    gráficas sustituidos por tokens Halo: `TopSkillsChart` usa
    `var(--color-primary)` en vez de `var(--chart-1)` (que sigue apuntando a
    `--role-backend`, sin tocar — también es el fallback de
@@ -70,11 +70,9 @@ _(anterior al rediseño Halo)_
    en fases 001/003/006); verificado con 309/309 tests, build limpio y 0
    errores de consola. Ver `007-tasks.md` para el detalle.
 
-## En curso 🔜
-
-8. **008 · Integridad de datos en la co-ocurrencia de skills** — no es
-   parte del rediseño Halo; fix de datos descubierto en conversación
-   directa con el usuario sobre el heatmap. Backend:
+9. **008 · Integridad de datos en la co-ocurrencia de skills**
+   fix de datos descubierto en conversación directa con el usuario sobre
+   el heatmap. Backend:
    `/api/skills/cooccurrence` agrupaba por `role_category` además de por
    el par de skills, fragmentando cada par real en varias filas con
    `co_count` parcial y desperdiciando el `LIMIT 1000` en duplicados —
@@ -84,8 +82,22 @@ _(anterior al rediseño Halo)_
    pequeños), 100% dinámico con la BD. Ver
    `spec/features/008-skills-cooccurrence/008-tasks.md` para el detalle.
 
+## En curso 🔜
+
+9. **009 · Calidad de datos en el autocomplete de skills del mapa** —
+   fix de datos en `EuropeMap`.
+   El autocomplete sugería miles de entradas de `skills` sin ningún uso
+   real (fragmentos de texto, nombres compuestos como "React/Angular",
+   títulos de puesto) porque `GET /api/skills/list` volcaba la tabla
+   `skills` completa (4557 filas) sin filtrar. Verificado con datos
+   reales: 34 de 35 coincidencias de "react" tenían 0 ofertas activas.
+   `GET /api/skills/list` ahora exige al menos 1 oferta activa real
+   vinculada vía `job_skills` (`WHERE EXISTS`), 100% dinámico, sin
+   parsear ni redistribuir nombres compuestos. Ver
+   `spec/features/009-skills-list-quality/009-tasks.md` para el detalle.
+
 ## Backlog 💡
 
-9. **009 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
+10. **010 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
 
 > Una sola feature activa a la vez. No se empieza la siguiente hasta que la anterior pasa todos los criterios de aceptación.

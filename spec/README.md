@@ -20,7 +20,8 @@ spec/
     ├── 006-halo-hero/                 ← Fase 6: hero del dashboard → Halo
     ├── 007-halo-charts-internals/     ← Fase 7: colores internos de gráficas
     ├── 008-skills-cooccurrence/       ← Fase 8: integridad de datos del heatmap de co-ocurrencia
-    └── 009-halo-responsive-pulido/    ← Fase 9: responsive y pulido final
+    ├── 009-skills-list-quality/       ← Fase 9: calidad de datos del autocomplete de skills del mapa
+    └── 010-halo-responsive-pulido/    ← Fase 10: responsive y pulido final
 ```
 
 ## Flujo para cada feature

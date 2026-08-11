@@ -37,16 +37,34 @@ function errorHandler(res, err, context) {
 }
 
 // GET /api/skills/list
-// Devuelve todas las skills registradas en la BD, ordenadas alfabéticamente.
-// Se usa para poblar el autocomplete del mapa. No aplica ningún filtro de periodo
-// ni de ofertas activas: queremos ver todas las skills conocidas, independientemente
-// de si tienen ofertas recientes.
+// Devuelve las skills registradas en la BD que tienen al menos una oferta
+// activa real vinculada, ordenadas alfabéticamente. Se usa para poblar el
+// autocomplete del mapa.
+//
+// Antes devolvía las 4557 filas de `skills` sin ningún filtro (tabla
+// poblada progresivamente por un pipeline NLP de extracción — ver
+// api/schema.sql). La mayoría son artefactos sin ninguna oferta real
+// detrás: fragmentos de texto de ofertas, nombres compuestos
+// ("React/Angular", "WEB (React)"), títulos de puesto. Verificado con
+// datos reales: de 35 filas de `skills.name` que contienen "react", 34
+// tenían 0 ofertas activas — solo la fila limpia "React" tiene ofertas
+// reales. El EXISTS exige al menos una oferta activa real, sin parsear
+// ni redistribuir nombres compuestos — el filtro que sí funciona porque
+// el mapa (más abajo) también solo muestra ofertas activas, así que una
+// skill sin ninguna llevaría siempre a un resultado vacío.
 app.get("/api/skills/list", async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT name, category
-       FROM skills
-       ORDER BY name ASC`,
+      `SELECT s.name, s.category
+       FROM skills s
+       WHERE EXISTS (
+         SELECT 1
+         FROM job_skills js
+         JOIN jobs j ON j.id = js.job_id
+         WHERE js.skill_id = s.id
+           AND j.is_active = TRUE
+       )
+       ORDER BY s.name ASC`,
     );
     res.json(result.rows);
   } catch (err) {
@@ -312,16 +330,28 @@ app.get("/api/skills/cooccurrence", async (req, res) => {
 // Devuelve:
 //   total_active_jobs    → ofertas activas en este momento
 //   total_countries      → países cubiertos por el dataset
-//   total_skills         → skills distintas registradas en la BD
+//   total_skills         → skills distintas con al menos una oferta activa
 //   pct_with_salary      → porcentaje de ofertas activas con salario declarado
 //   last_updated         → fecha de la oferta activa más reciente
+//
+// total_skills usa el mismo criterio que GET /api/skills/list (ver ese
+// endpoint): antes contaba las 4557 filas crudas de `skills` sin
+// filtrar, casi todo artefactos de extracción NLP sin ninguna oferta
+// real detrás (verificado con datos reales — ver
+// spec/features/009-skills-list-quality/). Se calcula con
+// COUNT(DISTINCT skill_id) sobre un JOIN directo en vez de un EXISTS
+// correlacionado por fila de `skills` — mismo resultado, una sola
+// pasada en vez de una subconsulta por cada una de las 4557 filas.
 app.get("/api/stats/summary", async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
         COUNT(*)                                              AS total_active_jobs,
         COUNT(DISTINCT country_code)                          AS total_countries,
-        (SELECT COUNT(*) FROM skills)                         AS total_skills,
+        (SELECT COUNT(DISTINCT js.skill_id)
+         FROM job_skills js
+         JOIN jobs j ON j.id = js.job_id
+         WHERE j.is_active = TRUE)                            AS total_skills,
         ROUND(
           SUM(CASE WHEN salary_mid IS NOT NULL
                     AND salary_is_predicted = FALSE

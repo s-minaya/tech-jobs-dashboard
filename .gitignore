@@ -28,3 +28,7 @@ playwright-report/
 
 # Vitest
 coverage/
+
+# Schema de referencia de la BD real (compartido para depuración puntual,
+# no es del propio repo — no debe subirse a GitHub).
+api/schema.sql

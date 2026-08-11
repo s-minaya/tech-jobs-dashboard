@@ -6,7 +6,8 @@ import { useState, useRef, useEffect } from "react";
 // para que la búsqueda sea instantánea sin peticiones de red adicionales.
 //
 // Props:
-//   skills         → array de { name, category } con todas las skills de la BD
+//   skills         → array de { name, category } con las skills de la BD que
+//                    tienen al menos una oferta activa (ver GET /api/skills/list)
 //   selectedSkill  → nombre de la skill actualmente seleccionada, o null
 //   onSelect       → callback que recibe el nombre de la skill seleccionada
 //   onClear        → callback para limpiar la selección
