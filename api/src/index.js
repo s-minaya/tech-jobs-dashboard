@@ -250,6 +250,17 @@ app.get("/api/skills/top", async (req, res) => {
 // GET /api/skills/cooccurrence
 // Pares de skills que aparecen juntas. Solo aplica el filtro de periodo.
 // País, contrato, jornada y remote no aplican (datos globales).
+//
+// role_category NO va en el SELECT/GROUP BY a propósito: el frontend
+// (buildLookup en heatmapUtils.js) nunca lo usa, y agrupar por él
+// fragmentaba cada par en varias filas (una por role_category) con un
+// co_count parcial en vez del total real. Eso hacía que buildLookup se
+// quedara con el valor de la última fragmento que pisaba las anteriores
+// (co_count incorrecto) y, peor, que el LIMIT 1000 — ordenado por esos
+// co_count ya fragmentados — se gastara en duplicados del mismo par en
+// vez de cubrir pares distintos, dejando fuera pares reales (sobre todo
+// en categorías de skill menos populares, donde filterSkillsWithCoOccurrence
+// terminaba eliminando skills que sí tenían co-ocurrencias reales).
 app.get("/api/skills/cooccurrence", async (req, res) => {
   try {
     const { country: _c, jornada: _j, ...restQuery } = req.query;
@@ -264,7 +275,6 @@ app.get("/api/skills/cooccurrence", async (req, res) => {
         `SELECT
            s1.name AS skill,
            s2.name AS co_skill,
-           j.role_category,
            COUNT(DISTINCT js1.job_id) AS co_count
          FROM job_skills js1
          JOIN job_skills js2 ON js1.job_id = js2.job_id AND js1.skill_id < js2.skill_id
@@ -272,7 +282,7 @@ app.get("/api/skills/cooccurrence", async (req, res) => {
          JOIN skills s2 ON s2.id = js2.skill_id
          JOIN jobs j ON j.id = js1.job_id
          WHERE ${conditions.join(" AND ")}
-         GROUP BY s1.name, s2.name, j.role_category
+         GROUP BY s1.name, s2.name
          ORDER BY co_count DESC
          LIMIT 1000`,
         values,
