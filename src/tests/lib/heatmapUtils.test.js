@@ -196,6 +196,10 @@ describe("getHeatmapTextColor", () => {
 // Tests para filterSkillsWithCoOccurrence — añadida en fase de heatmap dinámico
 import { filterSkillsWithCoOccurrence } from "@/lib/heatmapUtils";
 
+// Estos 5 tests usan conjuntos de n<=4 skills — caen en el fallback de
+// SMALL_SET_THRESHOLD y por tanto ejercitan el criterio de compatibilidad
+// (>=1 conexión, sin piso de conteo), no el criterio k-core real (ver el
+// describe "umbral de conectividad (k-core)" más abajo para ese caso).
 describe("filterSkillsWithCoOccurrence", () => {
   const pairs = [
     { skill: "Python", co_skill: "SQL", co_count: 890 },
@@ -234,6 +238,121 @@ describe("filterSkillsWithCoOccurrence", () => {
     const skills = ["Python", "SQL", "AWS", "React"];
     const r1 = filterSkillsWithCoOccurrence(skills, pairs);
     const r2 = filterSkillsWithCoOccurrence(skills, pairs);
+    expect(r1).toEqual(r2);
+  });
+});
+
+// Tests del criterio k-core — añadida en fase 008 (integridad de datos
+// de la co-ocurrencia). Usan conjuntos de n>4 skills para activar el
+// umbral real (minDegree=2, minEdgeCount=2 por defecto) en vez del
+// fallback de conjunto pequeño.
+describe("filterSkillsWithCoOccurrence — umbral de conectividad (k-core)", () => {
+  // PostgreSQL/MySQL/MongoDB forman un trío bien conectado entre sí.
+  // Redis y Cassandra tienen una única conexión cada una (grado 1).
+  const dbSkills = ["PostgreSQL", "MySQL", "MongoDB", "Redis", "Cassandra"];
+  const dbPairs = [
+    { skill: "PostgreSQL", co_skill: "MySQL", co_count: 500 },
+    { skill: "PostgreSQL", co_skill: "MongoDB", co_count: 300 },
+    { skill: "MySQL", co_skill: "MongoDB", co_count: 250 },
+    { skill: "Redis", co_skill: "PostgreSQL", co_count: 200 },
+    { skill: "Cassandra", co_skill: "PostgreSQL", co_count: 3 },
+  ];
+
+  it("elimina skills con una sola conexión aunque esa conexión tenga muchas ofertas (grado insuficiente)", () => {
+    const result = filterSkillsWithCoOccurrence(dbSkills, dbPairs);
+    expect(result).not.toContain("Redis");
+    expect(result).not.toContain("Cassandra");
+    expect(result).toEqual(
+      expect.arrayContaining(["PostgreSQL", "MySQL", "MongoDB"]),
+    );
+  });
+
+  it("no cuenta como conexión válida una co-ocurrencia respaldada por una sola oferta (co_count por debajo de minEdgeCount)", () => {
+    // Ansible "técnicamente" conecta con Docker y Kubernetes (grado 2 por
+    // existencia), pero ambas conexiones tienen co_count=1 — coincidencia,
+    // no señal real. Chef no tiene ninguna conexión.
+    const skills = ["Docker", "Kubernetes", "Terraform", "Ansible", "Chef"];
+    const pairs = [
+      { skill: "Docker", co_skill: "Kubernetes", co_count: 400 },
+      { skill: "Docker", co_skill: "Terraform", co_count: 350 },
+      { skill: "Kubernetes", co_skill: "Terraform", co_count: 300 },
+      { skill: "Ansible", co_skill: "Docker", co_count: 1 },
+      { skill: "Ansible", co_skill: "Kubernetes", co_count: 1 },
+    ];
+    const result = filterSkillsWithCoOccurrence(skills, pairs);
+    expect(result).not.toContain("Ansible");
+    expect(result).not.toContain("Chef");
+    expect(result).toEqual(
+      expect.arrayContaining(["Docker", "Kubernetes", "Terraform"]),
+    );
+  });
+
+  it("propaga la eliminación en cascada cuando una skill pierde su única conexión válida", () => {
+    // Elasticsearch conecta solo con Kafka y RabbitMQ (grado 2, sobrevive
+    // la 1ª pasada). Kafka y RabbitMQ solo conectan con Elasticsearch
+    // (grado 1, se eliminan en la 1ª pasada). En la 2ª pasada,
+    // Elasticsearch se queda sin vecinos y también debe eliminarse.
+    // PostgreSQL/MySQL/MongoDB forman un trío estable no relacionado.
+    const skills = [
+      "Elasticsearch",
+      "Kafka",
+      "RabbitMQ",
+      "PostgreSQL",
+      "MySQL",
+      "MongoDB",
+    ];
+    const pairs = [
+      { skill: "Elasticsearch", co_skill: "Kafka", co_count: 20 },
+      { skill: "Elasticsearch", co_skill: "RabbitMQ", co_count: 15 },
+      { skill: "PostgreSQL", co_skill: "MySQL", co_count: 500 },
+      { skill: "PostgreSQL", co_skill: "MongoDB", co_count: 300 },
+      { skill: "MySQL", co_skill: "MongoDB", co_count: 250 },
+    ];
+    const result = filterSkillsWithCoOccurrence(skills, pairs);
+    expect(result).toEqual(
+      expect.arrayContaining(["PostgreSQL", "MySQL", "MongoDB"]),
+    );
+    expect(result).not.toContain("Kafka");
+    expect(result).not.toContain("RabbitMQ");
+    expect(result).not.toContain("Elasticsearch");
+    expect(result).toHaveLength(3);
+  });
+
+  it("con un conjunto pequeño (<= 4 candidatas) usa el criterio original de al menos 1 conexión, sin piso de conteo", () => {
+    const skills = ["Terraform", "Pulumi", "CloudFormation"];
+    const pairs = [{ skill: "Terraform", co_skill: "Pulumi", co_count: 1 }];
+    const result = filterSkillsWithCoOccurrence(skills, pairs);
+    expect(result).toEqual(expect.arrayContaining(["Terraform", "Pulumi"]));
+    expect(result).not.toContain("CloudFormation");
+  });
+
+  it("permite personalizar minDegree vía opciones", () => {
+    const result = filterSkillsWithCoOccurrence(dbSkills, dbPairs, {
+      minDegree: 1,
+    });
+    expect(result).toContain("Redis");
+    expect(result).toContain("Cassandra");
+  });
+
+  it("permite personalizar minEdgeCount vía opciones", () => {
+    // n=5 (no n=3) para que el fallback de conjunto pequeño no enmascare
+    // el override explícito de minDegree/minEdgeCount.
+    const skills = ["Docker", "Kubernetes", "Terraform", "Ansible", "Chef"];
+    const pairs = [
+      { skill: "Docker", co_skill: "Kubernetes", co_count: 400 },
+      { skill: "Ansible", co_skill: "Docker", co_count: 1 },
+      { skill: "Ansible", co_skill: "Kubernetes", co_count: 1 },
+    ];
+    const result = filterSkillsWithCoOccurrence(skills, pairs, {
+      minDegree: 2,
+      minEdgeCount: 1,
+    });
+    expect(result).toContain("Ansible");
+  });
+
+  it("es estable con el criterio k-core — resultado idéntico en llamadas repetidas", () => {
+    const r1 = filterSkillsWithCoOccurrence(dbSkills, dbPairs);
+    const r2 = filterSkillsWithCoOccurrence(dbSkills, dbPairs);
     expect(r1).toEqual(r2);
   });
 });

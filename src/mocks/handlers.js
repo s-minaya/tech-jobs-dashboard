@@ -163,26 +163,51 @@ export const handlers = [
 
   // GET /api/skills/cooccurrence
   // Usado por useHeatmapData
+  // Sin role_category: el backend ya no lo devuelve (agruparlo por rol
+  // fragmentaba cada par en varias filas con un co_count parcial en vez
+  // del total real — ver el comentario en api/src/index.js).
+  //
+  // Los 5 pares conectan las 5 skills de /api/skills/top entre sí con
+  // grado >= 2 cada una (Python-SQL, Python-AWS, React-JavaScript,
+  // Python-JavaScript, SQL-AWS, React-Python) para que sobrevivan al
+  // umbral de conectividad mínima de filterSkillsWithCoOccurrence
+  // (minDegree=2, minEdgeCount=2 por defecto) — igual que en datos
+  // reales, donde las skills más populares suelen estar bien conectadas
+  // entre sí. Antes solo había 3 pares (dos pares "aislados" de grado 1),
+  // suficiente para el criterio antiguo de "al menos 1 conexión" pero no
+  // representativo de un dataset real bajo el criterio k-core actual.
   http.get(`${BASE}/api/skills/cooccurrence`, () => {
     return HttpResponse.json({
       pairs: [
         {
           skill: "Python",
           co_skill: "SQL",
-          role_category: "data_analyst",
           co_count: 890,
         },
         {
           skill: "Python",
           co_skill: "AWS",
-          role_category: "data_engineer",
           co_count: 654,
         },
         {
           skill: "React",
           co_skill: "JavaScript",
-          role_category: "frontend",
           co_count: 1200,
+        },
+        {
+          skill: "Python",
+          co_skill: "JavaScript",
+          co_count: 500,
+        },
+        {
+          skill: "SQL",
+          co_skill: "AWS",
+          co_count: 400,
+        },
+        {
+          skill: "React",
+          co_skill: "Python",
+          co_count: 300,
         },
       ],
       total_matching_jobs: 26023,

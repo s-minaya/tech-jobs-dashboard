@@ -19,7 +19,8 @@ spec/
     ├── 005-halo-bottomnav/            ← Fase 5: BottomNav → Halo
     ├── 006-halo-hero/                 ← Fase 6: hero del dashboard → Halo
     ├── 007-halo-charts-internals/     ← Fase 7: colores internos de gráficas
-    └── 008-halo-responsive-pulido/    ← Fase 8: responsive y pulido final
+    ├── 008-skills-cooccurrence/       ← Fase 8: integridad de datos del heatmap de co-ocurrencia
+    └── 009-halo-responsive-pulido/    ← Fase 9: responsive y pulido final
 ```
 
 ## Flujo para cada feature

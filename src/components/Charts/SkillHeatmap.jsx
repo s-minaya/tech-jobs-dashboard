@@ -99,9 +99,11 @@ function SkillHeatmap({ filters }) {
   } = useHeatmapData(categoria, filtrosHeatmap);
 
   const maxN = categoria === "todas" ? DEFAULT_MAX_SKILLS : FILTERED_MAX;
-  // Primero seleccionamos las top N skills por popularidad,
-  // luego filtramos para quedarnos solo con las que tienen al menos
-  // una co-ocurrencia con otra del conjunto — evita filas/columnas vacías.
+  // Primero seleccionamos las top N skills por popularidad, luego
+  // filtramos para quedarnos solo con las que tienen conectividad mínima
+  // real dentro del conjunto (por defecto: al menos 2 skills distintas
+  // con co-ocurrencia real, respaldada por al menos 2 ofertas cada una)
+  // — evita filas/columnas vacías o con una única coincidencia residual.
   const skillsCandidatas = selectSkills(skillsData, categoria, maxN);
   const skills = filterSkillsWithCoOccurrence(skillsCandidatas, pairs);
   const combinedSkills = [...allSkillsData, ...skillsData];

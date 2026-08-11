@@ -25,22 +25,52 @@ export function selectSkills(skillsData, categoria, maxN) {
   return unique.slice(0, maxN);
 }
 
+// Con conjuntos muy pequeños (categorías con pocas skills populares),
+// exigir grado >= 2 sería desproporcionado: con n<=4 candidatas el grado
+// máximo posible es 3, y pedir >=2 exige conectar con la mayoría del
+// conjunto sin margen para distinguir señal de ruido.
+const SMALL_SET_THRESHOLD = 4;
+
 // filterSkillsWithCoOccurrence
-// A partir de un array de skills candidatas y el lookup de co-ocurrencias,
-// devuelve solo las skills que tienen al menos una co-ocurrencia con otra
-// skill del mismo conjunto. Así el heatmap nunca muestra filas/columnas
-// completamente vacías que confunden al usuario.
+// A partir de un array de skills candidatas y los pares de co-ocurrencia,
+// devuelve solo las skills con conectividad mínima real dentro del propio
+// conjunto ("k-core"): cada skill superviviente debe co-ocurrir con al
+// menos `minDegree` otras skills del conjunto, y cada una de esas
+// conexiones debe estar respaldada por al menos `minEdgeCount` ofertas
+// reales (para no contar como "conexión" una coincidencia de una sola
+// oferta compartida). Antes solo exigíamos "al menos 1" co-ocurrencia sin
+// piso de conteo (k=1), lo que dejaba pasar filas casi vacías con una
+// única coincidencia residual — ej. una skill de nicho que aparece junto
+// a otra en 1 sola oferta de mil.
 //
-// El algoritmo es iterativo: eliminamos skills sin co-ocurrencias y
-// repetimos hasta que el conjunto sea estable (puede que al eliminar una
-// skill, otras queden sin co-ocurrencias).
-export function filterSkillsWithCoOccurrence(skills, pairs) {
-  // Construimos un Set de pares con co-ocurrencia para acceso O(1)
-  const pairSet = new Set();
-  for (const { skill, co_skill } of pairs) {
-    pairSet.add(`${skill}|${co_skill}`);
-    pairSet.add(`${co_skill}|${skill}`);
+// El algoritmo es un "peeling" de k-core: eliminamos skills que no
+// alcanzan el umbral y repetimos, porque al quitar una skill otras
+// pueden perder conexiones y caer también por debajo.
+//
+// Con conjuntos de candidatas pequeños (<= SMALL_SET_THRESHOLD) usamos el
+// criterio original (>=1 conexión, sin piso de conteo) para no vaciar
+// categorías donde ya hay poco margen — ver SMALL_SET_THRESHOLD arriba.
+export function filterSkillsWithCoOccurrence(
+  skills,
+  pairs,
+  { minDegree = 2, minEdgeCount = 2 } = {},
+) {
+  // Mapa de magnitud (no solo existencia) — necesario para poder
+  // descartar conexiones respaldadas por muy pocas ofertas.
+  const countMap = new Map();
+  for (const { skill, co_skill, co_count } of pairs) {
+    const count = Number(co_count);
+    countMap.set(`${skill}|${co_skill}`, count);
+    countMap.set(`${co_skill}|${skill}`, count);
   }
+
+  // El umbral efectivo se calcula UNA sola vez sobre el tamaño del
+  // conjunto candidato inicial, no en cada pasada — así el peeling
+  // converge de forma monótona y ninguna skill "revive" a mitad de la
+  // iteración por un cambio de umbral.
+  const isSmallSet = skills.length <= SMALL_SET_THRESHOLD;
+  const effectiveMinDegree = isSmallSet ? 1 : minDegree;
+  const effectiveMinEdgeCount = isSmallSet ? 1 : minEdgeCount;
 
   let current = [...skills];
   let changed = true;
@@ -48,11 +78,15 @@ export function filterSkillsWithCoOccurrence(skills, pairs) {
   // Iteramos hasta estabilidad — normalmente 1-2 pasadas
   while (changed) {
     changed = false;
-    const next = current.filter((skill) =>
-      current.some(
-        (other) => other !== skill && pairSet.has(`${skill}|${other}`),
-      ),
-    );
+    const next = current.filter((skill) => {
+      let degree = 0;
+      for (const other of current) {
+        if (other === skill) continue;
+        const count = countMap.get(`${skill}|${other}`) ?? 0;
+        if (count >= effectiveMinEdgeCount) degree++;
+      }
+      return degree >= effectiveMinDegree;
+    });
     if (next.length !== current.length) {
       current = next;
       changed = true;

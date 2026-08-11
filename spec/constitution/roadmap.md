@@ -72,10 +72,20 @@ _(anterior al rediseño Halo)_
 
 ## En curso 🔜
 
-_(ninguna — siguiente: 008)_
+8. **008 · Integridad de datos en la co-ocurrencia de skills** — no es
+   parte del rediseño Halo; fix de datos descubierto en conversación
+   directa con el usuario sobre el heatmap. Backend:
+   `/api/skills/cooccurrence` agrupaba por `role_category` además de por
+   el par de skills, fragmentando cada par real en varias filas con
+   `co_count` parcial y desperdiciando el `LIMIT 1000` en duplicados —
+   corregido. Frontend: `filterSkillsWithCoOccurrence` pasa de exigir "al
+   menos 1" co-ocurrencia a un umbral de conectividad mínima real
+   (k-core: `minDegree`/`minEdgeCount`, con fallback para conjuntos
+   pequeños), 100% dinámico con la BD. Ver
+   `spec/features/008-skills-cooccurrence/008-tasks.md` para el detalle.
 
 ## Backlog 💡
 
-8. **008 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
+9. **009 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
 
 > Una sola feature activa a la vez. No se empieza la siguiente hasta que la anterior pasa todos los criterios de aceptación.
