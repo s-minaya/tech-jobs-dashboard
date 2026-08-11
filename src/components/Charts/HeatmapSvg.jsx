@@ -131,9 +131,11 @@ function HeatmapSvg({ skills, lookup, jobCountMap, loading = false }) {
         .attr("rx", 3)
         .attr("fill", (d) => {
           const co = lookup[`${d.row}|${d.col}`] ?? 0;
-          const isDark = document.documentElement.classList.contains("dark");
-          // Gris neutro para celdas sin datos — distinto del rojo de "raramente juntas"
-          if (co === 0) return isDark ? "hsl(237, 22%, 22%)" : "#f1f5f9";
+          // --color-surface para celdas sin datos — distinto del rojo de
+          // "raramente juntas" y del fondo, en ambos temas. Los atributos
+          // SVG fill sí resuelven variables CSS en el navegador (a
+          // diferencia de los <text> de Recharts).
+          if (co === 0) return "var(--color-surface)";
           return colorScale((co / (jobCountMap[d.row] ?? 1)) * 100);
         });
 

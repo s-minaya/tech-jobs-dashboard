@@ -145,7 +145,9 @@ function EuropeMap({ filters }) {
                 : "var(--color-border-strong)";
               const opacity =
                 selectedCountry && isIncluded && !isSelected ? 0.4 : 1;
-              const stroke = isSelected ? "#ffffff" : "var(--border)";
+              const stroke = isSelected
+                ? "var(--color-text-primary)"
+                : "var(--color-border)";
               const strokeWidth = isSelected ? 2 : 0.5;
 
               const path = pathGenerator(geo);

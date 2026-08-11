@@ -11,6 +11,7 @@ import {
 import { getDemandByRole } from "@/services/jobServices";
 import { getRoleLabel, getRoleColor, extractRoles } from "@/lib/roleLabels";
 import { useChartData } from "@/hooks/useChartData";
+import { useIsDark } from "@/hooks/useIsDark";
 import ChartCard from "@/components/ui/ChartCard";
 import ChartDescription, {
   getWarningNodes,
@@ -69,7 +70,7 @@ function pivotData(rows, mesesRango) {
 function TooltipDemanda({ active, payload, label, chartConfig }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="grid min-w-40 gap-1.5 rounded-lg border border-border/50 bg-background px-3 py-2 text-xs shadow-xl">
+    <div className="grid min-w-40 gap-1.5 rounded-lg border border-border bg-elevated px-3 py-2 text-xs shadow-xl">
       <p className="font-medium">{label}</p>
       {payload.map((entry) => (
         <div
@@ -144,11 +145,15 @@ function DemandByRoleChart({ filters }) {
   // para que una gráfica de áreas sea informativa.
   const periodoInsuficiente = !PERIODOS_CON_TENDENCIA.includes(filters.periodo);
 
-  // Color de los ticks de los ejes: blanco en dark, heredado en light.
-  // Recharts renderiza los ticks como SVG <text> y no hereda CSS variables,
-  // así que necesitamos el valor resuelto en el momento del render.
-  const isDark = document.documentElement.classList.contains("dark");
-  const tickColor = isDark ? "#ffffff" : undefined;
+  // Color de los ticks de los ejes — tokens Halo resueltos con
+  // getComputedStyle: Recharts renderiza los ticks como SVG <text> y no
+  // puede leer variables CSS directamente, así que necesitamos el valor
+  // concreto en el momento del render. El fallback cubre jsdom en tests.
+  const isDark = useIsDark();
+  const tickColor =
+    getComputedStyle(document.documentElement)
+      .getPropertyValue(isDark ? "--color-text-primary" : "--color-text-secondary")
+      .trim() || (isDark ? "#f5f6f8" : "#4b4b63");
 
   return (
     <ChartCard
@@ -237,7 +242,7 @@ function DemandByRoleChart({ filters }) {
                   </defs>
 
                   <CartesianGrid vertical={false} />
-                  {/* tickColor blanco en dark para que los labels sean legibles */}
+                  {/* tickColor resuelto a token Halo según el tema activo */}
                   <XAxis
                     dataKey="month"
                     tick={{ fontSize: 12, fill: tickColor }}

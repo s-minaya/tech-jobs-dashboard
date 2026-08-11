@@ -2,112 +2,99 @@
 
 ## Preparación
 
-- [ ] Grep de `var(--chart-1)` en `index.css` para ver si ya apunta a
-  `--color-primary`:
-  ```bash
-  grep "chart-1" src/index.css
-  ```
-- [ ] Grep de `var(--border)` (nombre shadcn) que queden en las gráficas:
-  ```bash
-  grep -r "var(--border)" src/components/Charts/ --include="*.jsx"
-  ```
+- [x] Grep de `var(--chart-1)` en `index.css` para ver si ya apunta a
+  `--color-primary`. **No apuntaba** — desde la fase 001 apunta a
+  `var(--role-backend)` (decisión explícita de esa fase: "chart-1..5 ahora
+  referencian --role-* en vez de duplicar el valor"), y `roleLabels.js`
+  usa `var(--chart-1)` como fallback de `getRoleColor()` para roles
+  desconocidos — cambiar el token globalmente habría afectado ese
+  fallback, que sí debe seguir siendo un color de familia "rol", no el
+  primary de marca. Se siguió la instrucción literal del plan
+  ("reemplazar por `var(--color-primary)` **directamente**"): solo se
+  cambiaron las dos referencias en `TopSkillsChart.jsx`
+  (`chartConfig.job_count.color` y `<Bar fill=...>`), sin tocar
+  `index.css` ni `roleLabels.js`.
+- [x] Grep de `var(--border)` (nombre shadcn) en `src/components/Charts/` —
+  encontrado 1 uso, en `EuropeMap.jsx` (stroke de países normales).
 
 ## Hook — `src/hooks/useIsDark.js` (nuevo)
 
-- [ ] Crear `src/hooks/useIsDark.js` con el hook extraído de `TopSkillsChart`
-  (ver plan para el código exacto).
+- [x] Creado con el hook extraído de `TopSkillsChart` (MutationObserver,
+  idéntico comportamiento).
 
 ## TopSkillsChart — `src/components/Charts/TopSkillsChart.jsx`
 
-- [ ] Eliminar la definición inline de `useIsDark` (la función + el
-  `useEffect` con `MutationObserver`).
-- [ ] Importar `useIsDark` desde `@/hooks/useIsDark`.
-- [ ] Actualizar `tickColor` para usar `getComputedStyle`:
-  ```js
-  const tickColor = getComputedStyle(document.documentElement)
-    .getPropertyValue(isDark ? "--color-text-primary" : "--color-text-secondary")
-    .trim() || (isDark ? "#F2F4F8" : "#64748B");
-  ```
-- [ ] Verificar `var(--chart-1)` en `chartConfig` y `<Bar fill=...>` —
-  si el grep de preparación confirma que apunta a `--color-primary`,
-  no tocar; si no, reemplazar por `var(--color-primary)`.
+- [x] Eliminada la definición inline de `useIsDark`.
+- [x] Importa `useIsDark` desde `@/hooks/useIsDark`.
+- [x] `tickColor` actualizado con `getComputedStyle` — fallback usando los
+  valores hex reales de los tokens (`#f5f6f8` / `#4b4b63`, no los del
+  ejemplo del plan que no coincidían exactamente con `index.css`).
+- [x] `var(--chart-1)` reemplazado por `var(--color-primary)` (ver nota de
+  Preparación).
 
 ## DemandByRoleChart — `src/components/Charts/DemandByRoleChart.jsx`
 
-- [ ] Importar `useIsDark` desde `@/hooks/useIsDark`.
-- [ ] Reemplazar la lectura directa del DOM:
-  ```js
-  // Eliminar:
-  const isDark = document.documentElement.classList.contains("dark");
-  // Añadir al nivel del componente:
-  const isDark = useIsDark();
-  ```
-- [ ] Actualizar `tickColor` con `getComputedStyle` (mismo patrón que TopSkills).
-- [ ] Tooltips: `bg-background` → `bg-elevated`, `border-border/50` →
-  `border-border`.
+- [x] Importa `useIsDark` desde `@/hooks/useIsDark`.
+- [x] Reemplazada la lectura directa del DOM por `useIsDark()`.
+- [x] `tickColor` actualizado con `getComputedStyle` (mismo patrón).
+- [x] Tooltip: `bg-background` → `bg-elevated`, `border-border/50` →
+  `border-border`. De paso se actualizó un comentario JSX que hablaba de
+  "tickColor blanco en dark" (ya no describía el comportamiento real).
 
 ## SalaryChart — `src/components/Charts/SalaryChart.jsx`
 
-- [ ] Mismo cambio de `isDark` y `tickColor` que `DemandByRoleChart`.
-- [ ] Tooltips: mismo cambio que `DemandByRoleChart`.
+- [x] Mismo cambio de `isDark`, `tickColor` y tooltip que `DemandByRoleChart`.
 
 ## EuropeMap — `src/components/Charts/EuropeMap.jsx`
 
-- [ ] `stroke` de países normales: `"var(--border)"` → `"var(--color-border)"`.
-- [ ] `stroke` de país seleccionado: `"#ffffff"` → `"var(--color-text-primary)"`.
+- [x] `stroke` de países normales: `"var(--border)"` → `"var(--color-border)"`.
+- [x] `stroke` de país seleccionado: `"#ffffff"` → `"var(--color-text-primary)"`.
 
 ## HeatmapSvg — `src/components/Charts/HeatmapSvg.jsx`
 
-- [ ] En la función `fill` de las celdas D3, reemplazar:
-  ```js
-  // Eliminar:
-  const isDark = document.documentElement.classList.contains("dark");
-  if (co === 0) return isDark ? "hsl(237, 22%, 22%)" : "#f1f5f9";
-  // Añadir:
-  if (co === 0) return "var(--color-surface)";
-  ```
+- [x] Celdas sin datos: `isDark ? "hsl(237, 22%, 22%)" : "#f1f5f9"` →
+  `"var(--color-surface)"`. Eliminada la lectura de `classList` dentro de
+  la función `fill` de D3.
 
 ## HeatmapLegend — `src/components/Charts/HeatmapLegend.jsx`
 
-- [ ] Celda sin datos: reemplazar los estilos inline hardcodeados:
-  ```jsx
-  // Antes:
-  style={{ backgroundColor: isDark ? "hsl(237, 22%, 22%)" : "#f1f5f9",
-           border: isDark ? "..." : "..." }}
-  // Después:
-  style={{ backgroundColor: "var(--color-surface)",
-           border: "1px solid var(--color-border)" }}
-  ```
-- [ ] Eliminar la variable `isDark` del componente si ya no se usa en
-  ningún otro sitio del archivo.
-- [ ] Nota final: `text-muted-foreground/70` → `text-muted-foreground`.
+- [x] Celda sin datos: estilos inline hardcodeados → `var(--color-surface)`
+  / `1px solid var(--color-border)`.
+- [x] Eliminada la variable `isDark` — no se usaba en ningún otro sitio del
+  archivo.
+- [x] Nota final: `text-muted-foreground/70` → `text-muted-foreground`.
 
 ## Tests — `src/tests/hooks/useIsDark.test.js` (nuevo)
 
-- [ ] Crear test básico del hook:
-  - Arranca en `false` si `<html>` no tiene clase `dark`.
-  - Arranca en `true` si `<html>` tiene clase `dark`.
-  - Reacciona correctamente al añadir/quitar la clase `dark`.
-  (Patrón similar a `useTheme.test.js`.)
+- [x] Creado con 4 tests: arranque en `false`/`true` según la clase `dark`
+  inicial, y reactividad (añadir/quitar la clase después de montar,
+  esperando con `waitFor` a que el `MutationObserver` dispare). Patrón
+  igual que `useTheme.test.js`.
 
 ## Verificación
 
-- [ ] Arrancar dev server y comprobar en **dark mode**:
-  - Ticks de los ejes de las tres gráficas en color claro (no negro).
-  - Celdas vacías del heatmap en `--color-surface` (no gris custom).
-  - País seleccionado en el mapa con borde claro (no `#ffffff` hardcodeado).
-- [ ] Cambiar a **light mode** con el toggle:
-  - Ticks de los ejes en color oscuro sin recargar.
-  - Celdas vacías del heatmap en `--color-surface` light.
-  - Tooltips con fondo `bg-elevated` (ligeramente diferente de background).
-- [ ] `npx vitest run` — 100% de tests pasando incluyendo el nuevo
-  `useIsDark.test.js`.
-- [ ] `npm run build` — sin errores.
-- [ ] La landing no ha sido modificada.
+- [x] `npx vitest run` — 309/309 tests pasando (305 previos + 4 nuevos de
+  `useIsDark`). Los 55 tests de `Charts/` + el hook pasan sin cambios de
+  aserciones — ejercitan estos mismos componentes con datos de MSW.
+- [x] `npm run build` — sin errores.
+- [x] La landing no ha sido modificada.
+- [x] Arrancar dev server y comprobar visualmente en dark y light mode: el
+  shell del dashboard (cards, bordes, fondos, ThemeToggle) se ve correcto
+  en ambos temas sin errores de consola.
+  **Limitación del entorno (igual que en las fases 001, 003 y 006):** este
+  sandbox no tiene salida de red fiable hacia la BD real de Supabase — se
+  esperó hasta 150s con el backend conectado y las 6 gráficas seguían en
+  "Cargando...". No se pudieron fotografiar las barras/mapa/heatmap ya
+  cargados con datos reales para confirmar visualmente `tickColor`,
+  `fill="var(--color-primary)"`, los strokes del mapa ni las celdas del
+  heatmap. Se compensa con: revisión de código línea a línea, 0 errores de
+  consola durante toda la espera (incluye que `getComputedStyle` no lanza
+  en el navegador), y los tests de `Charts/` que sí renderizan estos
+  componentes con datos (de MSW) y pasan sin fallos.
 
 ## Cierre
 
-- [ ] Validar contra todos los criterios de aceptación de `spec.md`.
-- [ ] Mover la feature a "Hecho" en `spec/constitution/roadmap.md`.
+- [x] Validar contra todos los criterios de aceptación de `spec.md`.
+- [x] Mover la feature a "Hecho" en `spec/constitution/roadmap.md`.
 - [ ] Commit (solo tras confirmación del usuario):
   `refactor: replace hardcoded chart colors with Halo tokens, extract useIsDark hook`

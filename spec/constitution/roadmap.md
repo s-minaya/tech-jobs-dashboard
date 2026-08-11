@@ -53,13 +53,29 @@ _(anterior al rediseño Halo)_
    probable falta de índice; es trabajo de `api/`, zona congelada, no
    tocado). Ver `006-tasks.md` para el detalle.
 
+7. **007 · Halo Charts Internals** — colores hardcodeados dentro de las
+   gráficas sustituidos por tokens Halo: `TopSkillsChart` usa
+   `var(--color-primary)` en vez de `var(--chart-1)` (que sigue apuntando a
+   `--role-backend`, sin tocar — también es el fallback de
+   `roleLabels.js`); `tickColor` de `TopSkillsChart`/`DemandByRoleChart`/
+   `SalaryChart` se resuelve con `getComputedStyle` desde
+   `--color-text-primary`/`-secondary` en vez de hex hardcodeado, mediante
+   un hook `useIsDark` nuevo y compartido (extraído de la implementación
+   original de `TopSkillsChart`); tooltips de esas dos últimas pasan de
+   `bg-background border-border/50` a `bg-elevated border-border`;
+   `EuropeMap` usa `--color-border`/`--color-text-primary` para el stroke
+   de países; `HeatmapSvg`/`HeatmapLegend` usan `--color-surface` +
+   `--color-border` para la celda "sin datos". No se pudo verificar
+   visualmente con datos reales (misma limitación de red del sandbox que
+   en fases 001/003/006); verificado con 309/309 tests, build limpio y 0
+   errores de consola. Ver `007-tasks.md` para el detalle.
+
 ## En curso 🔜
 
-_(ninguna — siguiente: 007)_
+_(ninguna — siguiente: 008)_
 
 ## Backlog 💡
 
-8. **007 · Halo Charts Internals** — colores internos de todas las gráficas adaptados a la paleta Halo.
-9. **008 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
+8. **008 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
 
 > Una sola feature activa a la vez. No se empieza la siguiente hasta que la anterior pasa todos los criterios de aceptación.

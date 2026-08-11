@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { getSalaryByRoleAndCountry } from "@/services/jobServices";
 import { getRoleLabel, getRoleColor, extractRoles } from "@/lib/roleLabels";
 import { useChartData } from "@/hooks/useChartData";
+import { useIsDark } from "@/hooks/useIsDark";
 import ChartCard from "@/components/ui/ChartCard";
 import ChartDescription, {
   getWarningNodes,
@@ -29,7 +30,7 @@ function pivotData(rows) {
 function TooltipSalario({ active, payload, label, chartConfig }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="grid min-w-52 gap-1.5 rounded-lg border border-border/50 bg-background px-3 py-2 text-xs shadow-xl">
+    <div className="grid min-w-52 gap-1.5 rounded-lg border border-border bg-elevated px-3 py-2 text-xs shadow-xl">
       <p className="font-medium">{label}</p>
       <p className="text-muted-foreground">Salario mediano anual en euros</p>
       {payload.map((entry) =>
@@ -101,10 +102,15 @@ function SalaryChart({ filters }) {
     ]),
   );
 
-  // Ticks blancos en dark mode para legibilidad.
-  // Recharts renderiza los ticks como SVG <text> sin acceso a CSS variables.
-  const isDark = document.documentElement.classList.contains("dark");
-  const tickColor = isDark ? "#ffffff" : undefined;
+  // Color de los ticks de los ejes — tokens Halo resueltos con
+  // getComputedStyle: Recharts renderiza los ticks como SVG <text> y no
+  // puede leer variables CSS directamente, así que necesitamos el valor
+  // concreto en el momento del render. El fallback cubre jsdom en tests.
+  const isDark = useIsDark();
+  const tickColor =
+    getComputedStyle(document.documentElement)
+      .getPropertyValue(isDark ? "--color-text-primary" : "--color-text-secondary")
+      .trim() || (isDark ? "#f5f6f8" : "#4b4b63");
 
   return (
     <ChartCard

@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import {
   ChartContainer,
   ChartTooltip,
@@ -7,41 +6,18 @@ import {
 import { BarChart, Bar, XAxis, YAxis } from "recharts";
 import { getTopSkills } from "@/services/jobServices";
 import { useChartData } from "@/hooks/useChartData";
+import { useIsDark } from "@/hooks/useIsDark";
 import ChartCard from "@/components/ui/ChartCard";
 import ChartDescription, {
   getWarningNodes,
 } from "@/components/ui/ChartDescription";
 
 const chartConfig = {
-  job_count: { label: "Número de ofertas", color: "var(--chart-1)" },
+  job_count: { label: "Número de ofertas", color: "var(--color-primary)" },
 };
 
 const PX_POR_SKILL = 32;
 const ALTURA_MINIMA = 200;
-
-// useIsDark
-// Observa la clase "dark" en el <html> y devuelve true/false en tiempo real.
-// Necesario porque Recharts renderiza los ticks como SVG fuera del árbol React
-// y no puede leer variables CSS — necesitamos el valor resuelto en cada render.
-// MutationObserver garantiza que el color se actualiza al cambiar el tema.
-function useIsDark() {
-  const [isDark, setIsDark] = useState(() =>
-    document.documentElement.classList.contains("dark"),
-  );
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains("dark"));
-    });
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-    return () => observer.disconnect();
-  }, []);
-
-  return isDark;
-}
 
 // TopSkillsChart
 // Gráfica de barras horizontales con las skills más demandadas.
@@ -70,8 +46,16 @@ function TopSkillsChart({ filters }) {
 
   // useIsDark con MutationObserver garantiza que el color se actualiza
   // correctamente al cambiar el tema en cualquier dirección.
+  // Recharts renderiza los ticks como <text> SVG fuera del árbol React y
+  // no puede leer variables CSS — hay que resolver el token a un valor
+  // concreto con getComputedStyle en el momento del render. El fallback
+  // cubre jsdom en tests, donde getComputedStyle no resuelve custom
+  // properties y devuelve string vacío.
   const isDark = useIsDark();
-  const tickColor = isDark ? "#ffffff" : "#374151";
+  const tickColor =
+    getComputedStyle(document.documentElement)
+      .getPropertyValue(isDark ? "--color-text-primary" : "--color-text-secondary")
+      .trim() || (isDark ? "#f5f6f8" : "#4b4b63");
 
   return (
     <ChartCard
@@ -111,7 +95,7 @@ function TopSkillsChart({ filters }) {
                   interval={0}
                 />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="job_count" fill="var(--chart-1)" radius={4} />
+                <Bar dataKey="job_count" fill="var(--color-primary)" radius={4} />
               </BarChart>
             </ChartContainer>
           </div>

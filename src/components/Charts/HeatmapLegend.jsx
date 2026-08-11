@@ -20,8 +20,6 @@ import * as d3 from "d3";
 function HeatmapLegend({ maxPct }) {
   // Mismo interpolador que HeatmapSvg: RdYlGn (rojo → amarillo → verde)
   const steps = [0, 0.2, 0.4, 0.6, 0.8, 1];
-  // dark: fondo oscuro azulado / light: gris claro — igual que las celdas vacías del SVG
-  const isDark = document.documentElement.classList.contains("dark");
 
   return (
     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -30,10 +28,8 @@ function HeatmapLegend({ maxPct }) {
         <div
           className="h-3.5 w-3.5 rounded"
           style={{
-            backgroundColor: isDark ? "hsl(237, 22%, 22%)" : "#f1f5f9",
-            border: isDark
-              ? "1px solid hsl(237, 22%, 30%)"
-              : "1px solid #e2e8f0",
+            backgroundColor: "var(--color-surface)",
+            border: "1px solid var(--color-border)",
           }}
         />
         <span>Sin datos</span>
@@ -55,7 +51,7 @@ function HeatmapLegend({ maxPct }) {
       </div>
 
       {/* Nota explicativa del máximo */}
-      <p className="mt-0.5 w-full text-xs text-muted-foreground/70">
+      <p className="mt-0.5 w-full text-xs text-muted-foreground">
         El verde intenso representa la relación más fuerte del dataset, no el
         100%. Cada celda muestra el % desde la perspectiva de la fila.
       </p>
