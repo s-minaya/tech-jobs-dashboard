@@ -77,5 +77,5 @@ usuario, no relacionados con esta feature:
   contraste — no hizo falta ningún ajuste.
 - [x] Validar contra todos los criterios de aceptación de `spec.md`.
 - [x] Mover la feature a "Hecho" en `spec/constitution/roadmap.md`.
-- [ ] Commit (solo tras confirmación del usuario):
+- [x] Commit (solo tras confirmación del usuario):
   `refactor: replace hardcoded hero colors with Halo tokens`
