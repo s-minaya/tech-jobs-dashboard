@@ -130,13 +130,54 @@ _(anterior al rediseño Halo)_
     índice). Ver `spec/features/010-salary-chart-quality/010-tasks.md`
     para el detalle completo.
 
+10. **011 · Calidad de datos y rendimiento — Evolución mensual de ofertas
+    por rol** — cuarta ronda "tabla por tabla". Auditoría exhaustiva de
+    `DemandByRoleChart` y `GET /api/jobs/demand-by-role`: bug de
+    agregación real con el filtro de país en su valor por defecto
+    ("Todos") — el backend fragmentaba cada combinación mes+rol en una
+    fila por país, y el frontend se quedaba solo con la última que
+    llegaba de Postgres en vez de sumarlas, infrarrepresentando la
+    demanda sin ningún error visible; corregido en el origen quitando
+    `country_code` del `SELECT`/`GROUP BY` (mismo tipo de bug que la fase
+    008 con `role_category` en la co-ocurrencia de skills). El "top 5 de
+    roles por defecto" tenía el mismo bug ya arreglado en `SalaryChart`
+    (orden de llegada de la API en vez de volumen real) — corregido
+    reusando `rankRolesByVolume`. Nueva nota explicando que el último mes
+    mostrado puede estar incompleto (ingesta continua), para no leer un
+    "bajón" de demanda ficticio al final de cada línea. Backend: índice
+    nuevo (`idx_jobs_demand_by_role`, no aplicado contra la BD real por el
+    mismo bloqueo de conexión directa de fases anteriores) + una sola
+    query en vez de dos; vista SQL duplicada y desincronizada
+    (`v_demand_by_role_monthly`) eliminada; `extractRoles` eliminada de
+    `roleLabels.js` al quedarse sin consumidores. Verificado con 347/347
+    tests de frontend y 36/36 de `api/`, y contra el backend real: con
+    filtro de país (`country=de`) respondió `200 OK` en 5.3s confirmando
+    la forma de fila correcta (sin `country_code`) y que
+    `total_matching_jobs` coincide exactamente con la suma de `job_count`
+    de las filas devueltas; sin filtro de país siguió fallando por
+    `statement timeout` (esperado, es justo lo que soluciona el índice
+    pendiente de aplicar). Revisión post-implementación (mismo día):
+    `jornada` estaba excluido como filtro sin ninguna razón técnica real
+    (reutilizaba una nota genérica pensada para el heatmap de
+    co-ocurrencia) — habilitado y verificado con datos reales
+    (`full_time`/`part_time` devuelven totales distintos; ~35.7% de las
+    ofertas de DE/90d no declaran jornada, no invalida el filtro); y con
+    "Últimos 30 días" se seguía consultando el backend aunque el gráfico
+    nunca se muestra — ahora se salta esa petición. De paso se confirmó
+    que excluir `skillCategoria` sí es correcto (ningún endpoint salvo
+    `/api/skills/top` hace `JOIN` con la tabla `skills`) y se detectó que
+    `/api/skills/top` tiene el mismo problema de `jornada` sin resolver,
+    documentado como candidato a una ronda futura. Ver
+    `spec/features/011-demand-by-role-quality/011-tasks.md` para el
+    detalle completo.
+
 ## En curso 🔜
 
-_(ninguna — siguiente: 011, o una feature de restructuración de carga
+_(ninguna — siguiente: 012, o una feature de restructuración de carga
 del dashboard aún sin planificar, en discusión con el usuario)_
 
 ## Backlog 💡
 
-11. **011 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
+11. **012 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
 
 > Una sola feature activa a la vez. No se empieza la siguiente hasta que la anterior pasa todos los criterios de aceptación.

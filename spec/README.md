@@ -22,7 +22,8 @@ spec/
     ├── 008-skills-cooccurrence/       ← Fase 8: integridad de datos del heatmap de co-ocurrencia
     ├── 009-skills-list-quality/       ← Fase 9: calidad de datos del autocomplete de skills del mapa
     ├── 010-salary-chart-quality/      ← Fase 10: calidad de datos y rendimiento del salario por rol y país
-    └── 011-halo-responsive-pulido/    ← Fase 11: responsive y pulido final
+    ├── 011-demand-by-role-quality/    ← Fase 11: calidad de datos y rendimiento de la evolución mensual de ofertas por rol
+    └── 012-halo-responsive-pulido/    ← Fase 12: responsive y pulido final
 ```
 
 ## Flujo para cada feature

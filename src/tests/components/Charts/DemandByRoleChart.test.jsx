@@ -141,15 +141,37 @@ describe("DemandByRoleChart", () => {
       });
     });
 
-    it("muestra aviso ⚠ cuando jornada está activa (filtro ignorado)", async () => {
+    it("NO muestra aviso ⚠ cuando jornada está activa — sí se aplica como filtro real (hallazgo post-implementación, ver 011-tasks.md)", async () => {
       render(
         <DemandByRoleChart
           filters={{ ...filtersNeutros, jornada: "Full time" }}
         />,
       );
       await waitFor(() => {
-        expect(screen.getByTestId("warning-popover")).toBeInTheDocument();
+        expect(screen.getByText(/número de ofertas publicadas/i)).toBeInTheDocument();
       });
+      expect(screen.queryByTestId("warning-popover")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("eficiencia de las consultas", () => {
+    it("no llama a la API cuando el periodo es 'Últimos 30 días' — el gráfico nunca se renderiza en ese estado, pedir los datos sería una consulta desperdiciada", async () => {
+      let calls = 0;
+      server.use(
+        http.get("/api/jobs/demand-by-role", () => {
+          calls++;
+          return HttpResponse.json({ rows: [], total_matching_jobs: 0 });
+        }),
+      );
+      render(
+        <DemandByRoleChart
+          filters={{ ...filtersNeutros, periodo: "Últimos 30 días" }}
+        />,
+      );
+      await waitFor(() => {
+        expect(screen.getByText(/periodo insuficiente/i)).toBeInTheDocument();
+      });
+      expect(calls).toBe(0);
     });
   });
 
@@ -166,6 +188,86 @@ describe("DemandByRoleChart", () => {
       render(<DemandByRoleChart filters={filtersNeutros} />);
       await waitFor(() => {
         expect(screen.getByText(/error/i)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("selección de roles por defecto", () => {
+    it("los roles disponibles (allRoles) vienen ordenados por volumen, no por orden de llegada — cubierto a fondo en roleLabels.test.js (rankRolesByVolume); aquí solo se comprueba la integración", async () => {
+      render(<DemandByRoleChart filters={filtersNeutros} />);
+      await waitFor(() => {
+        // backend (365 ofertas sumadas feb+mar) y devops (208) son los
+        // únicos dos roles del mock — ambos caben en el "top 5" y deben
+        // aparecer como botones disponibles independientemente del orden
+        // en que llegaron las filas.
+        expect(
+          screen.getByRole("button", { name: /^backend$/i }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /^devops$/i }),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("excluye 'other' de la selección automática aunque sea el rol con más volumen, pero lo deja disponible para selección manual", async () => {
+      server.use(
+        http.get("/api/jobs/demand-by-role", () =>
+          HttpResponse.json({
+            rows: [
+              { month: "2025-02-01T00:00:00.000Z", role_category: "other", job_count: 500 },
+              { month: "2025-02-01T00:00:00.000Z", role_category: "backend", job_count: 100 },
+              { month: "2025-02-01T00:00:00.000Z", role_category: "devops", job_count: 80 },
+              { month: "2025-02-01T00:00:00.000Z", role_category: "frontend", job_count: 60 },
+              { month: "2025-02-01T00:00:00.000Z", role_category: "cloud", job_count: 40 },
+              { month: "2025-02-01T00:00:00.000Z", role_category: "data_science", job_count: 20 },
+            ],
+            total_matching_jobs: 800,
+          }),
+        ),
+      );
+      render(<DemandByRoleChart filters={filtersNeutros} />);
+
+      // "other" tiene más volumen (500) que cualquier otro rol, pero no
+      // debe estar entre los 5 seleccionados por defecto — data_science
+      // (el 5º por volumen tras excluir "other") sí debe estarlo.
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /data science/i }),
+        ).toBeInTheDocument();
+      });
+      const botonOther = screen.getByRole("button", { name: /^other$/i });
+      // Disponible como botón (selección manual sigue siendo posible)...
+      expect(botonOther).toBeInTheDocument();
+      // ...pero no resaltado como parte de la selección por defecto —
+      // RoleSelector solo aplica "border-transparent text-white" a los
+      // roles activos (ver RoleSelector.jsx).
+      expect(botonOther).toHaveClass("border-border");
+      expect(botonOther).not.toHaveClass("border-transparent");
+    });
+  });
+
+  describe("sin datos", () => {
+    it("muestra el mensaje de 'sin datos' cuando rows está vacío", async () => {
+      server.use(
+        http.get("/api/jobs/demand-by-role", () =>
+          HttpResponse.json({ rows: [], total_matching_jobs: 0 }),
+        ),
+      );
+      render(<DemandByRoleChart filters={filtersNeutros} />);
+      await waitFor(() => {
+        expect(
+          screen.getByText(/no hay datos para los filtros seleccionados/i),
+        ).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("nota", () => {
+    it("menciona que la selección es por volumen total y que el último mes puede estar incompleto", async () => {
+      render(<DemandByRoleChart filters={filtersNeutros} />);
+      await waitFor(() => {
+        expect(screen.getByText(/en total/i)).toBeInTheDocument();
+        expect(screen.getByText(/puede estar incompleto/i)).toBeInTheDocument();
       });
     });
   });

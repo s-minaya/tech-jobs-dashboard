@@ -94,31 +94,28 @@ export const handlers = [
   }),
 
   // GET /api/jobs/demand-by-role
-  // Usado por DemandByRoleChart
+  // Usado por DemandByRoleChart. Sin country_code (fase 011: el backend
+  // dejó de agrupar por país — ver api/src/demandQuery.js).
   http.get(`${BASE}/api/jobs/demand-by-role`, () => {
     return HttpResponse.json({
       rows: [
         {
           month: "2025-02-01T00:00:00.000Z",
-          country_code: "de",
           role_category: "backend",
           job_count: 175,
         },
         {
           month: "2025-02-01T00:00:00.000Z",
-          country_code: "de",
           role_category: "devops",
           job_count: 98,
         },
         {
           month: "2025-03-01T00:00:00.000Z",
-          country_code: "de",
           role_category: "backend",
           job_count: 190,
         },
         {
           month: "2025-03-01T00:00:00.000Z",
-          country_code: "de",
           role_category: "devops",
           job_count: 110,
         },

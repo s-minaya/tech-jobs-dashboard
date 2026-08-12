@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from "recharts";
 import { getDemandByRole } from "@/services/jobServices";
-import { getRoleLabel, getRoleColor, extractRoles } from "@/lib/roleLabels";
+import { getRoleLabel, getRoleColor, rankRolesByVolume } from "@/lib/roleLabels";
 import { useChartData } from "@/hooks/useChartData";
 import { useIsDark } from "@/hooks/useIsDark";
 import ChartCard from "@/components/ui/ChartCard";
@@ -50,6 +50,11 @@ function generarMesesRango(nMeses) {
 
 // Transforma [{ month, role_category, job_count }] en [{ month, backend: 150, ... }].
 // Si se pasa un rango de meses, inicializa todos para que aparezcan en el eje X.
+// Asume que el backend ya devuelve como mucho una fila por (month,
+// role_category) — ver api/src/demandQuery.js: ya no se agrupa por
+// country_code, así que no hay nada que sumar aquí; si el backend volviera
+// a fragmentar por alguna dimensión adicional, esta asignación directa
+// volvería a perder datos igual que antes de la fase 011.
 function pivotData(rows, mesesRango) {
   const byMonth = {};
   if (mesesRango) {
@@ -104,28 +109,55 @@ function TooltipDemanda({ active, payload, label, chartConfig }) {
 // Requiere al menos 3 meses de datos para que la tendencia sea visible.
 // Con "Últimos 30 días" muestra un aviso en lugar de la gráfica.
 function DemandByRoleChart({ filters }) {
+  // Comprobamos si el periodo tiene suficientes meses para una tendencia
+  // ANTES de useChartData: con "Últimos 30 días" el bloque de abajo nunca
+  // renderiza el gráfico (solo el aviso), así que pedir los datos al
+  // backend sería una consulta 100% desperdiciada — se calculaba (y se
+  // descartaba) en cada cambio de filtro. Ver 011-tasks.md, "Hallazgos
+  // post-implementación".
+  const periodoInsuficiente = !PERIODOS_CON_TENDENCIA.includes(filters.periodo);
+
   const {
     data: response,
     loading,
     isInitialLoad,
     error,
   } = useChartData(
-    (signal) => getDemandByRole(filters, signal),
-    [filters.pais, filters.periodo, filters.contrato, filters.remote],
+    (signal) =>
+      periodoInsuficiente
+        ? Promise.resolve({ rows: [], total_matching_jobs: null })
+        : getDemandByRole(filters, signal),
+    [
+      filters.pais,
+      filters.periodo,
+      filters.contrato,
+      filters.jornada,
+      filters.remote,
+    ],
   );
 
   const rows = response?.rows ?? [];
   const totalJobs = response?.total_matching_jobs ?? null;
-  const allRoles = extractRoles(rows);
+  // Roles ordenados por volumen real (job_count sumado entre meses y
+  // países), no por el orden de llegada de la API — ese orden responde al
+  // ORDER BY del backend (mes ascendente) y no tiene relación con qué
+  // roles son más demandados. Ver rankRolesByVolume en roleLabels.js.
+  const allRoles = rankRolesByVolume(rows);
 
   // null → inicial (5 primeros) | [] → Ninguno | [...] → selección manual
   const [selectedRoles, setSelectedRoles] = useState(null);
   // activeRole: rol sobre el que está el cursor — null = ninguno en hover
   const [activeRole, setActiveRole] = useState(null);
 
+  // "other" (cajón de sastre del clasificador NLP para títulos que no
+  // encajan en ninguna categoría real) puede ser, con datos reales, el
+  // rol con más volumen — pero no aporta información accionable como
+  // "rol destacado" en la selección automática. Sigue disponible para
+  // selección manual vía RoleSelector (allRoles no se filtra), solo deja
+  // de ocupar uno de los 5 huecos por defecto.
   const effectiveSelected =
     selectedRoles === null
-      ? allRoles.slice(0, 5)
+      ? allRoles.filter((r) => r !== "other").slice(0, 5)
       : selectedRoles.filter((r) => allRoles.includes(r));
 
   // Cada rol recibe su color semántico (Backend=índigo, Data Science=esmeralda...)
@@ -141,10 +173,6 @@ function DemandByRoleChart({ filters }) {
   const nMeses = MESES_POR_PERIODO[filters.periodo] ?? null;
   const mesesRango = generarMesesRango(nMeses);
 
-  // Comprobamos si el periodo seleccionado tiene suficientes meses
-  // para que una gráfica de áreas sea informativa.
-  const periodoInsuficiente = !PERIODOS_CON_TENDENCIA.includes(filters.periodo);
-
   // Color de los ticks de los ejes — tokens Halo resueltos con
   // getComputedStyle: Recharts renderiza los ticks como SVG <text> y no
   // puede leer variables CSS directamente, así que necesitamos el valor
@@ -158,21 +186,18 @@ function DemandByRoleChart({ filters }) {
   return (
     <ChartCard
       title="Evolución mensual de ofertas por rol"
-      warning={getWarningNodes(
-        filters,
-        ["jornada", "skillCategoria"],
-        "demanda",
-      )}
+      warning={getWarningNodes(filters, ["skillCategoria"], "demanda")}
       loading={loading}
       isInitialLoad={isInitialLoad}
       error={error}
+      slowHint="Esta consulta puede tardar varios segundos, sobre todo con 'Todo el histórico' — gracias por tu paciencia."
     >
       <ChartDescription
         description="Número de ofertas publicadas cada mes por tipo de rol. Permite ver qué perfiles están creciendo en demanda y cuáles pierden fuerza a lo largo del tiempo."
         filters={filters}
         totalJobs={totalJobs}
-        nota="Por defecto se muestran los 5 roles más demandados."
-        excludeFilters={["jornada", "skillCategoria"]}
+        nota="Por defecto se muestran los 5 roles con más ofertas en total (sumando todos los meses y países). El último mes mostrado puede estar incompleto: las ofertas se siguen indexando de forma continua."
+        excludeFilters={["skillCategoria"]}
       />
 
       {/* Aviso cuando el periodo es demasiado corto para ver tendencias */}
@@ -188,6 +213,11 @@ function DemandByRoleChart({ filters }) {
             para ver la evolución real por rol.
           </p>
         </div>
+      ) : rows.length === 0 && !loading ? (
+        <p className="text-sm text-muted-foreground">
+          No hay datos para los filtros seleccionados. Prueba a ampliar el
+          periodo o quitar algún filtro.
+        </p>
       ) : (
         <>
           <RoleSelector

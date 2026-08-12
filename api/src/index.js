@@ -6,6 +6,7 @@ import pg from "pg";
 import dotenv from "dotenv";
 import { buildFilters } from "./buildFilters.js";
 import { buildSalaryByRoleCountryQuery, shapeSalaryRows } from "./salaryQuery.js";
+import { buildDemandByRoleQuery, shapeDemandRows } from "./demandQuery.js";
 import { devCacheMiddleware } from "./devCache.js";
 
 dotenv.config({ path: ".env.local" });
@@ -126,38 +127,26 @@ app.get("/api/jobs/offers-by-country", async (req, res) => {
 
 // GET /api/jobs/demand-by-role
 // Evolución mensual de ofertas por rol.
-// Filtros: país, periodo, contrato, remote. Jornada no aplica.
+// Filtros: país, periodo, contrato, jornada, remote. skillCategoria no
+// aplica: esta query no hace JOIN con job_skills/skills, no hay columna
+// de skill que filtrar (ver spec/features/011-demand-by-role-quality/
+// 011-tasks.md, "Hallazgos post-implementación" para el razonamiento
+// completo, incluida la corrección de por qué jornada sí debía aplicar).
+// No agrupa por country_code (fase 011): el frontend (DemandByRoleChart)
+// siempre suma la demanda de un rol/mes entre los países filtrados, nunca
+// la desglosa — agrupar por país solo fragmentaba cada (mes, rol) en
+// varias filas que había que volver a sumar en el cliente, y con "Todos"
+// los países (el filtro por defecto) el pivot del frontend se quedaba solo
+// con la última fila que llegaba en vez de sumarlas. Ver demandQuery.js y
+// spec/features/011-demand-by-role-quality/011-spec.md.
 app.get("/api/jobs/demand-by-role", async (req, res) => {
   try {
-    const { jornada: _j, ...filtrosAplicables } = req.query;
-    const { conditions, values } = buildFilters(filtrosAplicables);
+    const { conditions, values } = buildFilters(req.query);
     conditions.push("j.role_category IS NOT NULL");
     conditions.push("j.posted_at IS NOT NULL");
-
-    const [demandResult, totalResult] = await Promise.all([
-      pool.query(
-        `SELECT
-           DATE_TRUNC('month', j.posted_at) AS month,
-           j.country_code,
-           j.role_category,
-           COUNT(*) AS job_count
-         FROM jobs j
-         WHERE ${conditions.join(" AND ")}
-         GROUP BY DATE_TRUNC('month', j.posted_at), j.country_code, j.role_category
-         ORDER BY month ASC`,
-        values,
-      ),
-      pool.query(
-        `SELECT COUNT(DISTINCT j.id)::int AS total
-         FROM jobs j WHERE ${conditions.join(" AND ")}`,
-        values,
-      ),
-    ]);
-
-    res.json({
-      rows: demandResult.rows,
-      total_matching_jobs: totalResult.rows[0].total,
-    });
+    const { text } = buildDemandByRoleQuery(conditions);
+    const result = await pool.query(text, values);
+    res.json(shapeDemandRows(result.rows));
   } catch (err) {
     errorHandler(res, err, "demand-by-role");
   }

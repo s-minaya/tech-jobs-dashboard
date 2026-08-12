@@ -204,6 +204,38 @@ describe("SalaryChart", () => {
         ).toBeInTheDocument();
       });
     });
+
+    it("excluye 'other' de la selección automática aunque sea el rol con más volumen, pero lo deja disponible para selección manual", async () => {
+      server.use(
+        http.get("/api/salary/by-role-country", () =>
+          HttpResponse.json({
+            rows: [
+              { country_code: "de", role_category: "other", job_count: 500, avg_salary_eur: 50000, median_salary_eur: 48000 },
+              { country_code: "de", role_category: "backend", job_count: 100, avg_salary_eur: 65000, median_salary_eur: 63000 },
+              { country_code: "de", role_category: "devops", job_count: 80, avg_salary_eur: 70000, median_salary_eur: 68000 },
+              { country_code: "de", role_category: "frontend", job_count: 60, avg_salary_eur: 60000, median_salary_eur: 58000 },
+              { country_code: "de", role_category: "cloud", job_count: 40, avg_salary_eur: 72000, median_salary_eur: 70000 },
+              { country_code: "de", role_category: "data_science", job_count: 20, avg_salary_eur: 75000, median_salary_eur: 73000 },
+            ],
+            total_matching_jobs: 800,
+          }),
+        ),
+      );
+      render(<SalaryChart filters={filtersNeutros} />);
+
+      // "other" tiene más volumen (500) que cualquier otro rol, pero no
+      // debe estar entre los 5 seleccionados por defecto — data_science
+      // (el 5º por volumen tras excluir "other") sí debe estarlo.
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /data science/i }),
+        ).toBeInTheDocument();
+      });
+      const botonOther = screen.getByRole("button", { name: /^other$/i });
+      expect(botonOther).toBeInTheDocument();
+      expect(botonOther).toHaveClass("border-border");
+      expect(botonOther).not.toHaveClass("border-transparent");
+    });
   });
 
   describe("manejo de errores", () => {

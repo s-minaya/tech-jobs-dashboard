@@ -137,9 +137,15 @@ function SalaryChart({ filters }) {
 
   // null → inicial (5 primeros por volumen) | [] → Ninguno | [...] → selección manual
   const [selectedRoles, setSelectedRoles] = useState(null);
+  // "other" (cajón de sastre del clasificador NLP para títulos que no
+  // encajan en ninguna categoría real) puede ser, con datos reales, el
+  // rol con más volumen — pero no aporta información accionable como
+  // "rol destacado" en la selección automática. Sigue disponible para
+  // selección manual vía RoleSelector (allRoles no se filtra), solo deja
+  // de ocupar uno de los 5 huecos por defecto.
   const effectiveSelected =
     selectedRoles === null
-      ? allRoles.slice(0, 5)
+      ? allRoles.filter((r) => r !== "other").slice(0, 5)
       : selectedRoles.filter((r) => allRoles.includes(r));
 
   // Color semántico por rol: Backend siempre índigo, Data Science siempre

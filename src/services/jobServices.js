@@ -56,7 +56,7 @@ export async function getTopSkills(filters = {}, signal) {
 }
 
 export async function getDemandByRole(filters = {}, signal) {
-  const { jornada: _j, skillCategoria: _s, ...rest } = filters;
+  const { skillCategoria: _s, ...rest } = filters;
   return fetchJson(`/api/jobs/demand-by-role?${buildParams(rest)}`, {
     signal,
   });

@@ -1,10 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  getRoleLabel,
-  ROLE_LABELS,
-  extractRoles,
-  rankRolesByVolume,
-} from "@/lib/roleLabels";
+import { getRoleLabel, ROLE_LABELS, rankRolesByVolume } from "@/lib/roleLabels";
 
 describe("ROLE_LABELS", () => {
   it("contiene los roles principales del dashboard", () => {
@@ -55,34 +50,11 @@ describe("getRoleLabel", () => {
   });
 });
 
-describe("extractRoles", () => {
-  it("devuelve los roles únicos presentes en las filas", () => {
-    const rows = [
-      { role_category: "backend" },
-      { role_category: "frontend" },
-      { role_category: "backend" },
-    ];
-    expect(extractRoles(rows)).toEqual(["backend", "frontend"]);
-  });
-
-  it("devuelve array vacío si no hay filas", () => {
-    expect(extractRoles([])).toEqual([]);
-  });
-
-  it("mantiene el orden de primera aparición de cada rol", () => {
-    const rows = [
-      { role_category: "data_science" },
-      { role_category: "backend" },
-      { role_category: "data_science" },
-      { role_category: "devops" },
-    ];
-    expect(extractRoles(rows)).toEqual(["data_science", "backend", "devops"]);
-  });
-});
-
-// rankRolesByVolume — añadida en la fase 010 (Salary Chart Quality).
-// Reemplaza a extractRoles como criterio de "roles por defecto" en
-// SalaryChart: ordena por job_count total, no por orden de llegada.
+// rankRolesByVolume — añadida en la fase 010 (Salary Chart Quality) para
+// SalaryChart, reutilizada en la fase 011 (Demand by Role Quality) para
+// DemandByRoleChart. Reemplazó a extractRoles (eliminada en la fase 011
+// al quedarse sin consumidores) como criterio de "roles por defecto":
+// ordena por job_count total, no por orden de llegada.
 describe("rankRolesByVolume", () => {
   it("ordena por job_count total de mayor a menor, no por orden de llegada", () => {
     // Reproduce el caso real detectado en Austria (periodo=90d): en el
