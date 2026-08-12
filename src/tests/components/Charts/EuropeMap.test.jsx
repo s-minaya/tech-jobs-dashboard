@@ -156,6 +156,18 @@ describe("EuropeMap", () => {
         ).toBeInTheDocument();
       });
     });
+
+    it("muestra el aviso ⓘ cuando skillCategoria está activa (fase 012 — antes solo avisaba de país)", async () => {
+      setupGeoHandler();
+      render(
+        <EuropeMap
+          filters={{ ...filtersNeutros, skillCategoria: "Database" }}
+        />,
+      );
+      await waitFor(() => {
+        expect(screen.getByTestId("warning-popover")).toBeInTheDocument();
+      });
+    });
   });
 
   describe("total de ofertas", () => {

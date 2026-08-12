@@ -58,3 +58,30 @@ export function buildFilters(query, existingValues = []) {
 
   return { conditions, values };
 }
+
+// stripKeys
+// Devuelve una copia de `query` sin las claves indicadas. La usan los
+// endpoints que solo aplican un subconjunto de los filtros habituales
+// (ej. /api/skills/cooccurrence, que solo usa periodo) — mantener "qué se
+// descarta" como una lista explícita e importable permite testear el
+// contrato del endpoint sin levantar Express ni BD, en vez de un
+// destructure inline en index.js que no se puede verificar por separado
+// (fase 012 — un destructure incompleto de este tipo dejó `contrato`/
+// `remote` colándose en /api/skills/cooccurrence sin que ningún test lo
+// detectara).
+export function stripKeys(query, keys) {
+  const result = { ...query };
+  for (const key of keys) delete result[key];
+  return result;
+}
+
+// COOCCURRENCE_IGNORED_FILTERS
+// /api/skills/cooccurrence solo debe filtrarse por periodo — país,
+// contrato, jornada y remote fragmentarían la muestra hasta dejar pocas
+// co-ocurrencias reales, y los porcentajes dejarían de ser fiables.
+export const COOCCURRENCE_IGNORED_FILTERS = [
+  "country",
+  "contrato",
+  "jornada",
+  "remote",
+];

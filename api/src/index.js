@@ -4,7 +4,11 @@ import express from "express";
 import cors from "cors";
 import pg from "pg";
 import dotenv from "dotenv";
-import { buildFilters } from "./buildFilters.js";
+import {
+  buildFilters,
+  stripKeys,
+  COOCCURRENCE_IGNORED_FILTERS,
+} from "./buildFilters.js";
 import { buildSalaryByRoleCountryQuery, shapeSalaryRows } from "./salaryQuery.js";
 import { buildDemandByRoleQuery, shapeDemandRows } from "./demandQuery.js";
 import { devCacheMiddleware } from "./devCache.js";
@@ -254,7 +258,18 @@ app.get("/api/skills/top", async (req, res) => {
 // terminaba eliminando skills que sí tenían co-ocurrencias reales).
 app.get("/api/skills/cooccurrence", async (req, res) => {
   try {
-    const { country: _c, jornada: _j, ...restQuery } = req.query;
+    // Los 4 filtros de COOCCURRENCE_IGNORED_FILTERS se descartan
+    // explícitamente (fase 012): antes se hacía con un destructure
+    // inline que solo cubría country/jornada, dejando contrato/remote
+    // colarse en restQuery — si algún día llegaran en la query string,
+    // buildFilters los habría aplicado igual, devolviendo datos
+    // silenciosamente más pequeños/sesgados que lo que este mismo
+    // comentario y la UI le prometen al usuario. Dormido hasta ahora
+    // porque el único caller (getSkillCoOccurrence en jobServices.js) ya
+    // los descartaba antes de llamar — pero el contrato de la API en sí
+    // estaba roto. Usar stripKeys + la lista exportada (en vez de un
+    // destructure inline) permite testear este contrato sin Express/BD.
+    const restQuery = stripKeys(req.query, COOCCURRENCE_IGNORED_FILTERS);
     const { conditions, values } = buildFilters(restQuery);
 
     if (!req.query.periodo || req.query.periodo === "all") {

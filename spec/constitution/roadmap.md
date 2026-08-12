@@ -171,13 +171,51 @@ _(anterior al rediseño Halo)_
     `spec/features/011-demand-by-role-quality/011-tasks.md` para el
     detalle completo.
 
+11. **012 · Auditoría cruzada de filtros** — quinta ronda "tabla por
+    tabla", pero distinta: no audita una gráfica nueva, sino cómo
+    interactúan los filtros del sidebar entre sí y contra las 5 gráficas
+    ya construidas (`TopSkillsChart`, `SalaryChart`, `DemandByRoleChart`,
+    `EuropeMap`, `SkillHeatmap`)
+    Auditoría de los 7 endpoints + discusión de diseño filtro por filtro
+    con el usuario (contrastando su diseño original, nunca escrito antes,
+    contra lo implementado). Resultado: `GET /api/skills/cooccurrence` descartaba
+    `country`/`jornada` pero no `contrato`/`remote`, que se habrían
+    aplicado silenciosamente si algún caller los hubiera enviado
+    (dormido en producción porque el único caller ya los descartaba antes,
+    pero el contrato de la API estaba roto); corregido con un
+    `stripKeys`/`COOCCURRENCE_IGNORED_FILTERS` testeable en
+    `buildFilters.js`, verificado en vivo con peticiones concurrentes
+    (idénticas con y sin `contrato`/`remote`). Además, un bug de
+    UI en `EuropeMap` donde el aviso ⓘ no cubría `skillCategoria` aunque
+    la pill sí se ocultaba. El resto de la auditoría confirmó que el
+    diseño original ya estaba bien implementado, con dos correcciones
+    sobre el propio análisis inicial de esta ronda: se descartó habilitar
+    `jornada` en `TopSkillsChart` (recomendación de la fase 011 que
+    resultó ser un error de razonamiento — "sin barrera técnica" no es lo
+    mismo que "aporta una pregunta de negocio útil"), y se descubrió que
+    el filtro de categoría de skill en el heatmap de co-ocurrencia **ya
+    funcionaba** con la semántica deseada (ambas skills del par dentro de
+    la categoría), implementado client-side desde antes de esta sesión
+    (`heatmapUtils.js`) — no fue necesario construir nada nuevo, solo se
+    añadió un test que lo deja documentado. Verificación post-implementación
+    (mismo día): el heatmap no mostraba ningún aviso claro al cambiar de
+    categoría (reconectado al badge "Actualizando..." que `ChartCard` ya
+    tenía, quitando la atenuación duplicada que hacía `HeatmapSvg` por su
+    cuenta); los `NS_BINDING_ABORTED` vistos en consola resultaron ser
+    `StrictMode` duplicando efectos en desarrollo (no aparece en
+    producción), no un bug. Verificado con 353/353 tests de frontend y
+    40/40 de `api/`. Ver
+    `spec/features/012-cross-filter-audit/012-tasks.md` para el detalle
+    completo.
+
 ## En curso 🔜
 
-_(ninguna — siguiente: 012, o una feature de restructuración de carga
-del dashboard aún sin planificar, en discusión con el usuario)_
+_(ninguna — siguiente: 013, un "chart de tendencias" estilo Halo ligado a
+la idea aún sin planificar de restructurar la carga del dashboard con
+header/rutas, o lo que el usuario decida)_
 
 ## Backlog 💡
 
-11. **012 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
+12. **013 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
 
 > Una sola feature activa a la vez. No se empieza la siguiente hasta que la anterior pasa todos los criterios de aceptación.

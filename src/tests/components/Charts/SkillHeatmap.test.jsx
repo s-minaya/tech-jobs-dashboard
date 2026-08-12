@@ -167,6 +167,40 @@ describe("SkillHeatmap", () => {
     });
   });
 
+  describe("aviso de actualización al cambiar de categoría", () => {
+    it("atenúa la tarjeta completa y muestra el badge 'Actualizando...' de ChartCard mientras carga las skills de la nueva categoría (no solo el texto interno)", async () => {
+      const { rerender } = render(<SkillHeatmap filters={filtersNeutros} />);
+
+      // Esperamos a que termine la carga inicial (loadingPairs=false) —
+      // en este punto solo debería haber, como mucho, el texto interno
+      // "Mostrando N skills...", ningún "Actualizando...".
+      await waitFor(() => {
+        expect(document.querySelector("svg")).toBeInTheDocument();
+      });
+      expect(screen.queryByText(/actualizando/i)).not.toBeInTheDocument();
+
+      // A partir de aquí, /api/skills/top nunca resuelve — afecta solo a
+      // la petición que dispara el cambio de categoría (la carga inicial
+      // ya se resolvió con el handler por defecto), dejando loadingSkills
+      // en `true` de forma estable para poder inspeccionar ese estado.
+      server.use(
+        http.get("/api/skills/top", () => new Promise(() => {})),
+      );
+      rerender(
+        <SkillHeatmap
+          filters={{ ...filtersNeutros, skillCategoria: "Language" }}
+        />,
+      );
+
+      // Dos apariciones: el texto interno de SkillHeatmap ("Actualizando...")
+      // y el badge flotante de ChartCard (mismo texto) — antes del fix,
+      // ChartCard no recibía loadingSkills y este badge no aparecía.
+      await waitFor(() => {
+        expect(screen.getAllByText(/actualizando/i)).toHaveLength(2);
+      });
+    });
+  });
+
   describe("manejo de errores", () => {
     it("muestra error cuando el endpoint de co-ocurrencia falla", async () => {
       server.use(

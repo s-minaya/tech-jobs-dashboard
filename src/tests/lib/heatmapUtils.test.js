@@ -356,3 +356,48 @@ describe("filterSkillsWithCoOccurrence — umbral de conectividad (k-core)", () 
     expect(r1).toEqual(r2);
   });
 });
+
+// Flujo completo de filtrado por categoría — añadido en la fase 012
+// (Auditoría cruzada de filtros). El heatmap no filtra por categoría en
+// el backend (GET /api/skills/cooccurrence trae TODOS los pares, sin
+// filtrar); el filtrado real ocurre encadenando selectSkills (recorta las
+// filas/columnas candidatas a la categoría activa) + buildLookup (solo
+// conserva pares donde AMBAS skills sobreviven ese recorte). Este test
+// documenta y protege esa garantía end-to-end: aunque `pairs` traiga
+// pares cruzados entre categorías, ninguno debe sobrevivir en el lookup
+// final cuando hay una categoría activa.
+describe("filtrado por categoría end-to-end (selectSkills + buildLookup)", () => {
+  const skillsData = [
+    { skill: "AWS", skill_category: "cloud", job_count: 1000 },
+    { skill: "Azure", skill_category: "cloud", job_count: 800 },
+    { skill: "GCP", skill_category: "cloud", job_count: 400 },
+    { skill: "Python", skill_category: "language", job_count: 2000 },
+  ];
+  // AWS-Python es un par cruzado (cloud + language) que SÍ viene en la
+  // respuesta global de /api/skills/cooccurrence (no filtra por
+  // categoría) — no debe sobrevivir al filtrar por "cloud".
+  const pairs = [
+    { skill: "AWS", co_skill: "Azure", co_count: 300 },
+    { skill: "AWS", co_skill: "GCP", co_count: 150 },
+    { skill: "AWS", co_skill: "Python", co_count: 900 },
+  ];
+
+  it("con categoría activa, ningún par del lookup final mezcla categorías distintas", () => {
+    const candidatas = selectSkills(skillsData, "cloud", 50);
+    const skills = filterSkillsWithCoOccurrence(candidatas, pairs);
+    const lookup = buildLookup(pairs, skills);
+
+    // El par cruzado (AWS-Python) no debe aparecer en ninguna dirección,
+    // aunque venga en `pairs` — Python nunca entra en `skills` (filtrado
+    // por categoría en selectSkills), así que buildLookup lo descarta.
+    expect(lookup["AWS|Python"]).toBeUndefined();
+    expect(lookup["Python|AWS"]).toBeUndefined();
+
+    // Los pares dentro de la categoría sí deben sobrevivir.
+    expect(lookup["AWS|Azure"]).toBe(300);
+    expect(lookup["AWS|GCP"]).toBe(150);
+
+    // Ninguna skill fuera de "cloud" debe colarse en el conjunto final.
+    expect(skills).not.toContain("Python");
+  });
+});

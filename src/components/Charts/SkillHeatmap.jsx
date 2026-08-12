@@ -125,7 +125,7 @@ function SkillHeatmap({ filters }) {
         ["pais", "contrato", "jornada", "remote"],
         "heatmap",
       )}
-      loading={loadingPairs}
+      loading={loadingPairs || loadingSkills}
       isInitialLoad={loadingPairs}
       error={error}
     >
@@ -178,7 +178,6 @@ function SkillHeatmap({ filters }) {
                 skills={skills}
                 lookup={lookup}
                 jobCountMap={jobCountMap}
-                loading={loadingSkills}
               />
             </div>
           )}

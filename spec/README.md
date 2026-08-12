@@ -23,7 +23,8 @@ spec/
     ├── 009-skills-list-quality/       ← Fase 9: calidad de datos del autocomplete de skills del mapa
     ├── 010-salary-chart-quality/      ← Fase 10: calidad de datos y rendimiento del salario por rol y país
     ├── 011-demand-by-role-quality/    ← Fase 11: calidad de datos y rendimiento de la evolución mensual de ofertas por rol
-    └── 012-halo-responsive-pulido/    ← Fase 12: responsive y pulido final
+    ├── 012-cross-filter-audit/        ← Fase 12: auditoría cruzada de filtros entre gráficas
+    └── 013-halo-responsive-pulido/    ← Fase 13: responsive y pulido final
 ```
 
 ## Flujo para cada feature

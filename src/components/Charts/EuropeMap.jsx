@@ -104,7 +104,7 @@ function EuropeMap({ filters }) {
   return (
     <ChartCard
       title="Ofertas por país en Europa"
-      warning={getWarningNodes(filters, ["pais"], "mapa")}
+      warning={getWarningNodes(filters, ["pais", "skillCategoria"], "mapa")}
       loading={loading}
       isInitialLoad={isInitialLoad && geoLoading}
       error={error}

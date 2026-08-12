@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { buildFilters } from "../src/buildFilters.js";
+import {
+  buildFilters,
+  stripKeys,
+  COOCCURRENCE_IGNORED_FILTERS,
+} from "../src/buildFilters.js";
 
 // Tests de buildFilters
 //
@@ -166,5 +170,62 @@ describe("buildFilters", () => {
       expect(lastCondition).toContain("$5");
       expect(lastCondition).not.toContain("$6");
     });
+  });
+});
+
+// stripKeys / COOCCURRENCE_IGNORED_FILTERS — añadidos en la fase 012
+// (Auditoría cruzada de filtros). GET /api/skills/cooccurrence usaba un
+// destructure inline que solo descartaba country/jornada, dejando
+// contrato/remote colarse hasta buildFilters si algún día llegaban en la
+// query string — un bug real de fuga de filtros, aunque dormido porque el
+// único caller ya los descartaba antes de llamar. Estos tests cubren el
+// contrato completo del endpoint sin tener que levantar Express ni BD.
+describe("stripKeys", () => {
+  it("quita las claves indicadas y conserva el resto", () => {
+    const result = stripKeys(
+      { country: "de", periodo: "90d", contrato: "permanent" },
+      ["country", "contrato"],
+    );
+    expect(result).toEqual({ periodo: "90d" });
+  });
+
+  it("no muta el objeto original", () => {
+    const original = { country: "de", periodo: "90d" };
+    stripKeys(original, ["country"]);
+    expect(original).toEqual({ country: "de", periodo: "90d" });
+  });
+
+  it("claves ausentes no rompen nada", () => {
+    const result = stripKeys({ periodo: "90d" }, ["country", "contrato"]);
+    expect(result).toEqual({ periodo: "90d" });
+  });
+});
+
+describe("COOCCURRENCE_IGNORED_FILTERS + buildFilters (contrato de /api/skills/cooccurrence)", () => {
+  it("con los 5 filtros activos en la query, tras el strip solo periodo llega a buildFilters", () => {
+    const query = {
+      country: "de",
+      periodo: "90d",
+      contrato: "permanent",
+      jornada: "full_time",
+      remote: "true",
+    };
+    const restQuery = stripKeys(query, COOCCURRENCE_IGNORED_FILTERS);
+    const { conditions, values } = buildFilters(restQuery);
+
+    // Antes del fix de la fase 012, contrato/remote sobrevivían al strip
+    // y buildFilters generaba estas dos condiciones extra — deben haber
+    // desaparecido.
+    expect(conditions.join(" ")).not.toContain("j.contract_type");
+    expect(conditions.join(" ")).not.toContain("j.remote");
+    expect(conditions.join(" ")).not.toContain("j.country_code");
+    expect(conditions.join(" ")).not.toContain("j.contract_time");
+
+    // Solo queda la condición de periodo (más is_active, siempre presente).
+    expect(conditions).toEqual([
+      "j.is_active = TRUE",
+      "j.posted_at >= NOW() - $1::interval",
+    ]);
+    expect(values).toEqual(["90 days"]);
   });
 });

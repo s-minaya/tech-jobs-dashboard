@@ -12,7 +12,7 @@ const CELL_MIN = 28; // mínimo para que quepan los porcentajes
 // contenedor medido con ResizeObserver. Así con pocos filtros y pocas
 // skills las celdas son grandes, y en landscape móvil se encogen
 // para caber en pantalla. Los porcentajes siempre se muestran.
-function HeatmapSvg({ skills, lookup, jobCountMap, loading = false }) {
+function HeatmapSvg({ skills, lookup, jobCountMap }) {
   const svgRef = useRef(null);
   const containerRef = useRef(null);
 
@@ -252,15 +252,7 @@ function HeatmapSvg({ skills, lookup, jobCountMap, loading = false }) {
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className="relative w-full"
-      style={{
-        opacity: loading ? 0.4 : 1,
-        transition: "opacity 200ms ease",
-        minHeight: "200px",
-      }}
-    >
+    <div ref={containerRef} className="relative w-full" style={{ minHeight: "200px" }}>
       <svg ref={svgRef} />
     </div>
   );
