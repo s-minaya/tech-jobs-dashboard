@@ -34,6 +34,39 @@ test("landing → dashboard: pulsar el botón lleva al dashboard", async ({
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 1b. LANDING — stats rediseñadas (fase 014)
+// ─────────────────────────────────────────────────────────────────────────────
+// Lightfall (WebGL) impide testear LandingPage con Testing Library/jsdom
+// (sin contexto WebGL real) — mismo motivo por el que MainContent
+// tampoco tiene test unitario. Esta verificación vive en E2E, con un
+// navegador real, en su lugar.
+test("landing: las 3 cards de stats muestran datos reales, sin el badge antiguo", async ({
+  page,
+}) => {
+  await goToLanding(page);
+
+  await expect(
+    page.getByText(/explora el mercado por país/i),
+  ).toBeVisible({ timeout: 10_000 });
+  await expect(
+    page.getByText(/compara salarios en europa/i),
+  ).toBeVisible();
+  await expect(
+    page.getByText(/descubre dónde está la demanda/i),
+  ).toBeVisible();
+
+  // El badge "Mercado tech europeo · 8 países · Datos en tiempo real" se eliminó.
+  await expect(
+    page.getByText(/datos en tiempo real/i),
+  ).not.toBeVisible();
+
+  // Los contadores animados terminan mostrando un número real (no "…").
+  await expect(page.getByText("países").locator("..")).not.toContainText("…", {
+    timeout: 10_000,
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 2. SESSION STORAGE
 // ─────────────────────────────────────────────────────────────────────────────
 test("sessionStorage: recargar no muestra la landing de nuevo", async ({
@@ -60,12 +93,17 @@ test("sessionStorage: recargar no muestra la landing de nuevo", async ({
 test("KPI cards: muestran datos reales de la API", async ({ page }) => {
   await skipLanding(page);
 
-  // Esperamos a que los skeletons desaparezcan
-  await expect(page.getByText("Ofertas activas", { exact: true })).toBeVisible({
+  // Esperamos a que los skeletons desaparezcan. Labels actualizados en
+  // la revisión post-plan de la fase 014: "Ofertas activas"/"Países
+  // cubiertos" se sustituyeron por "Empresas analizadas"/"Roles
+  // analizados" (esos dos números ya se muestran en la landing).
+  await expect(
+    page.getByText("Empresas analizadas", { exact: true }),
+  ).toBeVisible({
     timeout: 15_000,
   });
   await expect(
-    page.getByText("Países cubiertos", { exact: true }),
+    page.getByText("Roles analizados", { exact: true }),
   ).toBeVisible();
   await expect(
     page.getByText("Skills rastreadas", { exact: true }),
@@ -134,7 +172,10 @@ test("Filtros: seleccionar Alemania actualiza el badge de filtros activos", asyn
   page,
 }) => {
   await skipLanding(page);
-  await expect(page.getByText("Ofertas activas", { exact: true })).toBeVisible({
+  // "Skills rastreadas" como ancla de "las KPI cards ya cargaron": a
+  // diferencia de "Ofertas activas" (eliminada en la revisión post-plan
+  // de la fase 014), esta card no ha cambiado de nombre.
+  await expect(page.getByText("Skills rastreadas", { exact: true })).toBeVisible({
     timeout: 15_000,
   });
 
@@ -145,8 +186,12 @@ test("Filtros: seleccionar Alemania actualiza el badge de filtros activos", asyn
   const drawer = page.locator("div.fixed.top-0.left-0.z-50");
   await expect(drawer).toBeVisible({ timeout: 5_000 });
 
-  // Seleccionamos Alemania dentro del drawer
-  await drawer.getByRole("button", { name: /^DE$/ }).click();
+  // Seleccionamos Alemania dentro del drawer — el chip muestra el nombre
+  // traducido ("Alemania"), no el código crudo ("DE"), desde que la fase
+  // 013 tradujo el sidebar completo (OPTION_LABELS en FilterSection.jsx).
+  // Este test seguía buscando "DE" literal — descubierto al ejecutar el
+  // E2E completo por primera vez desde esa fase (fase 014).
+  await drawer.getByRole("button", { name: /^Alemania$/ }).click();
   await drawer.getByRole("button", { name: /ver resultados/i }).click();
 
   // El anillo pulsante del FAB indica filtro activo
@@ -160,7 +205,10 @@ test("Filtros: resetear elimina el badge de filtros activos", async ({
   page,
 }) => {
   await skipLanding(page);
-  await expect(page.getByText("Ofertas activas", { exact: true })).toBeVisible({
+  // "Skills rastreadas" como ancla de "las KPI cards ya cargaron": a
+  // diferencia de "Ofertas activas" (eliminada en la revisión post-plan
+  // de la fase 014), esta card no ha cambiado de nombre.
+  await expect(page.getByText("Skills rastreadas", { exact: true })).toBeVisible({
     timeout: 15_000,
   });
 
@@ -169,8 +217,8 @@ test("Filtros: resetear elimina el badge de filtros activos", async ({
   const drawer = page.locator("div.fixed.top-0.left-0.z-50");
   await expect(drawer).toBeVisible({ timeout: 5_000 });
 
-  // Activamos un filtro
-  await drawer.getByRole("button", { name: /^FR$/ }).click();
+  // Activamos un filtro — nombre traducido, mismo motivo que el test anterior.
+  await drawer.getByRole("button", { name: /^Francia$/ }).click();
 
   // Reseteamos desde dentro del drawer
   await drawer.getByRole("button", { name: /resetear/i }).click();

@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
-import { getSummaryStats } from "@/services/jobServices";
+import { useSummaryStats } from "@/hooks/useSummaryStats";
+import { useCountUp } from "@/hooks/useCountUp";
+import { SLOW_LOADING_MS } from "@/components/ui/ChartCard";
 
 // Formatea un número grande con separador de miles: 26023 → "26.023"
+// Redondea explícitamente porque useCountUp devuelve el valor crudo de
+// la animación (con decimales a medio camino).
 function formatNumber(n) {
-  return Number(n).toLocaleString("es-ES");
+  return Math.round(Number(n)).toLocaleString("es-ES");
 }
 
 // Formatea una fecha ISO a "15 ene 2025"
@@ -52,31 +56,67 @@ function KpiCard({ label, value, description, fullWidth = false }) {
 //   móvil    → 2 columnas: 2+2 cards y la última ocupa las 2 columnas
 //   sm       → 3 columnas
 //   lg       → 5 columnas (todas en una fila)
+//
+// Fase 014 (revisión post-plan): "Ofertas activas"/"Países cubiertos" se
+// sustituyen por "Empresas analizadas"/"Roles analizados" — esos dos
+// números ya se muestran en la card "Explora el mercado por país" de la
+// landing (mismo endpoint), así que repetirlos aquí no aportaba nada
+// nuevo; las 2 cards nuevas cuentan una historia distinta (amplitud de
+// empresas, granularidad de roles antes de entrar en SalaryChart). Las
+// otras 3 ("Con salario declarado", "Última actualización", "Skills
+// rastreadas") se mantienen igual, a petición explícita del usuario.
+// Todos los valores numéricos animan al montar con useCountUp (mismo
+// hook que la landing) — "Última actualización" es una fecha, no un
+// conteo, así que no anima.
 function SummaryStats() {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { stats, loading, error } = useSummaryStats();
 
-  // Cargamos los stats una sola vez al montar el componente.
-  // No hay deps que cambien porque los KPIs son independientes de los filtros.
+  // Aviso de carga lenta (hallazgo 3): SummaryStats no usa ChartCard
+  // (layout propio de stat tiles), así que no puede recibir la prop
+  // slowHint — replica el mismo umbral (SLOW_LOADING_MS, exportado de
+  // ChartCard.jsx) con su propio temporizador local. Con la caché de
+  // /api/stats/summary (statsCache.js, TTL 10 min) esto solo debería
+  // llegar a mostrarse en el caso raro de caché fría.
+  const [showSlowHint, setShowSlowHint] = useState(false);
   useEffect(() => {
-    getSummaryStats()
-      .then(setStats)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
+    if (!loading) {
+      setShowSlowHint(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowSlowHint(true), SLOW_LOADING_MS);
+    return () => clearTimeout(timer);
+  }, [loading]);
+
+  // Contadores animados — useCountUp no anima nada mientras el target es
+  // null/undefined/NaN, así que es seguro llamarlos ya con stats?.campo
+  // antes de que stats cargue (los hooks deben llamarse siempre, en el
+  // mismo orden, nunca dentro de un if).
+  const companiesCount = useCountUp(stats?.total_companies);
+  const roleCategoriesCount = useCountUp(stats?.total_role_categories);
+  const skillsCount = useCountUp(stats?.total_skills);
+  const salaryPctCount = useCountUp(
+    stats ? Number(stats.pct_with_salary) : null,
+  );
 
   if (loading) {
     return (
-      <div className="mb-6 grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {[...Array(5)].map((_, i) => (
-          <div
-            key={i}
-            className={`h-22 animate-pulse rounded-xl border border-border bg-surface/50 ${
-              i === 4 ? "col-span-2 sm:col-span-1" : ""
-            }`}
-          />
-        ))}
+      <div className="mb-6">
+        <div className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className={`h-22 animate-pulse rounded-xl border border-border bg-surface/50 ${
+                i === 4 ? "col-span-2 sm:col-span-1" : ""
+              }`}
+            />
+          ))}
+        </div>
+        {showSlowHint && (
+          <p className="mt-2 text-center text-xs text-muted-foreground/70">
+            La primera carga puede tardar unos segundos — gracias por tu
+            paciencia.
+          </p>
+        )}
       </div>
     );
   }
@@ -86,31 +126,32 @@ function SummaryStats() {
   return (
     <div className="mb-6 grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 lg:grid-cols-5">
       <KpiCard
-        label="Ofertas activas"
-        value={formatNumber(stats.total_active_jobs)}
-        description="en los 8 países cubiertos"
+        label="Empresas analizadas"
+        value={formatNumber(companiesCount)}
+        description="con ofertas activas"
       />
       <KpiCard
-        label="Países cubiertos"
-        value={formatNumber(stats.total_countries)}
-        description="DE, FR, ES, NL, PL, IT, AT, BE"
+        label="Roles analizados"
+        value={formatNumber(roleCategoriesCount)}
+        description="categorías en Salario por rol"
       />
       <KpiCard
         label="Skills rastreadas"
-        value={formatNumber(stats.total_skills)}
+        value={formatNumber(skillsCount)}
         description="tecnologías y habilidades"
       />
       <KpiCard
         label="Con salario declarado"
-        value={`${stats.pct_with_salary}%`}
+        value={`${salaryPctCount.toFixed(1)}%`}
         description="de las ofertas activas"
       />
       {/* Última actualización ocupa 2 columnas en móvil (fila propia),
-          1 columna en sm y lg donde hay espacio suficiente */}
+          1 columna en sm y lg donde hay espacio suficiente. No anima:
+          es una fecha, no un conteo. */}
       <KpiCard
         label="Última actualización"
         value={formatDate(stats.last_updated)}
-        description="oferta más reciente"
+        description="última sincronización con la fuente"
         fullWidth
       />
     </div>

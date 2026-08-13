@@ -10,9 +10,15 @@ import {
   COOCCURRENCE_IGNORED_FILTERS,
   applyDefaultPeriodoFallback,
 } from "./buildFilters.js";
-import { buildSalaryByRoleCountryQuery, shapeSalaryRows } from "./salaryQuery.js";
+import {
+  buildSalaryByRoleCountryQuery,
+  shapeSalaryRows,
+  salaryQualityConditions,
+} from "./salaryQuery.js";
 import { buildDemandByRoleQuery, shapeDemandRows } from "./demandQuery.js";
 import { buildTopSkillsQueries, shapeTopSkillsResult } from "./skillsQuery.js";
+import { buildStatsSummaryQuery } from "./statsQuery.js";
+import { getCached } from "./statsCache.js";
 import { devCacheMiddleware } from "./devCache.js";
 
 dotenv.config({ path: ".env.local" });
@@ -37,6 +43,21 @@ pool.connect((err, client, release) => {
   }
   console.log("Conectado a PostgreSQL");
   release();
+
+  // Calienta statsCache.js al arrancar (fase 014, ronda 3) — sin este
+  // warmup, el primer visitante tras cada reinicio del servidor paga el
+  // coste completo de /api/stats/summary (37-90s en frío, ver
+  // spec/features/014-summary-stats-quality/014-tasks.md) y el loader
+  // de la landing se ve obligado a revelar la página sin datos porque
+  // su techo de seguridad es mucho más corto que eso. Con
+  // `node --watch` reiniciando en cada guardado durante el desarrollo,
+  // sin esto la caché está fría constantemente. Fire-and-forget: no
+  // bloquea el arranque del servidor ni ninguna otra ruta.
+  getCached(async () => {
+    const { text } = buildStatsSummaryQuery();
+    const result = await pool.query(text);
+    return result.rows[0];
+  }).catch((err) => console.error("[stats-warmup]", err.message));
 });
 
 const port = process.env.PORT ?? 3000;
@@ -170,9 +191,7 @@ app.get("/api/salary/by-role-country", async (req, res) => {
   try {
     const { conditions, values } = buildFilters(req.query);
     conditions.push("j.role_category IS NOT NULL");
-    conditions.push("j.salary_mid IS NOT NULL");
-    conditions.push("j.salary_is_predicted = FALSE");
-    conditions.push("j.salary_mid >= 1000");
+    conditions.push(...salaryQualityConditions());
 
     const { text } = buildSalaryByRoleCountryQuery(conditions);
     const result = await pool.query(text, values);
@@ -272,7 +291,7 @@ app.get("/api/skills/cooccurrence", async (req, res) => {
 });
 
 // GET /api/stats/summary
-// Indicadores globales del dashboard (KPI cards).
+// Indicadores globales del dashboard (KPI cards) y de la landing.
 // No aplica ningún filtro: los números representan el estado completo
 // de la base de datos, independientemente de lo que el usuario tenga filtrado.
 // Esto da contexto sobre el volumen y calidad del dataset.
@@ -282,7 +301,31 @@ app.get("/api/skills/cooccurrence", async (req, res) => {
 //   total_countries      → países cubiertos por el dataset
 //   total_skills         → skills distintas con al menos una oferta activa
 //   pct_with_salary      → porcentaje de ofertas activas con salario declarado
-//   last_updated         → fecha de la oferta activa más reciente
+//   last_updated         → última vez que el pipeline vio/actualizó una
+//                           oferta activa (MAX(last_seen_at), no
+//                           posted_at — fase 014: la etiqueta "Última
+//                           actualización" prometía esto, pero medía la
+//                           fecha de publicación de la oferta más
+//                           reciente, un dato del mercado, no del
+//                           pipeline; verificado en vivo que ambas
+//                           fechas pueden divergir varios minutos)
+//   median_salary_90d    → salario mediano, ofertas activas de los
+//                           últimos 90 días (landing, card "Compara
+//                           salarios en Europa" — no 6 meses: ver
+//                           statsQuery.js, una oferta activa nunca es
+//                           tan antigua, la ventana habría sido un no-op)
+//   top_skills_30d       → top 3 skills por nº de ofertas, últimos 30 días
+//                           (landing, card "Descubre dónde está la demanda")
+//   total_companies      → empresas distintas con al menos una oferta
+//                           activa (KPI card "Empresas analizadas" —
+//                           cuenta strings distintos de `company`, no
+//                           empresas deduplicadas: hay variantes de razón
+//                           social del mismo empleador, ver statsQuery.js)
+//   total_role_categories → categorías de rol distintas entre ofertas
+//                           activas (KPI card "Roles analizados" — orienta
+//                           sobre la granularidad de SalaryChart antes de
+//                           entrar ahí; incluye 'other', que sí es
+//                           seleccionable en ese chart)
 //
 // total_skills usa el mismo criterio que GET /api/skills/list (ver ese
 // endpoint): antes contaba las 4557 filas crudas de `skills` sin
@@ -292,29 +335,19 @@ app.get("/api/skills/cooccurrence", async (req, res) => {
 // COUNT(DISTINCT skill_id) sobre un JOIN directo en vez de un EXISTS
 // correlacionado por fila de `skills` — mismo resultado, una sola
 // pasada en vez de una subconsulta por cada una de las 4557 filas.
+//
+// Query extraída a statsQuery.js y cacheada 10 minutos (statsCache.js):
+// esta es, con diferencia, la query más cara del proyecto (22-56s sin
+// caché, ver spec/features/014-summary-stats-quality/014-spec.md) y no
+// tiene combinatoria de filtros — cachearla es seguro y de bajo riesgo.
 app.get("/api/stats/summary", async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT
-        COUNT(*)                                              AS total_active_jobs,
-        COUNT(DISTINCT country_code)                          AS total_countries,
-        (SELECT COUNT(DISTINCT js.skill_id)
-         FROM job_skills js
-         JOIN jobs j ON j.id = js.job_id
-         WHERE j.is_active = TRUE)                            AS total_skills,
-        ROUND(
-          SUM(CASE WHEN salary_mid IS NOT NULL
-                    AND salary_is_predicted = FALSE
-                    AND salary_mid >= 1000
-                   THEN 1 ELSE 0 END) * 100.0
-          / NULLIF(COUNT(*), 0)
-        , 1)                                                  AS pct_with_salary,
-        MAX(posted_at)                                        AS last_updated
-      FROM jobs
-      WHERE is_active = TRUE
-    `);
-
-    res.json(result.rows[0]);
+    const stats = await getCached(async () => {
+      const { text } = buildStatsSummaryQuery();
+      const result = await pool.query(text);
+      return result.rows[0];
+    });
+    res.json(stats);
   } catch (err) {
     errorHandler(res, err, "stats-summary");
   }

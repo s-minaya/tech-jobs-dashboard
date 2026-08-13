@@ -16,7 +16,10 @@ const BASE = "";
 
 export const handlers = [
   // GET /api/stats/summary
-  // Usado por SummaryStats
+  // Usado por SummaryStats y LandingPage (fase 014 — hook compartido
+  // useSummaryStats). median_salary_90d/top_skills_30d los consume
+  // LandingPage; total_companies/total_role_categories los consume
+  // SummaryStats (revisión post-plan de la fase 014).
   http.get(`${BASE}/api/stats/summary`, () => {
     return HttpResponse.json({
       total_active_jobs: 26023,
@@ -24,6 +27,19 @@ export const handlers = [
       total_skills: 312,
       pct_with_salary: "34.5",
       last_updated: "2025-05-15T10:30:00.000Z",
+      median_salary_90d: 52000,
+      top_skills_30d: [
+        { name: "Python", count: 1200 },
+        { name: "SQL", count: 980 },
+        { name: "Java", count: 875 },
+      ],
+      // 5 dígitos a propósito (valor real actual ronda 23.000): "es-ES"
+      // con useGrouping:"auto" NO agrupa números de 4 dígitos (3210 se
+      // formatea "3210", sin punto — comprobado en vivo), así que un
+      // mock de 4 dígitos no ejercitaría el separador de miles real que
+      // sí vería un usuario con el dato real.
+      total_companies: 23248,
+      total_role_categories: 16,
     });
   }),
 

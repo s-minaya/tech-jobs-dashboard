@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   buildSalaryByRoleCountryQuery,
   shapeSalaryRows,
+  salaryQualityConditions,
 } from "../src/salaryQuery.js";
 
 // Tests de salaryQuery — lógica pura de GET /api/salary/by-role-country,
@@ -68,5 +69,32 @@ describe("shapeSalaryRows", () => {
 
   it("con array vacío devuelve rows vacío y total 0", () => {
     expect(shapeSalaryRows([])).toEqual({ rows: [], total_matching_jobs: 0 });
+  });
+});
+
+// Fase 014: extraída de 3 copias independientes de la misma regla SQL
+// (aquí, /api/stats/summary y el índice idx_jobs_salary_by_role_country
+// en schema.sql) a un único punto de verdad.
+describe("salaryQualityConditions", () => {
+  it("con alias por defecto ('j'), devuelve las 3 condiciones de calidad", () => {
+    expect(salaryQualityConditions()).toEqual([
+      "j.salary_mid IS NOT NULL",
+      "j.salary_is_predicted = FALSE",
+      "j.salary_mid >= 1000",
+    ]);
+  });
+
+  it("acepta un alias distinto sin colisionar con otras subconsultas", () => {
+    expect(salaryQualityConditions("j2")).toEqual([
+      "j2.salary_mid IS NOT NULL",
+      "j2.salary_is_predicted = FALSE",
+      "j2.salary_mid >= 1000",
+    ]);
+  });
+
+  it("el resultado es directamente usable en un WHERE vía join(\" AND \")", () => {
+    expect(salaryQualityConditions("j").join(" AND ")).toBe(
+      "j.salary_mid IS NOT NULL AND j.salary_is_predicted = FALSE AND j.salary_mid >= 1000",
+    );
   });
 });

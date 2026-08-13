@@ -265,14 +265,88 @@ _(anterior al rediseño Halo)_
     completo, incluido el resultado íntegro del `EXPLAIN ANALYZE` y de la
     investigación del filtro de periodo.
 
+13. **014 · Auditoría — KPI cards y stats de la landing** — séptima ronda
+    "tabla por tabla", distinta de las anteriores: no audita una gráfica
+    del dashboard sino las 5 KPI cards del hero (`SummaryStats.jsx`) y,
+    por primera vez con permiso explícito, un fragmento de la landing
+    (`LandingPage.jsx`) — ambos consumen `GET /api/stats/summary`. 8
+    hallazgos: la query más cara detectada en el proyecto (22-88s sin
+    caché, incluso peor que `skills/top` en la fase 013), corregida con
+    una caché en memoria de 10 minutos (`statsCache.js` — los datos solo
+    cambian ~1 vez/día con la ingesta) + un índice de apoyo
+    (`idx_jobs_active_summary`, aplicado contra la BD real: 37s en frío
+    → 71-95ms en caliente); la landing y las KPI cards disparaban esa
+    misma query cara dos veces en la primera visita, corregido con un
+    hook compartido (`useSummaryStats`) que deduplica peticiones
+    simultáneas; "Ofertas activas"/"Países cubiertos" tenían texto
+    hardcodeado ("8 países") que podía desincronizarse de su propio dato
+    dinámico; "Última actualización" medía `posted_at` (dato del
+    mercado) bajo una etiqueta que prometía frescura del pipeline —
+    corregido a `last_seen_at`; la regla de negocio "salario declarado
+    ≥1.000€" estaba duplicada como SQL crudo en 3 sitios, centralizada en
+    `salaryQualityConditions()`. Revisión post-plan (mismo día): el
+    usuario, tras leer `014-plan.md`, amplió el alcance para rediseñar el
+    contenido de las 3 stats de la landing (antes fuera de la excepción,
+    que solo cubría lógica) — "Ofertas activas"/"Países cubiertos"/
+    "Skills rastreadas" pasan a "Explora el mercado por país"/"Compara
+    salarios en Europa"/"Descubre dónde está la demanda", cada una con
+    su icono, varias métricas reales y contadores animados (`useCountUp`,
+    sin librería nueva); badge superior eliminado; investigado un loader
+    percibido como roto (`PageLoader`/`App.jsx`) — su desaparición era un
+    `setTimeout` fijo de 800ms sin relación con si los datos habían
+    cargado, ahora espera un mínimo más `!statsLoading`, con techo de
+    seguridad. Corrección de semántica de negocio durante la
+    implementación: la card de salario se pidió con ventana de "6 meses",
+    pero verificado en vivo que una oferta activa nunca supera ~90 días
+    (mismo límite estructural ya documentado en la fase 013) — la ventana
+    de 6 meses habría sido idéntica a no poner ninguna, ajustada a 90
+    días. Al probar esa primera ronda, el usuario aclaró que el loader
+    debía tapar la carga *inicial* de la landing (Lightfall + stats), no
+    solo la transición hacia el dashboard — confirmado leyendo
+    `Lightfall.jsx` que no tiene ninguna carga asíncrona propia (shader
+    inline, sin texturas), así que `LandingPage` pasa a mostrar
+    `PageLoader` desde el primer render hasta que `useSummaryStats()`
+    resuelve, con un techo de seguridad de 8s. De paso tomó las
+    decisiones pendientes de las KPI cards del dashboard: "Ofertas
+    activas"/"Países cubiertos" (ya mostradas en la nueva card de la
+    landing) se sustituyen por "Empresas analizadas"/"Roles analizados"
+    — este último a propósito incluye la categoría `'other'`, real y
+    seleccionable en `SalaryChart`; el primero documentado como conteo de
+    strings de empresa distintos, no de empresas deduplicadas (hay
+    variantes reales de razón social, ej. "Sii"/"Sii Sp. z o.o."). Todos
+    los valores numéricos animan al montar (`useCountUp`, ajustado para
+    terminar en el valor decimal exacto en vez de redondeado). Verificado
+    con 393/393 tests de frontend, 74/74 de `api/`, servidor real (66,9s
+    en frío sin el índice ampliado — no se pudo aplicar contra la BD real,
+    `statement timeout` en 3 intentos — 8,6ms en caliente), y 11/11 E2E
+    reales con Playwright/Chromium (incluida la landing, que no se puede
+    testear con RTL/jsdom por depender de WebGL) — al ejecutar el E2E
+    completo se descubrió y corrigió, de paso, un bug pre-existente y sin
+    relación con esta feature: 2 tests buscaban los chips de país del
+    sidebar por su código crudo ("DE"/"FR"), desactualizados desde que la
+    fase 013 tradujo el sidebar a nombres en español. Tercera ronda,
+    tras probar en Firefox/Chrome reales: el loader de la landing
+    seguía sin funcionar — diagnosticado que su techo de seguridad
+    (8s) era muchísimo más corto que el tiempo real en frío de
+    `/api/stats/summary` (37-90s), así que cualquier visita tras un
+    reinicio del servidor revelaba la página sin datos. Corregido
+    calentando la caché al arrancar el servidor + subiendo el TTL a 30
+    min + techos más generosos (20s landing, 10s dashboard). Al
+    verificar el calentamiento contra el servidor real se encontró un
+    bug genuino: `getCached()` no deduplicaba llamadas concurrentes —
+    el propio calentamiento y una petición real en curso a la vez
+    lanzaban la query pesada dos veces en paralelo — corregido con el
+    mismo patrón de promesa compartida que ya usaba el frontend
+    (`useSummaryStats.js`). Ver
+    `spec/features/014-summary-stats-quality/014-tasks.md` para el
+    detalle completo, incluidos los resultados de `EXPLAIN ANALYZE`.
+
 ## En curso 🔜
 
-_(ninguna — siguiente: 014, un "chart de tendencias" estilo Halo ligado a
-la idea aún sin planificar de restructurar la carga del dashboard con
-header/rutas, o lo que el usuario decida)_
+_(ninguna)_
 
 ## Backlog 💡
 
-13. **014 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
+14. **015 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
 
 > Una sola feature activa a la vez. No se empieza la siguiente hasta que la anterior pasa todos los criterios de aceptación.

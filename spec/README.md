@@ -25,7 +25,8 @@ spec/
     ├── 011-demand-by-role-quality/    ← Fase 11: calidad de datos y rendimiento de la evolución mensual de ofertas por rol
     ├── 012-cross-filter-audit/        ← Fase 12: auditoría cruzada de filtros entre gráficas
     ├── 013-top-skills-quality/        ← Fase 13: calidad de datos y rendimiento de Top Skills más demandadas
-    └── 014-halo-responsive-pulido/    ← Fase 14: responsive y pulido final
+    ├── 014-summary-stats-quality/     ← Fase 14: auditoría de KPI cards y stats de la landing
+    └── 015-halo-responsive-pulido/    ← Fase 15: responsive y pulido final
 ```
 
 ## Flujo para cada feature

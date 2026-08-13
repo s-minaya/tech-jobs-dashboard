@@ -4,7 +4,10 @@ import DecryptedText from "@/components/ui/DecryptedText";
 import { describeError } from "@/lib/errorMessages";
 
 // Tras cuántos ms de carga inicial se muestra slowHint (si el chart lo pasa).
-const SLOW_LOADING_MS = 6000;
+// Exportada (fase 014) para que SummaryStats reutilice el mismo umbral en
+// su propio aviso de carga lenta — no usa ChartCard (layout propio de
+// stat tiles), pero el criterio de "cuánto es demasiado" debe ser el mismo.
+export const SLOW_LOADING_MS = 6000;
 
 // ChartCard
 // Wrapper visual reutilizable para todas las gráficas del dashboard.

@@ -6,6 +6,13 @@ import logo from "@/assets/logo.png";
 // El icono aparece y desaparece cíclicamente jugando con la opacidad
 // mediante una animación CSS keyframe personalizada.
 //
+// Fase 014: App.jsx dejó de ocultar este loader en un tiempo fijo — ahora
+// espera (con un techo) a que los datos reales estén listos, así que
+// puede seguir montado más de una iteración de la animación. Por eso
+// itera "infinite" en vez de una sola vez: con iteration-count 1, al
+// superar los 2s el icono se quedaba congelado a opacidad completa (sin
+// animation-fill-mode, el navegador revierte al valor base) — justo el
+// "logo que se queda" que se reportó como roto.
 
 function PageLoader() {
   return (
@@ -14,7 +21,7 @@ function PageLoader() {
       style={{ backgroundColor: "hsl(235, 25%, 14%)" }}
     >
       {/* Icono con animación de pulso de opacidad */}
-      <div style={{ animation: "loaderPulse 2s ease-in-out 1" }}>
+      <div style={{ animation: "loaderPulse 2s ease-in-out infinite" }}>
         <img src={logo} alt="Loading" width="128" height="128" />
       </div>
 
