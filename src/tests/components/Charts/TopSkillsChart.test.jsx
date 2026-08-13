@@ -109,4 +109,110 @@ describe("TopSkillsChart", () => {
       });
     });
   });
+
+  // Fase 013 — hueco de test detectado en la auditoría: ningún test
+  // ejercitaba skillCategoria activo (pill traducida, texto de la
+  // descripción, forma de la petición saliente).
+  describe("categoría de skill activa", () => {
+    it("la pill muestra la categoría traducida al español, no el valor crudo en inglés", async () => {
+      render(
+        <TopSkillsChart
+          filters={{ ...filtersNeutros, skillCategoria: "Database" }}
+        />,
+      );
+      await waitFor(() => {
+        expect(screen.getByTestId("chart-filter-pills")).toHaveTextContent(
+          "categoría de skill: base de datos",
+        );
+      });
+      expect(screen.queryByText(/database/i)).not.toBeInTheDocument();
+    });
+
+    it("la descripción del chart menciona la categoría traducida", async () => {
+      render(
+        <TopSkillsChart
+          filters={{ ...filtersNeutros, skillCategoria: "Methodology" }}
+        />,
+      );
+      await waitFor(() => {
+        expect(screen.getByText(/de la categoría "metodología"/i)).toBeInTheDocument();
+      });
+    });
+
+    it("la petición saliente incluye category en minúsculas y nunca jornada", async () => {
+      let capturedParams;
+      server.use(
+        http.get("/api/skills/top", ({ request }) => {
+          capturedParams = new URL(request.url).searchParams;
+          return HttpResponse.json({ rows: [], total_matching_jobs: 0 });
+        }),
+      );
+      render(
+        <TopSkillsChart
+          filters={{
+            ...filtersNeutros,
+            skillCategoria: "Database",
+            jornada: "Full time",
+          }}
+        />,
+      );
+      await waitFor(() => expect(capturedParams).toBeDefined());
+      expect(capturedParams.get("category")).toBe("database");
+      expect(capturedParams.has("jornada")).toBe(false);
+    });
+  });
+
+  // Fase 013 — hueco de test detectado: ningún test verificaba que el
+  // aviso ⓘ de jornada aparece cuando ese filtro está activo (justo el
+  // filtro que ChartDescription declara ignorado en este chart).
+  describe("aviso de jornada", () => {
+    it("aparece el ⓘ cuando jornada está activa", async () => {
+      render(
+        <TopSkillsChart filters={{ ...filtersNeutros, jornada: "Full time" }} />,
+      );
+      await waitFor(() => {
+        expect(screen.getByTestId("warning-popover")).toBeInTheDocument();
+      });
+    });
+
+    it("no aparece con los filtros neutros", async () => {
+      render(<TopSkillsChart filters={filtersNeutros} />);
+      await waitFor(() => {
+        expect(screen.getByText(/26\.023/)).toBeInTheDocument();
+      });
+      expect(screen.queryByTestId("warning-popover")).not.toBeInTheDocument();
+    });
+  });
+
+  // Fase 013 — hueco de test detectado: el mock solo traía 5 filas,
+  // nunca se ejercitó el techo de altura (ALTURA_MAXIMA) ni el scroll
+  // interno que aparece con category activa (hasta 50 filas reales).
+  describe("altura dinámica a escala realista", () => {
+    it("con muchas filas, el contenedor queda con scroll interno acotado", async () => {
+      const muchasSkills = Array.from({ length: 30 }, (_, i) => ({
+        skill: `Skill${i}`,
+        skill_category: "language",
+        job_count: 100 - i,
+      }));
+      server.use(
+        http.get("/api/skills/top", () =>
+          HttpResponse.json({ rows: muchasSkills, total_matching_jobs: 5000 }),
+        ),
+      );
+      render(<TopSkillsChart filters={filtersNeutros} />);
+      const scrollArea = await screen.findByTestId("top-skills-scroll-area");
+      await waitFor(() => {
+        expect(scrollArea.style.maxHeight).toBe("700px");
+        expect(scrollArea.style.overflow).toBe("hidden auto");
+      });
+    });
+
+    it("con pocas filas, no se aplica ningún límite de altura", async () => {
+      render(<TopSkillsChart filters={filtersNeutros} />);
+      const scrollArea = await screen.findByTestId("top-skills-scroll-area");
+      await waitFor(() => {
+        expect(scrollArea.style.maxHeight).toBe("");
+      });
+    });
+  });
 });

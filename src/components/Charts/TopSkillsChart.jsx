@@ -7,6 +7,7 @@ import { BarChart, Bar, XAxis, YAxis } from "recharts";
 import { getTopSkills } from "@/services/jobServices";
 import { useChartData } from "@/hooks/useChartData";
 import { useIsDark } from "@/hooks/useIsDark";
+import { SKILL_CATEGORIA_LABELS } from "@/lib/filterUtils";
 import ChartCard from "@/components/ui/ChartCard";
 import ChartDescription, {
   getWarningNodes,
@@ -18,6 +19,11 @@ const chartConfig = {
 
 const PX_POR_SKILL = 32;
 const ALTURA_MINIMA = 200;
+// ALTURA_MAXIMA (fase 013): sin techo, el backend puede devolver hasta 50
+// filas con `category` activa (hasta 1600px de card). 700px cubre el caso
+// por defecto (hasta 20 filas = 640px) sin scroll, y acota los casos con
+// más filas con scroll interno en vez de una card desproporcionada.
+const ALTURA_MAXIMA = 700;
 
 // TopSkillsChart
 // Gráfica de barras horizontales con las skills más demandadas.
@@ -42,7 +48,17 @@ function TopSkillsChart({ filters }) {
 
   const rows = response?.rows ?? [];
   const totalJobs = response?.total_matching_jobs ?? null;
+  // alturaPx es la altura REAL del contenido (para que Recharts reparta las
+  // barras con el mismo espaciado de siempre) — el techo se aplica en el
+  // contenedor exterior con overflow, no aquí, o las barras se
+  // comprimirían en vez de quedar recortadas con scroll.
   const alturaPx = Math.max(ALTURA_MINIMA, rows.length * PX_POR_SKILL);
+  const necesitaScroll = alturaPx > ALTURA_MAXIMA;
+
+  // skillCategoria llega en inglés (coincide con skills.category en BD) —
+  // SKILL_CATEGORIA_LABELS traduce solo el texto mostrado, igual que
+  // NOMBRES_PAISES/CONTRATO_LABELS (fase 013).
+  const categoriaLabel = SKILL_CATEGORIA_LABELS[filters.skillCategoria];
 
   // useIsDark con MutationObserver garantiza que el color se actualiza
   // correctamente al cambiar el tema en cualquier dirección.
@@ -64,9 +80,10 @@ function TopSkillsChart({ filters }) {
       loading={loading}
       isInitialLoad={isInitialLoad}
       error={error}
+      slowHint="Esta consulta puede tardar varios segundos, sobre todo sin filtro de país — gracias por tu paciencia."
     >
       <ChartDescription
-        description={`Skills técnicas que aparecen en más ofertas de empleo, ordenadas de mayor a menor. Cada barra muestra en cuántas ofertas se menciona esa tecnología${filters.skillCategoria !== "Todas" ? ` de la categoría "${filters.skillCategoria.toLowerCase()}"` : ""}.`}
+        description={`Skills técnicas que aparecen en más ofertas de empleo, ordenadas de mayor a menor. Cada barra muestra en cuántas ofertas se menciona esa tecnología${categoriaLabel ? ` de la categoría "${categoriaLabel.toLowerCase()}"` : ""}.`}
         filters={filters}
         totalJobs={totalJobs}
         excludeFilters={["jornada"]}
@@ -78,7 +95,20 @@ function TopSkillsChart({ filters }) {
           periodo o quitar algún filtro.
         </p>
       ) : (
-        <div className="chart-graph-area">
+        <div
+          data-testid="top-skills-scroll-area"
+          className="chart-graph-area"
+          // .chart-graph-area trae overflow: hidden por defecto (index.css)
+          // — el estilo inline sobreescribe explícitamente los dos ejes
+          // (no solo overflowY) para no depender de cómo resuelva el
+          // navegador la cascada entre el shorthand de la clase y una sola
+          // propiedad longhand inline.
+          style={
+            necesitaScroll
+              ? { maxHeight: ALTURA_MAXIMA, overflow: "hidden auto" }
+              : undefined
+          }
+        >
           <div style={{ width: "100%", height: alturaPx }}>
             <ChartContainer config={chartConfig} className="h-full w-full">
               <BarChart

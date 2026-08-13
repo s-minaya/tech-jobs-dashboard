@@ -111,6 +111,25 @@ También: añadir `slowHint` al `ChartCard` de `TopSkillsChart` (prop que ya
 existe y usa `SalaryChart` desde la fase 010) — es la gráfica más lenta
 del dashboard y hoy es la única de las 4 con `useChartData` que no lo usa.
 
+**Resultado real (ver `013-tasks.md` para el `EXPLAIN` completo)**:
+```sql
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_jobs_active_posted_at
+    ON jobs (posted_at DESC)
+    INCLUDE (id)
+    WHERE is_active = TRUE;
+```
+Aplicado también contra la BD real (esta vez sí fue posible conectar
+directamente, a diferencia de fases 009/010/011). Sin filtros: 28.5s →
+7.4s. `country=de`: 34.7s → 4.5s. El objetivo de &lt;2s sin filtros no se
+alcanzó — confirmado con `EXPLAIN ANALYZE` que es un límite estructural
+(el filtro `is_active + 90 días` solo excluye ~7% de la tabla), no falta
+de índice; documentado como fuera de alcance (tabla resumen materializada
+sería el siguiente paso, cambio de arquitectura mayor).
+
+Al investigar por qué la query del **total** (`countQuery`) seguía lenta
+incluso con este índice, se descubrió un hallazgo más importante que el
+propio rendimiento — ver el punto 9 más abajo.
+
 ## 3. `pct_of_all_jobs` — eliminar, no arreglar
 
 **Evidencia**: con `country=de&category=language`, las 22 filas devueltas
@@ -145,10 +164,12 @@ a `COOCCURRENCE_IGNORED_FILTERS` en `buildFilters.js`, reusando
 ```js
 const filtrosAplicables = stripKeys(req.query, TOP_SKILLS_IGNORED_FILTERS);
 ```
-Mismo cambio en `src/services/jobServices.js` si conviene extraer un
-helper equivalente en el frontend (a decidir durante la implementación
-según lo que ya exista ahí — hoy usa un destructure inline propio, no
-`stripKeys`, porque ese helper es solo de `api/`).
+**Resultado real**: `src/services/jobServices.js` se deja sin tocar —
+`getTopSkills` ya usa el mismo destructure inline que las otras 4
+funciones del archivo (`getDemandByRole`, `getSalaryByRoleAndCountry`,
+`getOffersByCountry`, `getSkillCoOccurrence`); introducir `stripKeys`
+solo ahí habría creado una inconsistencia nueva en vez de arreglar una
+existente, y la protección real (con test) ya vive en el backend.
 
 ## 5. Vistas SQL muertas
 
@@ -174,11 +195,12 @@ filtros.
 ## 7. Techo de altura en `TopSkillsChart`
 
 `alturaPx = Math.max(200, rows.length * 32)` sin límite superior — hasta
-1600px con `category` activo (50 filas). Propuesta: techo en torno a
-700-750px (deja ver las ~20 filas del caso por defecto sin scroll) con
-`overflow-y: auto` en el contenedor del gráfico cuando se supere. Valor
-exacto ajustable durante la implementación si al verlo en el navegador no
-convence.
+1600px con `category` activo (50 filas). **Resultado real**: techo
+`ALTURA_MAXIMA = 700` (cubre las 20 filas del caso por defecto sin
+scroll) con `overflow: "hidden auto"` en el contenedor exterior cuando se
+supera — la altura interna del contenido se mantiene sin recortar (para
+que Recharts reparta las barras con su espaciado normal), el recorte lo
+hace el `maxHeight` del wrapper.
 
 ## 8. Traducción de `skillCategoria`
 
@@ -199,11 +221,36 @@ export const SKILL_CATEGORIA_LABELS = {
 ```
 `Framework`/`Cloud` se dejan igual — préstamos ya asentados en español
 técnico (como "backend"/"frontend" en el resto de la app); el resto se
-traduce. Afecta a `describeFiltros` (pill), al chip del sidebar
-(`FilterSection.jsx`, si renderiza `title`/`options` tal cual — a
-confirmar durante la implementación si hace falta tocarlo ahí también o
-solo en los sitios que ya usan `filterUtils.js`) y a la interpolación de
-`TopSkillsChart.jsx:69`.
+traduce. Afecta a `describeFiltros` (pill) y a la interpolación de
+`TopSkillsChart.jsx`.
+
+**Resultado real**: `FilterSection.jsx` (chips del sidebar) se deja sin
+tocar. No traduce ninguna opción hoy — país muestra el código crudo +
+bandera, contrato/jornada muestran "Permanent"/"Full time" en inglés tal
+cual — un patrón consistente y nunca señalado como bug en 12 rondas de
+auditoría previas. Traducir solo `skillCategoria` ahí habría introducido
+una inconsistencia nueva en vez de arreglar una existente.
+
+## 9. Descubierto durante la implementación — `total_matching_jobs` solo contaba ofertas con skills
+
+Investigando por qué `countQuery` seguía lenta con el índice del punto 2
+ya puesto, se descubrió que contaba `COUNT(DISTINCT j.id)` sobre un
+`JOIN` a `job_skills` — solo ofertas con al menos una skill extraída.
+Verificado en vivo: de ~227.000 ofertas activas/recientes, solo ~68.000
+(30%) tienen alguna skill en `job_skills`; el 70% restante queda excluido
+del total hoy, repartido por toda la ventana de 90 días (no es backlog de
+ingesta reciente — confirmado con una distribución por antigüedad). El
+badge "X ofertas" de esta gráfica usa el mismo componente
+(`ChartDescription`) que `SalaryChart`/`DemandByRoleChart`/`EuropeMap`,
+que sí cuentan todas las ofertas activas sin exigir relación con skills
+— el usuario vería un número radicalmente distinto en esta gráfica para
+el mismo estado de filtros, sin ninguna explicación.
+
+**Fix**: `countQuery` (en `skillsQuery.js`) cuenta directamente sobre
+`jobs`, sin `JOIN` a `job_skills` — iguala la semántica con el resto del
+dashboard y de paso es ~15x más rápido en caliente (29s → 1.8s), porque
+ya no toca `job_skills` en absoluto para este cálculo. Ver el detalle
+completo (números, distribución por antigüedad) en `013-tasks.md`.
 
 ## Evaluado, no es un bug
 

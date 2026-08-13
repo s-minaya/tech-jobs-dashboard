@@ -8,9 +8,11 @@ import {
   buildFilters,
   stripKeys,
   COOCCURRENCE_IGNORED_FILTERS,
+  applyDefaultPeriodoFallback,
 } from "./buildFilters.js";
 import { buildSalaryByRoleCountryQuery, shapeSalaryRows } from "./salaryQuery.js";
 import { buildDemandByRoleQuery, shapeDemandRows } from "./demandQuery.js";
+import { buildTopSkillsQueries, shapeTopSkillsResult } from "./skillsQuery.js";
 import { devCacheMiddleware } from "./devCache.js";
 
 dotenv.config({ path: ".env.local" });
@@ -181,62 +183,17 @@ app.get("/api/salary/by-role-country", async (req, res) => {
 });
 
 // GET /api/skills/top
-// Skills más demandadas. Usa dos conjuntos de conditions para evitar que
-// el COUNT total falle al referenciar el alias 's' (skills) que no está
-// disponible en esa query. valuesForCount se clona ANTES de añadir category
-// para no pasar parámetros extra al COUNT.
+// Skills más demandadas. Lógica en skillsQuery.js (fase 013) — dos
+// queries (filas + total) porque `category` solo afecta a la primera; ver
+// el comentario de cabecera de ese archivo para el porqué completo.
 app.get("/api/skills/top", async (req, res) => {
   try {
-    const { jornada: _j, ...filtrosAplicables } = req.query;
-    const { conditions: conditionsJobs, values } =
-      buildFilters(filtrosAplicables);
-
-    if (!filtrosAplicables.periodo || filtrosAplicables.periodo === "all") {
-      conditionsJobs.push("j.posted_at >= NOW() - INTERVAL '90 days'");
-    }
-
-    // Clonamos ANTES de añadir category para que el COUNT no reciba ese valor extra
-    const valuesForCount = [...values];
-
-    const conditionsWithSkills = [...conditionsJobs];
-    if (filtrosAplicables.category) {
-      values.push(filtrosAplicables.category.toLowerCase());
-      conditionsWithSkills.push(`s.category = $${values.length}`);
-    }
-
-    const limit = filtrosAplicables.category ? 50 : 20;
-
+    const { rowsQuery, countQuery } = buildTopSkillsQueries(req.query);
     const [skillsResult, totalResult] = await Promise.all([
-      pool.query(
-        `SELECT
-           s.name AS skill,
-           s.category AS skill_category,
-           COUNT(*) AS job_count,
-           ROUND(
-             COUNT(*) * 100.0 / NULLIF(SUM(COUNT(*)) OVER (), 0),
-           2) AS pct_of_all_jobs
-         FROM job_skills js
-         JOIN jobs j ON j.id = js.job_id
-         JOIN skills s ON s.id = js.skill_id
-         WHERE ${conditionsWithSkills.join(" AND ")}
-         GROUP BY s.name, s.category
-         ORDER BY job_count DESC
-         LIMIT $${values.length + 1}`,
-        [...values, limit],
-      ),
-      pool.query(
-        `SELECT COUNT(DISTINCT j.id)::int AS total
-         FROM job_skills js
-         JOIN jobs j ON j.id = js.job_id
-         WHERE ${conditionsJobs.join(" AND ")}`,
-        valuesForCount,
-      ),
+      pool.query(rowsQuery.text, rowsQuery.values),
+      pool.query(countQuery.text, countQuery.values),
     ]);
-
-    res.json({
-      rows: skillsResult.rows,
-      total_matching_jobs: totalResult.rows[0].total,
-    });
+    res.json(shapeTopSkillsResult(skillsResult.rows, totalResult.rows));
   } catch (err) {
     errorHandler(res, err, "skills-top");
   }
@@ -272,9 +229,14 @@ app.get("/api/skills/cooccurrence", async (req, res) => {
     const restQuery = stripKeys(req.query, COOCCURRENCE_IGNORED_FILTERS);
     const { conditions, values } = buildFilters(restQuery);
 
-    if (!req.query.periodo || req.query.periodo === "all") {
-      conditions.push("j.posted_at >= NOW() - INTERVAL '90 days'");
-    }
+    // applyDefaultPeriodoFallback (buildFilters.js): solo actúa si
+    // periodo está totalmente ausente, nunca con "all" explícito. Hasta
+    // la fase 013 este endpoint reimplementaba el mismo `if` pero también
+    // saltaba con periodo === "all", así que "Todo el histórico" era un
+    // no-op silencioso aquí también (mismo bug que /api/skills/top — ver
+    // skillsQuery.js). Centralizado para que los dos no puedan volver a
+    // desincronizarse.
+    applyDefaultPeriodoFallback(conditions, req.query);
 
     const [coOccResult, totalResult] = await Promise.all([
       pool.query(

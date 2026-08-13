@@ -38,7 +38,7 @@ export const FILTERS = [
   },
   {
     key: "remote",
-    title: "Remote",
+    title: "Remoto",
     options: ["Todos", "Sí", "No"],
     fullWidth: true,
   },

@@ -3,6 +3,9 @@ import {
   describeFiltros,
   NOMBRES_PAISES,
   CONTRATO_LABELS,
+  JORNADA_LABELS,
+  SKILL_CATEGORIA_LABELS,
+  OPTION_LABELS,
   PERIODO_DEFAULT,
   activeFilterCount,
 } from "@/lib/filterUtils";
@@ -36,9 +39,60 @@ describe("NOMBRES_PAISES", () => {
 });
 
 describe("CONTRATO_LABELS", () => {
+  it("mapea los dos valores reales del filtro a español, capitalizados (listos para chip)", () => {
+    expect(CONTRATO_LABELS.Permanent).toBe("Permanente");
+    expect(CONTRATO_LABELS.Contract).toBe("Temporal");
+  });
+});
+
+describe("JORNADA_LABELS", () => {
   it("mapea los dos valores reales del filtro a español", () => {
-    expect(CONTRATO_LABELS.Permanent).toBe("permanente");
-    expect(CONTRATO_LABELS.Contract).toBe("temporal");
+    expect(JORNADA_LABELS["Full time"]).toBe("Jornada completa");
+    expect(JORNADA_LABELS["Part time"]).toBe("Jornada parcial");
+  });
+});
+
+describe("SKILL_CATEGORIA_LABELS", () => {
+  it("contiene las 6 categorías reales del filtro", () => {
+    expect(Object.keys(SKILL_CATEGORIA_LABELS)).toHaveLength(6);
+    ["Language", "Framework", "Cloud", "Database", "Tool", "Methodology"].forEach(
+      (cat) => {
+        expect(Object.keys(SKILL_CATEGORIA_LABELS)).toContain(cat);
+      },
+    );
+  });
+
+  it("traduce las que no son préstamos ya asentados en español técnico", () => {
+    expect(SKILL_CATEGORIA_LABELS.Language).toBe("Lenguaje");
+    expect(SKILL_CATEGORIA_LABELS.Database).toBe("Base de datos");
+    expect(SKILL_CATEGORIA_LABELS.Tool).toBe("Herramienta");
+    expect(SKILL_CATEGORIA_LABELS.Methodology).toBe("Metodología");
+  });
+
+  it("Framework y Cloud se dejan igual (préstamos ya asentados)", () => {
+    expect(SKILL_CATEGORIA_LABELS.Framework).toBe("Framework");
+    expect(SKILL_CATEGORIA_LABELS.Cloud).toBe("Cloud");
+  });
+});
+
+describe("OPTION_LABELS", () => {
+  // Pensado para FilterSection.jsx (sidebar), que traduce el texto
+  // visible de cualquier opción reconocible sin saber de qué filtro se
+  // trata — un único objeto plano con los 4 mapas combinados.
+  it("combina los 4 mapas sin colisiones de claves", () => {
+    const totalEsperado =
+      Object.keys(NOMBRES_PAISES).length +
+      Object.keys(CONTRATO_LABELS).length +
+      Object.keys(JORNADA_LABELS).length +
+      Object.keys(SKILL_CATEGORIA_LABELS).length;
+    expect(Object.keys(OPTION_LABELS)).toHaveLength(totalEsperado);
+  });
+
+  it("incluye una traducción de cada uno de los 4 filtros, capitalizada (lista para chip)", () => {
+    expect(OPTION_LABELS.DE).toBe("Alemania");
+    expect(OPTION_LABELS.Permanent).toBe("Permanente");
+    expect(OPTION_LABELS["Full time"]).toBe("Jornada completa");
+    expect(OPTION_LABELS.Database).toBe("Base de datos");
   });
 });
 
@@ -153,6 +207,45 @@ describe("describeFiltros", () => {
     });
   });
 
+  describe("filtro de jornada", () => {
+    // Añadido en la fase 013 (Top Skills Quality, hallazgos post-
+    // implementación): antes describeFiltros no tenía ningún mapa para
+    // jornada — solo hacía filters.jornada.toLowerCase(), así que la pill
+    // de un filtro de jornada activo decía literalmente "full time"
+    // (inglés). JORNADA_LABELS sigue el mismo patrón que CONTRATO_LABELS.
+    it("'Full time' produce 'jornada completa' en español", () => {
+      const resultado = describeFiltros({
+        ...filtersNeutros,
+        jornada: "Full time",
+      });
+      expect(resultado).toContain("jornada completa");
+    });
+
+    it("'Part time' produce 'jornada parcial' en español", () => {
+      const resultado = describeFiltros({
+        ...filtersNeutros,
+        jornada: "Part time",
+      });
+      expect(resultado).toContain("jornada parcial");
+    });
+
+    it("ningún resultado contiene los valores crudos en inglés", () => {
+      const resultado = describeFiltros({
+        ...filtersNeutros,
+        jornada: "Full time",
+      });
+      expect(resultado.some((r) => r.includes("full time"))).toBe(false);
+    });
+
+    it("'Todos' no aparece en el resultado", () => {
+      const resultado = describeFiltros({
+        ...filtersNeutros,
+        jornada: "Todos",
+      });
+      expect(resultado.some((r) => r.includes("jornada"))).toBe(false);
+    });
+  });
+
   describe("filtro de remote", () => {
     it("'Sí' produce 'solo remoto'", () => {
       expect(describeFiltros({ ...filtersNeutros, remote: "Sí" })).toContain(
@@ -182,9 +275,18 @@ describe("describeFiltros", () => {
     it("categoría activa aparece en minúsculas", () => {
       const resultado = describeFiltros({
         ...filtersNeutros,
+        skillCategoria: "Cloud",
+      });
+      expect(resultado.some((r) => r.includes("cloud"))).toBe(true);
+    });
+
+    it("categoría traducida (fase 013) aparece en español, no en inglés", () => {
+      const resultado = describeFiltros({
+        ...filtersNeutros,
         skillCategoria: "Database",
       });
-      expect(resultado.some((r) => r.includes("database"))).toBe(true);
+      expect(resultado.some((r) => r.includes("base de datos"))).toBe(true);
+      expect(resultado.some((r) => r.includes("database"))).toBe(false);
     });
   });
 

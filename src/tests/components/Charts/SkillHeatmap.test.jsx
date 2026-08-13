@@ -96,15 +96,20 @@ describe("SkillHeatmap", () => {
   });
 
   describe("filtro de categoría", () => {
-    it("muestra el nombre de la categoría activa", async () => {
+    it("muestra el nombre de la categoría activa, traducido al español (fase 013)", async () => {
       render(
         <SkillHeatmap
           filters={{ ...filtersNeutros, skillCategoria: "Language" }}
         />,
       );
       await waitFor(() => {
-        const elementos = screen.getAllByText(/language/i);
+        // "Language" se traduce a "lenguaje" (SKILL_CATEGORIA_LABELS) tanto
+        // en el texto "Mostrando N skills de la categoría..." como en la
+        // pill de ChartDescription — antes de este fix, el texto inline
+        // mostraba el valor crudo sin traducir ("language").
+        const elementos = screen.getAllByText(/lenguaje/i);
         expect(elementos.length).toBeGreaterThanOrEqual(1);
+        expect(screen.queryByText(/\blanguage\b/i)).not.toBeInTheDocument();
       });
     });
 

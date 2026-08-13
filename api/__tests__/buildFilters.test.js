@@ -3,6 +3,8 @@ import {
   buildFilters,
   stripKeys,
   COOCCURRENCE_IGNORED_FILTERS,
+  TOP_SKILLS_IGNORED_FILTERS,
+  applyDefaultPeriodoFallback,
 } from "../src/buildFilters.js";
 
 // Tests de buildFilters
@@ -227,5 +229,51 @@ describe("COOCCURRENCE_IGNORED_FILTERS + buildFilters (contrato de /api/skills/c
       "j.posted_at >= NOW() - $1::interval",
     ]);
     expect(values).toEqual(["90 days"]);
+  });
+});
+
+describe("TOP_SKILLS_IGNORED_FILTERS + buildFilters (contrato de /api/skills/top)", () => {
+  it("jornada nunca llega a buildFilters aunque esté en la query", () => {
+    const query = { country: "de", periodo: "90d", jornada: "full_time" };
+    const restQuery = stripKeys(query, TOP_SKILLS_IGNORED_FILTERS);
+    const { conditions, values } = buildFilters(restQuery);
+
+    expect(conditions.join(" ")).not.toContain("j.contract_time");
+    expect(values).not.toContain("full_time");
+    // El resto de filtros sí deben sobrevivir — solo jornada se descarta.
+    expect(conditions).toContain("j.country_code = $1");
+  });
+});
+
+// applyDefaultPeriodoFallback — añadido en la fase 013 (Auditoría Top
+// Skills). /api/skills/top y /api/skills/cooccurrence reimplementaban por
+// separado un `if (!periodo || periodo === "all")` que capaba "Todo el
+// histórico" a los mismos 90 días que el periodo por defecto — confirmado
+// en vivo (mismo total_matching_jobs con periodo=90d, periodo=all y sin
+// periodo). Centralizado y testeado aquí para que los dos endpoints no
+// puedan volver a desincronizarse ni reintroducir el bug.
+describe("applyDefaultPeriodoFallback", () => {
+  it("periodo ausente: añade el fallback de 90 días", () => {
+    const conditions = ["j.is_active = TRUE"];
+    applyDefaultPeriodoFallback(conditions, {});
+    expect(conditions).toContain("j.posted_at >= NOW() - INTERVAL '90 days'");
+  });
+
+  it("periodo='all': NO añade ningún fallback (bug de la fase 013, corregido)", () => {
+    const conditions = ["j.is_active = TRUE"];
+    applyDefaultPeriodoFallback(conditions, { periodo: "all" });
+    expect(conditions).toEqual(["j.is_active = TRUE"]);
+  });
+
+  it("periodo='90d': no añade el fallback (buildFilters ya cubrió la fecha)", () => {
+    const conditions = ["j.is_active = TRUE"];
+    applyDefaultPeriodoFallback(conditions, { periodo: "90d" });
+    expect(conditions).toEqual(["j.is_active = TRUE"]);
+  });
+
+  it("devuelve el mismo array que recibe (mutación in-place, como conditions.push en el resto del archivo)", () => {
+    const conditions = [];
+    const result = applyDefaultPeriodoFallback(conditions, {});
+    expect(result).toBe(conditions);
   });
 });

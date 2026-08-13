@@ -54,40 +54,17 @@ export const handlers = [
   }),
 
   // GET /api/skills/top
-  // Usado por TopSkillsChart y useHeatmapData
+  // Usado por TopSkillsChart y useHeatmapData. Sin pct_of_all_jobs (fase
+  // 013: campo eliminado del backend — se calculaba mal con category
+  // activo y ningún componente lo consumía).
   http.get(`${BASE}/api/skills/top`, () => {
     return HttpResponse.json({
       rows: [
-        {
-          skill: "Python",
-          skill_category: "language",
-          job_count: 2065,
-          pct_of_all_jobs: "7.94",
-        },
-        {
-          skill: "SQL",
-          skill_category: "language",
-          job_count: 1890,
-          pct_of_all_jobs: "7.27",
-        },
-        {
-          skill: "JavaScript",
-          skill_category: "language",
-          job_count: 1750,
-          pct_of_all_jobs: "6.73",
-        },
-        {
-          skill: "React",
-          skill_category: "framework",
-          job_count: 1540,
-          pct_of_all_jobs: "5.92",
-        },
-        {
-          skill: "AWS",
-          skill_category: "cloud",
-          job_count: 1320,
-          pct_of_all_jobs: "5.08",
-        },
+        { skill: "Python", skill_category: "language", job_count: 2065 },
+        { skill: "SQL", skill_category: "language", job_count: 1890 },
+        { skill: "JavaScript", skill_category: "language", job_count: 1750 },
+        { skill: "React", skill_category: "framework", job_count: 1540 },
+        { skill: "AWS", skill_category: "cloud", job_count: 1320 },
       ],
       total_matching_jobs: 26023,
     });

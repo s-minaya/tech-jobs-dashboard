@@ -24,12 +24,18 @@ import PL from "country-flag-icons/react/3x2/PL";
 import IT from "country-flag-icons/react/3x2/IT";
 import AT from "country-flag-icons/react/3x2/AT";
 import BE from "country-flag-icons/react/3x2/BE";
+import { OPTION_LABELS } from "@/lib/filterUtils";
 
 // Wrapper para normalizar las banderas al mismo tamaño que los react-icons
 const flag = (Flag) => () => <Flag className="h-3.5 w-5 rounded-xs" />;
 
 // ── Iconos por opción ─────────────────────────────────────────────────────────
-// Mapa de opción → icono. Si no hay icono definido se omite.
+// Mapa de opción → icono. Si no hay icono definido se omite. Mismo truco
+// que OPTION_LABELS (filterUtils.js) para el texto: un objeto plano
+// indexado por el valor crudo de la opción — este componente no sabe de
+// qué filtro se trata (país, contrato...), solo recibe `options`
+// genéricas, así que cualquier tabla de personalización por opción tiene
+// que poder resolverse sin esa información.
 const OPTION_ICONS = {
   // País — SVGs de country-flag-icons
   Todos: RiGlobalLine,
@@ -140,7 +146,7 @@ function FilterSection({
                 isActive={selected === option}
                 onClick={() => onSelect(option)}
               >
-                {option}
+                {OPTION_LABELS[option] ?? option}
               </FilterToggleRow>
             );
           })}
@@ -157,7 +163,7 @@ function FilterSection({
                 isActive={selected === option}
                 onClick={() => onSelect(option)}
               >
-                {option}
+                {OPTION_LABELS[option] ?? option}
               </FilterChip>
             );
           })}

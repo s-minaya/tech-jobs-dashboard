@@ -208,14 +208,71 @@ _(anterior al rediseño Halo)_
     `spec/features/012-cross-filter-audit/012-tasks.md` para el detalle
     completo.
 
+12. **013 · Calidad de datos y rendimiento — Top Skills más demandadas** —
+    sexta ronda "tabla por tabla". `GET /api/skills/top` y
+    `GET /api/skills/cooccurrence` capaban silenciosamente "Todo el
+    histórico" a los mismos 90 días del periodo por defecto (el fallback
+    de 90 días saltaba también con `periodo === "all"`, no solo cuando
+    faltaba) — confirmado en vivo (`periodo=90d`/`all`/ausente daban un
+    `total_matching_jobs` idéntico), corregido con una nueva
+    `applyDefaultPeriodoFallback` en `buildFilters.js` compartida por los
+    dos endpoints. Auditoría de rendimiento: `/api/skills/top` era la
+    query más lenta detectada hasta ahora (28.5-77s sin índice); con
+    acceso real a la BD (a diferencia de fases 009/010/011, esta vez sí
+    fue posible conectar y aplicar DDL directamente) se diagnosticó con
+    `EXPLAIN ANALYZE` y se añadió `idx_jobs_active_posted_at`, bajando a
+    7.4s sin filtros y 4.5s con país — sin alcanzar el objetivo de &lt;2s
+    por un límite estructural confirmado con evidencia (el filtro
+    `is_active + 90 días` apenas excluye ~7% de la tabla), documentado
+    como candidato a una tabla resumen materializada en una ronda futura,
+    no construida aquí. Investigando esa misma lentitud se descubrió un
+    segundo hallazgo mayor: `total_matching_jobs` contaba solo ofertas
+    con alguna skill extraída (~30% de las ofertas activas — el 70%
+    restante no tiene ninguna skill en `job_skills`, repartido por toda
+    la ventana de 90 días, no un backlog de ingesta), mostrando un número
+    de "ofertas totales" muy distinto al de las demás gráficas para el
+    mismo estado de filtros; corregido contando directamente sobre
+    `jobs` sin `JOIN`, lo que de paso lo hizo ~15x más rápido. Resto de
+    hallazgos: `pct_of_all_jobs` (ya señalado como dato muerto y roto en
+    la fase 012) eliminado en vez de arreglado; `jornada` pasó a
+    excluirse con `stripKeys`/`TOP_SKILLS_IGNORED_FILTERS` en vez de un
+    destructure inline sin test; SQL extraída a `api/src/skillsQuery.js`
+    (mismo patrón que `salaryQuery.js`/`demandQuery.js`); dos vistas SQL
+    muertas eliminadas de `schema.sql` y de la BD real; techo de altura
+    con scroll en `TopSkillsChart` (hasta 1600px sin límite antes);
+    categorías de skill traducidas al español en la pill y la
+    descripción del chart (no en el sidebar en esta primera pasada — ver
+    revisión post-implementación). Verificado con 364/364 tests de
+    frontend y 57/57 de `api/`, y en vivo contra la BD real en cada
+    punto. Revisión post-implementación (mismo día, verificando en el
+    navegador): el usuario pidió traducir también el sidebar completo
+    (país, contrato, jornada, "Remote", categoría) — nuevo `OPTION_LABELS`
+    en `filterUtils.js` (une los 4 mapas de traducción existentes/nuevos,
+    reutilizado por `FilterSection.jsx` sin que ese componente necesite
+    saber de qué filtro se trata, mismo truco que ya usaba `OPTION_ICONS`)
+    y `JORNADA_LABELS` nuevo (jornada era el único filtro sin ningún mapa,
+    ni en las pills — su pill mostraba literalmente "full time" en
+    inglés, bug corregido de paso); de camino se detectó y arregló que
+    `CONTRATO_LABELS` guardaba sus valores en minúscula (pensado solo
+    para la pill), inconsistente con chips capitalizados como "Alemania".
+    Por último, revisado el copy del
+    heatmap de co-ocurrencia (tooltip y leyenda): "co-ocurrencias
+    absolutas"/"dataset" sustituidos por lenguaje llano ("ofertas piden
+    las dos a la vez"), consistente con el resto del propio tooltip.
+    Verificado con 372/372 tests de frontend tras estos cambios (57/57 de
+    `api/`, sin cambios — ronda 100% frontend). Ver
+    `spec/features/013-top-skills-quality/013-tasks.md` para el detalle
+    completo, incluido el resultado íntegro del `EXPLAIN ANALYZE` y de la
+    investigación del filtro de periodo.
+
 ## En curso 🔜
 
-_(ninguna — siguiente: 013, un "chart de tendencias" estilo Halo ligado a
+_(ninguna — siguiente: 014, un "chart de tendencias" estilo Halo ligado a
 la idea aún sin planificar de restructurar la carga del dashboard con
 header/rutas, o lo que el usuario decida)_
 
 ## Backlog 💡
 
-12. **013 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
+13. **014 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
 
 > Una sola feature activa a la vez. No se empieza la siguiente hasta que la anterior pasa todos los criterios de aceptación.

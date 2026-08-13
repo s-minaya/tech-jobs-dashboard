@@ -4,9 +4,12 @@
 //
 // Combina en una sola query (antes eran dos en Promise.all: la agregación
 // y un COUNT(DISTINCT j.id) aparte con el mismo WHERE, dos escaneos de
-// `jobs`) el total con SUM(COUNT(*)) OVER() — mismo patrón que
-// /api/skills/top (pct_of_all_jobs). Es seguro sumar todos los grupos sin
-// duplicar: cada job pertenece a un único (country_code, role_category).
+// `jobs`) el total con SUM(COUNT(*)) OVER() — mismo patrón que usaba
+// /api/skills/top para pct_of_all_jobs (campo eliminado en la fase 013,
+// se calculaba mal con category activo y nadie lo consumía; skills/top
+// sigue con dos queries porque category solo afecta a una de las dos —
+// ver skillsQuery.js). Es seguro sumar todos los grupos sin duplicar:
+// cada job pertenece a un único (country_code, role_category).
 
 /**
  * @param {string[]} conditions - condiciones SQL ya construidas (buildFilters + extras)

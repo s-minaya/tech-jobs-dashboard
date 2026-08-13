@@ -17,6 +17,7 @@ import ChartDescription, {
 } from "@/components/ui/ChartDescription";
 import HeatmapSvg from "@/components/Charts/HeatmapSvg";
 import HeatmapLegend from "@/components/Charts/HeatmapLegend";
+import { SKILL_CATEGORIA_LABELS } from "@/lib/filterUtils";
 import { RiSmartphoneLine } from "react-icons/ri";
 
 const FILTROS_IGNORADOS = ["pais", "contrato", "jornada", "remote"];
@@ -85,6 +86,14 @@ function RotatePrompt() {
 function SkillHeatmap({ filters }) {
   const raw = filters?.skillCategoria ?? "Todas";
   const categoria = raw === "Todas" ? "todas" : raw.toLowerCase();
+  // categoriaLabel es SOLO para el texto mostrado — categoria (arriba)
+  // sigue siendo el valor crudo en minúsculas, usado en toda la lógica de
+  // datos (useHeatmapData, selectSkills, comparaciones "=== todas").
+  // Antes, "Mostrando N skills de la categoría X" mostraba el valor crudo
+  // sin traducir (p.ej. "database") aunque la pill de ChartDescription sí
+  // traduce vía SKILL_CATEGORIA_LABELS — inconsistencia corregida aquí.
+  const categoriaLabel =
+    SKILL_CATEGORIA_LABELS[raw]?.toLowerCase() ?? categoria;
   const filtrosHeatmap = { periodo: filters.periodo };
   const isLandscape = useOrientation();
 
@@ -155,7 +164,7 @@ function SkillHeatmap({ filters }) {
                   {categoria !== "todas" ? (
                     <span>
                       {" "}
-                      de la categoría <em>{categoria}</em>
+                      de la categoría <em>{categoriaLabel}</em>
                     </span>
                   ) : (
                     <span> (las más populares globalmente)</span>

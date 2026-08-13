@@ -208,13 +208,13 @@ function HeatmapSvg({ skills, lookup, jobCountMap }) {
               <span style="color:var(--color-text-muted)"> de ofertas con <em>${d.row}</em> también piden <em>${d.col}</em></span><br>
               <strong style="color:var(--color-text-primary)">${formatPct(co, jcB)}</strong>
               <span style="color:var(--color-text-muted)"> de ofertas con <em>${d.col}</em> también piden <em>${d.row}</em></span><br>
-              <span style="color:var(--color-text-muted);font-size:10px">${co.toLocaleString("es-ES")} co-ocurrencias absolutas</span>`;
+              <span style="color:var(--color-text-muted);font-size:10px">${co.toLocaleString("es-ES")} ofertas piden las dos a la vez</span>`;
           } else {
             tip.innerHTML = `
               <strong>${d.row}</strong>
               <span style="color:var(--color-text-muted)"> + </span>
               <strong>${d.col}</strong><br>
-              <span style="color:var(--color-text-muted)">Sin co-ocurrencias en el dataset</span>`;
+              <span style="color:var(--color-text-muted)">Ninguna oferta pide las dos a la vez</span>`;
           }
           tip.style.display = "block";
           tip.style.left = event.clientX + 14 + "px";

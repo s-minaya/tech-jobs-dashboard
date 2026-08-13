@@ -169,7 +169,7 @@ function SalaryChart({ filters }) {
 
   const notaContrato =
     filters.contrato !== "Todos"
-      ? `Mostrando solo contratos "${CONTRATO_LABELS[filters.contrato] ?? filters.contrato.toLowerCase()}". Los salarios varían entre contrato permanente y temporal.`
+      ? `Mostrando solo contratos "${(CONTRATO_LABELS[filters.contrato] ?? filters.contrato).toLowerCase()}". Los salarios varían entre contrato permanente y temporal.`
       : null;
 
   return (

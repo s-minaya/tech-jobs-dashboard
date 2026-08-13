@@ -85,3 +85,32 @@ export const COOCCURRENCE_IGNORED_FILTERS = [
   "jornada",
   "remote",
 ];
+
+// TOP_SKILLS_IGNORED_FILTERS
+// /api/skills/top no aplica jornada: qué tecnologías pide un puesto no
+// cambia según si es a tiempo completo o parcial (decisión de diseño
+// confirmada en la fase 012, tras descartar la recomendación inicial de
+// habilitarlo). Antes se descartaba con un destructure inline en
+// index.js sin ningún test que lo protegiera — mismo tipo de "contrato no
+// testeado" que dejó pasar el leak real de contrato/remote en
+// /api/skills/cooccurrence (fase 012).
+export const TOP_SKILLS_IGNORED_FILTERS = ["jornada"];
+
+// applyDefaultPeriodoFallback
+// /api/skills/top y /api/skills/cooccurrence prefieren no ejecutar sin
+// ningún límite de fecha si un caller se olvida de enviar `periodo` — le
+// añaden este fallback de 90 días como protección razonable. Debe saltar
+// SOLO cuando periodo está totalmente ausente, nunca cuando vale "all"
+// (buildFilters ya no añade ninguna condición de fecha en ese caso, que
+// es el comportamiento correcto de "Todo el histórico"). Hasta la fase
+// 013 los dos endpoints reimplementaban este `if` por separado, y ambos
+// saltaban también con periodo === "all" — "Todo el histórico" era un
+// no-op silencioso, confirmado en vivo (mismo total_matching_jobs con
+// periodo=90d, periodo=all y sin periodo). Centralizado aquí para que no
+// puedan volver a desincronizarse.
+export function applyDefaultPeriodoFallback(conditions, query) {
+  if (!query.periodo) {
+    conditions.push("j.posted_at >= NOW() - INTERVAL '90 days'");
+  }
+  return conditions;
+}

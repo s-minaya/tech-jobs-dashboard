@@ -16,12 +16,62 @@ export const NOMBRES_PAISES = {
 // El backend usa los valores crudos del CHECK de Postgres ('permanent'/
 // 'contract'), y el filtro del sidebar expone esos mismos valores en
 // inglés (config/filters.js) porque coinciden 1:1 con la API. Mapeo a
-// español para pills y notas — mismo patrón que NOMBRES_PAISES. Antes de
-// esto, la nota de SalaryChart mezclaba idiomas: "contratos 'contract'.
-// Los salarios varían entre contrato permanente y temporal."
+// español para pills, notas y sidebar — mismo patrón que NOMBRES_PAISES.
+// Antes de esto, la nota de SalaryChart mezclaba idiomas: "contratos
+// 'contract'. Los salarios varían entre contrato permanente y temporal."
+// Valores en mayúscula inicial (fase 013): antes estaban en minúscula
+// porque solo se usaban dentro de la frase de la pill ("contrato
+// permanente") — al reutilizar este mismo mapa para los chips del
+// sidebar (OPTION_LABELS), necesitan la misma forma "lista para chip"
+// que los otros 3 mapas (NOMBRES_PAISES, JORNADA_LABELS,
+// SKILL_CATEGORIA_LABELS, todos capitalizados). describeFiltros pasa a
+// hacer el .toLowerCase() explícito en el punto de uso, no aquí.
 export const CONTRATO_LABELS = {
-  Permanent: "permanente",
-  Contract: "temporal",
+  Permanent: "Permanente",
+  Contract: "Temporal",
+};
+
+// SKILL_CATEGORIA_LABELS
+// El backend usa los valores crudos de skills.category (CHECK de Postgres,
+// en inglés y minúsculas), y el filtro del sidebar expone esas mismas
+// opciones en inglés (config/filters.js) porque coinciden 1:1 con la API
+// — mismo patrón que NOMBRES_PAISES/CONTRATO_LABELS. Framework/Cloud se
+// dejan igual (préstamos ya asentados en español técnico, como
+// "backend"/"frontend" en el resto de la app); el resto se traduce.
+export const SKILL_CATEGORIA_LABELS = {
+  Language: "Lenguaje",
+  Framework: "Framework",
+  Cloud: "Cloud",
+  Database: "Base de datos",
+  Tool: "Herramienta",
+  Methodology: "Metodología",
+};
+
+// JORNADA_LABELS
+// Mismo patrón que CONTRATO_LABELS. A diferencia de los otros tres
+// mapas, hasta ahora no existía ninguno para jornada — describeFiltros
+// se limitaba a un `.toLowerCase()` del valor crudo, así que la pill de
+// un filtro de jornada activo decía literalmente "full time" (inglés,
+// minúsculas). Corregido a la vez que se añade este mapa.
+export const JORNADA_LABELS = {
+  "Full time": "Jornada completa",
+  "Part time": "Jornada parcial",
+};
+
+// OPTION_LABELS
+// Unión de los 4 mapas anteriores — pensado para FilterSection.jsx, que
+// no sabe de qué filtro se trata (solo recibe `options` genéricas) y
+// necesita traducir el texto visible de CUALQUIER opción reconocible sin
+// que le digan explícitamente "esto es país" o "esto es jornada". Mismo
+// truco que ya usa OPTION_ICONS en FilterSection.jsx (objeto plano
+// indexado por el valor crudo). Sin colisiones de claves entre los 4
+// mapas — confirmado (códigos de país, "Permanent"/"Contract", "Full
+// time"/"Part time" y las categorías de skill no se solapan).
+export const OPTION_LABELS = {
+  ...NOMBRES_PAISES,
+  ...CONTRATO_LABELS,
+  ...JORNADA_LABELS,
+  ...SKILL_CATEGORIA_LABELS,
 };
 
 // PERIODO_DEFAULT
@@ -56,7 +106,7 @@ export function describeFiltros(filters, excludeKeys = []) {
     filters.contrato !== "Todos"
   )
     partes.push(
-      `contrato ${CONTRATO_LABELS[filters.contrato] ?? filters.contrato.toLowerCase()}`,
+      `contrato ${(CONTRATO_LABELS[filters.contrato] ?? filters.contrato).toLowerCase()}`,
     );
 
   if (
@@ -64,7 +114,9 @@ export function describeFiltros(filters, excludeKeys = []) {
     filters.jornada &&
     filters.jornada !== "Todos"
   )
-    partes.push(filters.jornada.toLowerCase().replace("_", " "));
+    partes.push(
+      (JORNADA_LABELS[filters.jornada] ?? filters.jornada).toLowerCase(),
+    );
 
   if (!excludeKeys.includes("remote")) {
     if (filters.remote === "Sí") partes.push("solo remoto");
@@ -76,7 +128,11 @@ export function describeFiltros(filters, excludeKeys = []) {
     filters.skillCategoria &&
     filters.skillCategoria !== "Todas"
   )
-    partes.push(`categoría de skill: ${filters.skillCategoria.toLowerCase()}`);
+    partes.push(
+      `categoría de skill: ${(
+        SKILL_CATEGORIA_LABELS[filters.skillCategoria] ?? filters.skillCategoria
+      ).toLowerCase()}`,
+    );
 
   return partes;
 }

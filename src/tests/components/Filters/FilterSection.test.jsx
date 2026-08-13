@@ -17,7 +17,7 @@ describe("FilterSection", () => {
       expect(screen.getByText("País")).toBeInTheDocument();
     });
 
-    it("renderiza un chip por cada opción", () => {
+    it("renderiza un chip por cada opción, con el texto traducido (fase 013 — OPTION_LABELS)", () => {
       render(
         <FilterSection
           title="País"
@@ -27,8 +27,13 @@ describe("FilterSection", () => {
         />,
       );
       expect(screen.getByText("Todos")).toBeInTheDocument();
-      expect(screen.getByText("DE")).toBeInTheDocument();
-      expect(screen.getByText("ES")).toBeInTheDocument();
+      // El texto mostrado es el traducido (OPTION_LABELS); el valor crudo
+      // "DE"/"ES" sigue siendo lo que viaja por selected/onSelect (ver test
+      // de abajo) — solo cambia lo que se pinta en pantalla.
+      expect(screen.getByText("Alemania")).toBeInTheDocument();
+      expect(screen.getByText("España")).toBeInTheDocument();
+      expect(screen.queryByText("DE")).not.toBeInTheDocument();
+      expect(screen.queryByText("ES")).not.toBeInTheDocument();
     });
 
     it("el chip activo tiene clase de color primary", () => {
@@ -41,7 +46,7 @@ describe("FilterSection", () => {
         />,
       );
       // El chip activo tiene bg-primary en su className
-      expect(screen.getByText("DE").closest("button")).toHaveClass(
+      expect(screen.getByText("Alemania").closest("button")).toHaveClass(
         "bg-primary",
       );
     });
@@ -60,7 +65,7 @@ describe("FilterSection", () => {
       );
     });
 
-    it("llama a onSelect al pulsar un chip", async () => {
+    it("llama a onSelect con el valor crudo (no el traducido) al pulsar un chip", async () => {
       const user = userEvent.setup();
       const onSelect = vi.fn();
       render(
@@ -71,8 +76,22 @@ describe("FilterSection", () => {
           onSelect={onSelect}
         />,
       );
-      await user.click(screen.getByText("FR"));
+      await user.click(screen.getByText("Francia"));
       expect(onSelect).toHaveBeenCalledWith("FR");
+    });
+
+    it("una opción sin traducción conocida se muestra tal cual (fallback ?? option)", () => {
+      render(
+        <FilterSection
+          title="Categoría"
+          options={["Todos", "Framework"]}
+          selected="Todos"
+          onSelect={vi.fn()}
+        />,
+      );
+      // Framework no está en OPTION_LABELS a propósito (préstamo ya
+      // asentado en español técnico) — debe pintarse sin traducir.
+      expect(screen.getByText("Framework")).toBeInTheDocument();
     });
   });
 

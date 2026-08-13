@@ -52,8 +52,8 @@ function HeatmapLegend({ maxPct }) {
 
       {/* Nota explicativa del máximo */}
       <p className="mt-0.5 w-full text-xs text-muted-foreground">
-        El verde intenso representa la relación más fuerte del dataset, no el
-        100%. Cada celda muestra el % desde la perspectiva de la fila.
+        El verde intenso representa la relación más fuerte de estos datos,
+        no el 100%. Cada celda muestra el % desde la perspectiva de la fila.
       </p>
     </div>
   );

@@ -47,7 +47,7 @@ describe("FilterDrawer", () => {
       expect(screen.getByText("Periodo")).toBeInTheDocument();
       expect(screen.getByText("Tipo de contrato")).toBeInTheDocument();
       expect(screen.getByText("Jornada")).toBeInTheDocument();
-      expect(screen.getByText("Remote")).toBeInTheDocument();
+      expect(screen.getByText("Remoto")).toBeInTheDocument();
       expect(screen.getByText("Categoría de skills")).toBeInTheDocument();
     });
 
@@ -115,10 +115,12 @@ describe("FilterDrawer", () => {
       expect(onReset).toHaveBeenCalledTimes(1);
     });
 
-    it("llama a onFilterChange con la key y el valor al elegir una opción", async () => {
+    it("llama a onFilterChange con la key y el valor crudo (no el traducido) al elegir una opción", async () => {
       const user = userEvent.setup();
       const { onFilterChange } = renderDrawer();
-      await user.click(screen.getByText("DE"));
+      // El chip se pinta como "Alemania" (OPTION_LABELS, fase 013) pero el
+      // valor que viaja a onFilterChange sigue siendo el código crudo "DE".
+      await user.click(screen.getByText("Alemania"));
       expect(onFilterChange).toHaveBeenCalledWith("pais", "DE");
     });
   });
