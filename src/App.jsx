@@ -4,6 +4,7 @@ import { useFilters } from "@/hooks/useFilters";
 import { useTheme } from "@/hooks/useTheme";
 import { useSummaryStats } from "@/hooks/useSummaryStats";
 import HomePage from "@/pages/HomePage";
+import TopSkillsPage from "@/pages/TopSkillsPage";
 import TrendsPage from "@/pages/TrendsPage";
 import SalaryPage from "@/pages/SalaryPage";
 import MapPage from "@/pages/MapPage";
@@ -150,19 +151,20 @@ function App() {
 
             {/* Rutas del dashboard (fase 016) — cada gráfica vive en su
                 propia página; el grid único de MainContent.jsx desaparece.
-                Sin lazy/Suspense todavía (bloque B) ni sidebar de filtros
-                en las 4 páginas de gráfica (bloque D) — este bloque solo
-                monta el esqueleto navegable. */}
+                Code-splitting ya aplicado (bloque B, incluida la
+                corrección que movió TopSkillsChart de "/" a
+                "/top-skills"); sidebar de filtros en las 5 páginas de
+                gráfica todavía pendiente (bloque D). */}
             <Routes>
               <Route
                 path="/"
                 element={
-                  <HomePage
-                    filters={filters}
-                    isDark={isDark}
-                    toggleTheme={toggleTheme}
-                  />
+                  <HomePage isDark={isDark} toggleTheme={toggleTheme} />
                 }
+              />
+              <Route
+                path="/top-skills"
+                element={<TopSkillsPage filters={filters} />}
               />
               <Route
                 path="/tendencias"

@@ -1,7 +1,12 @@
 # 016 · Setup de rutas por gráfica + header de navegación
 
-**Estado:** en curso — spec + plan + tasks creados, pendiente de
-confirmación explícita del usuario antes de tocar código.
+**Estado:** en curso — implementación en progreso (bloques A y B
+completados). El bloque B incorporó una ruta nueva, `/top-skills`, tras
+feedback del usuario: `TopSkillsChart` sale de `/` y pasa a tener
+página propia con `DesktopFilterSidebar` (bloque D), igual que las
+demás gráficas — `/` se queda como portada sin ninguna gráfica (hero +
+KPIs). Este documento ya refleja las 6 rutas finales, no las 5
+originales.
 
 > Primera feature de la **fase 3** del roadmap general (rediseño total
 > de la página para optimizar velocidad y experiencia de usuario). La
@@ -77,13 +82,23 @@ ya existe y no necesita cambios para cubrir este caso nuevo.
    evaluar.
 2. **Introduce un router en el árbol de `App.jsx`**, con una ruta por
    grupo de gráficas — mismos grupos que ya existen como secciones (con
-   `SalaryChart` separado en su propia ruta), no se inventa contenido
-   nuevo, solo se resegmenta el existente:
-   - `/` → hero + KPIs + `TopSkillsChart`
+   `SalaryChart` y `TopSkillsChart` separados en su propia ruta cada
+   una), no se inventa contenido nuevo, solo se resegmenta el
+   existente:
+   - `/` → hero + KPIs (sin gráficas)
+   - `/top-skills` → `TopSkillsChart`
    - `/tendencias` → `DemandByRoleChart`
    - `/salarios` → `SalaryChart`
    - `/mapa` → `EuropeMap`
    - `/skills` → `SkillHeatmap`
+
+   `TopSkillsChart` vivía en `/` en el diseño original de esta feature;
+   se movió a su propia ruta porque `/` no lleva sidebar de filtros en
+   tablet/desktop (ver más abajo) — dejarla en `/` la habría dejado sin
+   ningún control de filtro propio ahí. Con ruta propia, participa del
+   mismo patrón que el resto de gráficas: `DesktopFilterSidebar` en
+   tablet/desktop (bloque D), filtros vía `BottomNav`/`MobileFilterSheet`
+   en móvil.
 
    La landing (`LandingPage.jsx`, congelada) se queda **fuera** del
    router, exactamente como hoy (gateada por `sessionStorage` en
@@ -104,7 +119,7 @@ ya existe y no necesita cambios para cubrir este caso nuevo.
    | | Móvil (<768px) | Tablet/Desktop (≥768px) |
    |---|---|---|
    | Navegación | `BottomNav` (ya existe, se adapta a `NavLink` real; gana el ítem "Salarios", que hoy no existe) | `Header` nuevo, con enlaces a las 5 rutas |
-   | Filtros | `MobileFilterSheet` (ya existe, **sin cambios de comportamiento** — sigue abriéndose desde el ítem "Filtros" de `BottomNav`, en cualquier página) | `DesktopFilterSidebar` nuevo — columna izquierda, **abierta por defecto**, colapsable con un icono, sin overlay; solo en las 4 páginas de gráfica, no en `/` |
+   | Filtros | `MobileFilterSheet` (ya existe, **sin cambios de comportamiento** — sigue abriéndose desde el ítem "Filtros" de `BottomNav`, en cualquier página) | `DesktopFilterSidebar` nuevo — columna izquierda, **abierta por defecto**, colapsable con un icono, sin overlay; solo en las 5 páginas de gráfica, no en `/` |
    | `ThemeToggle` | Montaje flotante independiente, visible en cualquier página | Dentro de `Header` |
 
    `DesktopFilterSidebar` es un componente **nuevo** — no una reescritura de
@@ -142,9 +157,11 @@ aviso de build.
 - `react-router-dom` como librería de rutas, modo declarativo clásico.
 - `filters` y `useSummaryStats` viven por encima del árbol de rutas.
 - Cada grupo de gráficas = su propia ruta + su propio chunk `lazy`.
-- Las 5 rutas (`/`, `/tendencias`, `/salarios`, `/mapa`, `/skills`)
-  cubren los mismos grupos de contenido que las 4 secciones actuales,
-  con `SalaryChart` separado de `DemandByRoleChart` en su propia ruta.
+- Las 6 rutas (`/`, `/top-skills`, `/tendencias`, `/salarios`, `/mapa`,
+  `/skills`) cubren los mismos grupos de contenido que las 4 secciones
+  actuales, con `SalaryChart` separado de `DemandByRoleChart` y
+  `TopSkillsChart` separado de `/` en su propia ruta cada una. `/` se
+  queda como portada sin ninguna gráfica (hero + KPIs).
 - La landing se queda fuera del árbol de rutas, exactamente como hoy.
 - **Móvil no lleva `Header` ni el sidebar nuevo** — `BottomNav`
   (adaptado, +Salarios) y `MobileFilterSheet` (intacto) siguen resolviendo
@@ -183,10 +200,10 @@ aviso de build.
 
 ## Criterios de aceptación
 
-- [ ] `react-router-dom` instalado y usado para las 5 rutas del
-      dashboard (`/`, `/tendencias`, `/salarios`, `/mapa`, `/skills`).
-      La landing (`LandingPage.jsx`) se queda fuera del árbol de rutas,
-      sin cambios.
+- [ ] `react-router-dom` instalado y usado para las 6 rutas del
+      dashboard (`/`, `/top-skills`, `/tendencias`, `/salarios`,
+      `/mapa`, `/skills`). La landing (`LandingPage.jsx`) se queda
+      fuera del árbol de rutas, sin cambios.
 - [ ] Cada gráfica (`TopSkillsChart`, `SalaryChart`,
       `DemandByRoleChart`, `EuropeMap`, `SkillHeatmap`) se importa con
       `React.lazy()` + `Suspense`, generando su propio chunk —
@@ -201,11 +218,11 @@ aviso de build.
       petición en curso si el usuario cambia de ruta antes de que
       resuelva — mismo mecanismo ya existente para cambios de filtro,
       sin duplicar lógica.
-- [ ] `Header` (nuevo, solo md+) navega entre las 5 rutas. `BottomNav`
+- [ ] `Header` (nuevo, solo md+) navega entre las 6 rutas. `BottomNav`
       (solo móvil) pasa de scroll + anclas a la misma navegación por
-      ruta y gana el ítem "Salarios".
+      ruta y gana los ítems "Salarios" y "Top Skills".
 - [ ] `FilterFAB` y `FilterDrawer.jsx` eliminados del código.
-      `DesktopFilterSidebar` (nuevo) se usa en las 4 páginas de gráfica en
+      `DesktopFilterSidebar` (nuevo) se usa en las 5 páginas de gráfica en
       tablet/desktop (no en `/`), abierto por defecto, colapsable.
 - [ ] `MobileFilterSheet.jsx` sigue funcionando en móvil exactamente igual
       que hoy, sin cambios de comportamiento.

@@ -2,9 +2,19 @@
 
 ## Mapa de rutas → contenido → componentes
 
+> **Enmienda (tras bloque B):** en el diseño original de esta feature,
+> `TopSkillsChart` vivía en `/` y `/` no llevaba sidebar de filtros —
+> quedaba entonces como la única gráfica sin control de filtro propio
+> en tablet/desktop. El usuario pidió corregirlo: `TopSkillsChart` pasa
+> a su propia ruta (`/top-skills`), con el mismo tratamiento que el
+> resto (chunk `lazy` + `DesktopFilterSidebar` en el bloque D); `/`
+> queda como portada sin ninguna gráfica. La tabla de abajo ya refleja
+> las 6 rutas finales.
+
 | Ruta | Contenido | Chunk lazy | Sidebar de filtros (md+) |
 |---|---|---|---|
-| `/` | Hero (DarkVeil/Aurora + título) + KPIs (`SummaryStats`) + `TopSkillsChart` | `TopSkillsChart` | No |
+| `/` | Hero (DarkVeil/Aurora + título) + KPIs (`SummaryStats`) | — | No |
+| `/top-skills` | `TopSkillsChart` | `TopSkillsChart` | Sí |
 | `/tendencias` | `DemandByRoleChart` | `DemandByRoleChart` | Sí |
 | `/salarios` | `SalaryChart` | `SalaryChart` | Sí |
 | `/mapa` | `EuropeMap` | `EuropeMap` | Sí |
@@ -60,17 +70,21 @@ siguiente:
    beneficio aquí).
 2. Crear `src/pages/` (carpeta nueva) con un componente por ruta:
    - `HomePage.jsx` — contenido movido de `MainContent.jsx` (hero +
-     `SummaryStats` + `TopSkillsChart`), **sin** sidebar.
+     `SummaryStats`), **sin** sidebar. *(Enmienda tras bloque B:
+     `TopSkillsChart` se movió de aquí a `TopSkillsPage.jsx` — ver
+     abajo — `HomePage.jsx` se queda sin ninguna gráfica.)*
+   - `TopSkillsPage.jsx` — `TopSkillsChart` + `DesktopFilterSidebar`.
+     *(Añadida tras bloque B, no en el plan original de este bloque.)*
    - `TrendsPage.jsx` — `DemandByRoleChart` + `DesktopFilterSidebar`.
    - `SalaryPage.jsx` — `SalaryChart` + `DesktopFilterSidebar`.
    - `MapPage.jsx` — `EuropeMap` + `DesktopFilterSidebar`.
    - `SkillsPage.jsx` — `SkillHeatmap` + `DesktopFilterSidebar`.
-   `MainContent.jsx` se elimina (su contenido pasa a `HomePage.jsx`;
-   el grid que agrupaba las 5 gráficas desaparece, cada una vive en su
-   página).
+   `MainContent.jsx` se elimina (su contenido pasa a `HomePage.jsx`/
+   `TopSkillsPage.jsx`; el grid que agrupaba las 5 gráficas desaparece,
+   cada una vive en su página).
 3. Envolver `<App />` con `<BrowserRouter>` en `src/main.jsx`.
 4. Dentro de `App.jsx`, sustituir el bloque `<MainContent />` por
-   `<Routes>` con las 5 `<Route>` (sin lazy todavía, import normal) —
+   `<Routes>` con las 6 `<Route>` (sin lazy todavía, import normal) —
    se mantiene todo lo demás igual (landing gate, `FilterFAB`/`Drawer`/
    `Sheet` **todavía presentes** en este bloque, se retiran/adaptan en
    el bloque D).
@@ -98,14 +112,15 @@ siguiente:
 ### Bloque C — `Header` (md+), `BottomNav` (móvil) y `ThemeToggle`
 
 1. `src/components/layout/Header.jsx` (nuevo) — barra superior, **solo
-   md+** (`hidden md:flex`), con 5 `NavLink` a las rutas (usa el estado
+   md+** (`hidden md:flex`), con 6 `NavLink` a las rutas (usa el estado
    `isActive` nativo de `NavLink`, sustituye por completo al
    `IntersectionObserver` de `App.jsx`, que se borra) y aloja
    `ThemeToggle`.
 2. `BottomNav.jsx` — se adapta, no se reescribe:
-   - `NAV_ITEMS` gana un ítem nuevo, "Salarios" (`/salarios`) → pasa de
-     5 a 6 items (Inicio, Tendencias, Salarios, Mapa, Skills, Filtros).
-   - Los 5 items de ruta pasan de `scrollIntoView` a `NavLink` real.
+   - `NAV_ITEMS` gana dos ítems nuevos, "Salarios" (`/salarios`) y "Top
+     Skills" (`/top-skills`) → pasa de 5 a 7 items (Inicio, Tendencias,
+     Salarios, Mapa, Skills, Top Skills, Filtros).
+   - Los 6 items de ruta pasan de `scrollIntoView` a `NavLink` real.
    - El ítem "Filtros" **no cambia de comportamiento** — sigue abriendo
      `MobileFilterSheet` exactamente como hoy, disponible en cualquier
      página (incluida `/`, igual que ahora).
@@ -144,7 +159,7 @@ nombre/archivo `FilterDrawer.jsx` para eso sería confuso (ya no es "un
 drawer"). Se construye `DesktopFilterSidebar.jsx` nuevo, usando esa cabecera +
 bucle de `FilterDrawer.jsx` como referencia visual directa (mismo
 look), y `FilterDrawer.jsx` se borra una vez `DesktopFilterSidebar` cubre las
-4 páginas — no queda huérfano ni duplicado.
+5 páginas — no queda huérfano ni duplicado.
 
 1. `src/components/Filters/DesktopFilterSidebar.jsx` (nuevo) — reutiliza
    `FilterSection.jsx` tal cual (no se toca) para las 6 secciones de
@@ -157,7 +172,7 @@ look), y `FilterDrawer.jsx` se borra una vez `DesktopFilterSidebar` cubre las
      ajustar, no un contrato cerrado).
    - Sin overlay ni backdrop — es parte del layout de la página, no
      flota encima del contenido.
-   - Solo en las 4 páginas de gráfica; `/` sigue sin ella.
+   - Solo en las 5 páginas de gráfica; `/` sigue sin ella.
    - **Estilo: Halo, dark + light, reutilizando lo que ya existe** — no
      se deja sin estilizar a la espera de un diseño desde cero. Se
      reutilizan los mismos tokens que ya usa `FilterDrawer.jsx` hoy
@@ -170,15 +185,15 @@ look), y `FilterDrawer.jsx` se borra una vez `DesktopFilterSidebar` cubre las
      variantes de tema; si no convence, el usuario lo ajusta desde ahí
      en vez de desde cero.
 3. `src/components/layout/ChartPageLayout.jsx` (nuevo, opcional) —
-   wrapper compartido por las 4 páginas de gráfica si conviene evitar
-   repetir el mismo grid `sidebar + contenido` 4 veces.
+   wrapper compartido por las 5 páginas de gráfica si conviene evitar
+   repetir el mismo grid `sidebar + contenido` 5 veces.
 4. `MobileFilterSheet.jsx` — **sin cambios de comportamiento.** Sigue
    controlada por el mismo `filtersOpen`/`onOpenFilters` que hoy,
    ahora vía `BottomNav` en cualquier página (móvil no tiene páginas
    con/sin sidebar — es un mecanismo global, como ya es hoy).
 5. Eliminar `FilterFAB` y `FilterDrawer.jsx` (incluye el export
    `FilterFAB`) y sus usos en `App.jsx`.
-6. Verificar: en cada una de las 4 páginas de gráfica, cambiar un
+6. Verificar: en cada una de las 5 páginas de gráfica, cambiar un
    filtro dispara una única petición nueva (no 5), el valor persiste en
    `localStorage` y se refleja también en `/` al volver (mismo
    `filters` compartido) — tanto desde `DesktopFilterSidebar` (md+) como desde
@@ -268,12 +283,15 @@ look), y `FilterDrawer.jsx` se borra una vez `DesktopFilterSidebar` cubre las
   extrae; un componente compartido respeta "un componente, una
   responsabilidad" (`tech-stack.md`).
 - **`/` sin sidebar ni acceso a filtros propio en md+** — consecuencia
-  explícita y aceptada de "no habrá sidebar en la home": en
-  desktop/tablet el usuario ajusta filtros desde cualquier página de
-  gráfica; como `filters` es estado compartido por encima del router,
-  `/` siempre refleja el último valor. En móvil esto no aplica —
-  `BottomNav`/`MobileFilterSheet` siguen disponibles en `/` igual que hoy, es
-  un mecanismo global, no por página.
+  explícita y aceptada de "no habrá sidebar en la home". Tras la
+  enmienda del bloque B (`TopSkillsChart` → `/top-skills`), `/` no
+  tiene ninguna gráfica que filtrar, así que esto deja de ser una
+  limitación real: no hace falta sidebar donde no hay nada que
+  filtrar. En desktop/tablet el usuario ajusta filtros desde cualquier
+  página de gráfica (las 5, `filters` es estado compartido por encima
+  del router). En móvil esto no aplica — `BottomNav`/`MobileFilterSheet`
+  siguen disponibles en `/` igual que hoy, es un mecanismo global, no
+  por página.
 - **Filtros no se sincronizan con la URL en esta feature** — se quedan
   en `localStorage` como hoy; es un cambio de alcance mayor (rutas
   "compartibles" con su estado) que no se ha pedido y no bloquea
@@ -292,8 +310,9 @@ look), y `FilterDrawer.jsx` se borra una vez `DesktopFilterSidebar` cubre las
   chunk sea diminuto, es que no se descarguen los 5 de golpe. Se
   documenta el tamaño real de cada chunk tras el bloque B en
   `016-tasks.md`, no se fija un umbral arbitrario de antemano.
-- **`BottomNav` con 6 elementos en pantallas muy estrechas** (5 rutas +
-  Filtros) — puede quedar apretado; el ajuste fino de tamaños/iconos es
+- **`BottomNav` con 7 elementos en pantallas muy estrechas** (6 rutas +
+  Filtros) — puede quedar apretado, más aún tras sumar "Top Skills" a
+  la corrección de este bloque; el ajuste fino de tamaños/iconos es
   parte del diseño visual que hace el usuario aparte, no bloquea la
   funcionalidad.
 - **Tests E2E son los que más cambian** (interactúan hoy directamente

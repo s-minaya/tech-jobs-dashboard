@@ -1,14 +1,16 @@
-import TopSkillsChart from "@/components/Charts/TopSkillsChart";
 import SummaryStats from "@/components/layout/SummaryStats";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import DarkVeil from "@/components/ui/DarkVeil";
 import Aurora from "@/components/ui/Aurora";
 
 // HomePage
-// Ruta "/" — hero + KPIs + Top Skills. Sin sidebar de filtros (fase 016):
-// el usuario ajusta filtros desde cualquier página de gráfica; como
-// `filters` es estado compartido por encima del router, el efecto se ve
-// también aquí al volver.
+// Ruta "/" — portada pura: hero + KPIs (`SummaryStats`), sin ninguna
+// gráfica. `TopSkillsChart` vivía aquí en el diseño original de esta
+// feature (fase 016); se movió a su propia ruta (`/top-skills`,
+// `TopSkillsPage.jsx`) porque "/" no lleva sidebar de filtros en
+// tablet/desktop (decisión ya tomada) — se quedaba como la única
+// gráfica sin ningún control de filtro propio ahí. Sin gráfica, esta
+// página no necesita `filters` en absoluto.
 //
 // El hero tiene fondo animado distinto según el tema:
 //   dark  → DarkVeil (CPPN, hueShift=0 para morado de la marca)
@@ -28,7 +30,7 @@ import Aurora from "@/components/ui/Aurora";
 // bloque C, así que mantenerlos un bloque más solo para borrarlos
 // después no aporta nada. Ningún selector CSS depende de ellos
 // (verificado con grep).
-function HomePage({ filters, isDark, toggleTheme }) {
+function HomePage({ isDark, toggleTheme }) {
   return (
     <main className="w-full min-w-0 flex-1 pb-20 md:pb-0">
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
@@ -81,11 +83,6 @@ function HomePage({ filters, isDark, toggleTheme }) {
         <div className="relative z-20 -mt-32 px-6 md:-mt-36">
           <SummaryStats />
         </div>
-      </div>
-
-      {/* ── Top Skills ───────────────────────────────────────────────────── */}
-      <div className="px-6 pt-2 pb-6">
-        <TopSkillsChart filters={filters} />
       </div>
     </main>
   );

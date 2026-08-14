@@ -38,40 +38,104 @@
 
 ## Bloque B — Code-splitting real
 
-- [ ] `TopSkillsChart` (en `HomePage.jsx`) → `React.lazy()` + `Suspense`.
-- [ ] `DemandByRoleChart` (en `TrendsPage.jsx`) → `React.lazy()` +
+- [x] `TopSkillsChart` (en `HomePage.jsx`) → `React.lazy()` + `Suspense`.
+- [x] `DemandByRoleChart` (en `TrendsPage.jsx`) → `React.lazy()` +
       `Suspense`.
-- [ ] `SalaryChart` (en `SalaryPage.jsx`) → `React.lazy()` +
+- [x] `SalaryChart` (en `SalaryPage.jsx`) → `React.lazy()` +
       `Suspense`.
-- [ ] `EuropeMap` (en `MapPage.jsx`) → `React.lazy()` + `Suspense`.
-- [ ] `SkillHeatmap` (en `SkillsPage.jsx`) → `React.lazy()` +
+- [x] `EuropeMap` (en `MapPage.jsx`) → `React.lazy()` + `Suspense`.
+- [x] `SkillHeatmap` (en `SkillsPage.jsx`) → `React.lazy()` +
       `Suspense`.
-- [ ] Fallback de `Suspense` coherente con el skeleton que ya usa
-      `ChartCard` durante la carga.
-- [ ] `npm run build`: confirmar chunks separados por gráfica (revisar
+- [x] Fallback de `Suspense` coherente con el skeleton que ya usa
+      `ChartCard` durante la carga. Componente nuevo
+      `src/components/ui/ChartFallback.jsx`: reutiliza exactamente el
+      shell visual del estado "Cargando..." de `ChartCard.jsx` (mismo
+      `.chart-card`, `p-5`, `mt-6`, texto), para que no haya salto de
+      layout ni cambio de estilo al pasar de "cargando el chunk" a
+      "cargando los datos".
+- [x] `npm run build`: confirmar chunks separados por gráfica (revisar
       `dist/assets/`) y que el aviso "chunks larger than 500 kB" ya no
       aplica al chunk principal — documentar el tamaño real de cada
       chunk aquí una vez medido:
-      - `TopSkillsChart`: ⬜ kB
-      - `DemandByRoleChart`: ⬜ kB
-      - `SalaryChart`: ⬜ kB
-      - `EuropeMap`: ⬜ kB
-      - `SkillHeatmap`: ⬜ kB
-- [ ] Verificación manual (Network tab): al entrar en una ruta, solo se
-      descarga el chunk de esa gráfica.
+      - `TopSkillsChart`: 2.12 kB (gzip 1.23 kB)
+      - `DemandByRoleChart`: 21.89 kB (gzip 7.40 kB)
+      - `SalaryChart`: 4.87 kB (gzip 2.30 kB)
+      - `EuropeMap`: 27.22 kB (gzip 10.81 kB)
+      - `SkillHeatmap`: 10.97 kB (gzip 4.20 kB)
+
+      Confirmado: el build ya no emite ningún aviso de tamaño de chunk
+      (antes, bundle único de 920.84 kB — ver `roadmap.md`). Las
+      dependencias pesadas compartidas entre varias gráficas (Recharts,
+      iconos) caen en chunks vendor aparte que Rollup nombra de forma
+      algo arbitraria (`useIsDark-*.js` 320.13 kB, `ri-*.js` 161.78 kB)
+      — se descargan una sola vez y quedan cacheados entre rutas que
+      los necesitan, no en cada navegación. El chunk `index-*.js`
+      (entrada + shell de rutas) queda en 324.92 kB — también por
+      debajo del umbral de 500 kB.
+- [x] Verificación manual (Network tab): al entrar en una ruta, solo se
+      descarga el chunk de esa gráfica. Verificado con un spec temporal
+      de Playwright (`e2e/_tmp-verify-lazy-016b.spec.js`, borrado tras
+      usar) que acumula las requests de red por ruta visitada: cada
+      navegación añade exactamente un chunk nuevo al conjunto ya
+      pedido (`/` → `TopSkillsChart`; `/tendencias` → +
+      `DemandByRoleChart`; `/salarios` → + `SalaryChart`; `/mapa` → +
+      `EuropeMap`; `/skills` → + `SkillHeatmap`), nunca antes de
+      visitar la ruta correspondiente. Verificado también de forma
+      visual (captura de pantalla, chunk de `SkillHeatmap`
+      artificialmente ralentizado): se ve `ChartFallback` con el mismo
+      acabado que el "Cargando..." de `ChartCard`. `npx vitest run`
+      sigue en verde (400/400, 28/28 archivos) y `npm run lint` no
+      añade ningún error nuevo (los 23 preexistentes son de archivos no
+      tocados en este bloque).
+
+## Bloque B.1 — Corrección: `TopSkillsChart` a ruta propia (`/top-skills`)
+
+> Tras cerrar el bloque B, feedback del usuario: `/` no lleva sidebar
+> de filtros (decisión ya tomada), así que `TopSkillsChart` se quedaba
+> como la única gráfica sin ningún control de filtro propio en
+> tablet/desktop — solo heredaba filtros aplicados desde otra ruta, sin
+> poder cambiarlos desde `/` mismo. Corrección: se mueve a su propia
+> ruta, mismo tratamiento que el resto de gráficas (chunk `lazy` ya
+> aplicado en este bloque; `DesktopFilterSidebar` le llega en el bloque
+> D junto con las otras 4). `/` pasa a ser portada pura (hero + KPIs),
+> sin ninguna gráfica. `016-spec.md`/`016-plan.md` ya actualizados con
+> las 6 rutas finales.
+
+- [x] Crear `src/pages/TopSkillsPage.jsx` (mismo patrón que
+      `TrendsPage.jsx`/etc.: `React.lazy()` + `Suspense` con
+      `ChartFallback` para `TopSkillsChart`).
+- [x] `HomePage.jsx`: quitar `TopSkillsChart` (import lazy, `Suspense`,
+      JSX, comentarios que lo mencionaban) — el hero se queda con
+      DarkVeil/Aurora + título + `SummaryStats`, nada más.
+- [x] `App.jsx`: nueva `<Route path="/top-skills" element={<TopSkillsPage filters={filters} />} />`.
+- [x] `npm run build`: `TopSkillsChart` sigue en su propio chunk (ya lo
+      tenía desde el bloque B, solo cambia qué página lo importa) —
+      2.12 kB (gzip 1.22 kB), sin cambios relevantes respecto al
+      bloque B. Chunk `index-*.js` prácticamente igual (325.10 kB vs
+      324.92 kB). Sin avisos nuevos de tamaño.
+- [x] `npx vitest run` en verde (400/400, 28/28 archivos). `npm run
+      lint` no añade errores nuevos en `App.jsx`/`HomePage.jsx`/
+      `TopSkillsPage.jsx` (el único error de `App.jsx` es preexistente,
+      línea 98, ajeno a este cambio).
+- [x] Verificación manual (Playwright): `/` ya no dispara la request de
+      `TopSkillsChart` y muestra el hero sin gráfica; `/top-skills` sí
+      la dispara y renderiza "Top Skills más demandadas" — spec
+      temporal (`e2e/_tmp-verify-topskills-route.spec.js`, borrado tras
+      usar) + captura de pantalla.
 
 ## Bloque C — `Header` (md+), `BottomNav` (móvil) y `ThemeToggle`
 
 - [ ] Crear `src/components/layout/Header.jsx`: barra superior, **solo
-      md+** (`hidden md:flex`), 5 `NavLink` a las rutas, aloja
-      `ThemeToggle`.
+      md+** (`hidden md:flex`), 6 `NavLink` a las rutas (incluye
+      `/top-skills`), aloja `ThemeToggle`.
 - [ ] Montar `Header` en `App.jsx` (fuera de `<Routes>`, visible en
       todas las páginas del dashboard, solo en md+).
-- [ ] `BottomNav.jsx`: añadir el ítem "Salarios" (`/salarios`) →
-      `NAV_ITEMS` pasa de 5 a 6 (Inicio, Tendencias, Salarios, Mapa,
-      Skills, Filtros). Los 5 ítems de ruta pasan de `scrollIntoView` a
-      `NavLink` real. El ítem "Filtros" no cambia — sigue abriendo
-      `MobileFilterSheet` igual que hoy.
+- [ ] `BottomNav.jsx`: añadir los ítems "Salarios" (`/salarios`) y "Top
+      Skills" (`/top-skills`) → `NAV_ITEMS` pasa de 5 a 7 (Inicio,
+      Tendencias, Salarios, Mapa, Skills, Top Skills, Filtros). Los 6
+      ítems de ruta pasan de `scrollIntoView` a `NavLink` real. El
+      ítem "Filtros" no cambia — sigue abriendo `MobileFilterSheet`
+      igual que hoy.
 - [ ] `HomePage.jsx`: quitar el `ThemeToggle` que hoy vive hardcodeado
       dentro del hero.
 - [ ] `App.jsx`: montar un segundo `ThemeToggle`, **solo móvil**
@@ -84,7 +148,7 @@
       `BottomNav` visible solo en móvil, navegación funcional en
       ambos, tema seleccionable desde cualquier ruta y cualquier
       tamaño de pantalla.
-- [ ] `npx vitest run` en verde (`BottomNav.test.jsx` actualizado a 6
+- [ ] `npx vitest run` en verde (`BottomNav.test.jsx` actualizado a 7
       items + `NavLink`; test nuevo `Header.test.jsx`).
 
 ## Bloque D — `DesktopFilterSidebar` nuevo (md+); `MobileFilterSheet` intacto (móvil)
@@ -108,8 +172,8 @@
       dark y light. Intento real de acabado, no un placeholder sin
       estilizar.
 - [ ] Crear `src/components/layout/ChartPageLayout.jsx` si conviene
-      (grid `sidebar + contenido` compartido por las 4 páginas).
-- [ ] `TrendsPage.jsx`/`SalaryPage.jsx`/`MapPage.jsx`/
+      (grid `sidebar + contenido` compartido por las 5 páginas).
+- [ ] `TopSkillsPage.jsx`/`TrendsPage.jsx`/`SalaryPage.jsx`/`MapPage.jsx`/
       `SkillsPage.jsx`: envolver su gráfica en `ChartPageLayout` (o
       directamente) con `DesktopFilterSidebar`.
 - [ ] `App.jsx`: eliminar `FilterFAB`, `FilterDrawer` y su montaje
@@ -117,10 +181,12 @@
       `filtersOpen`/`onOpenFilters` que ya usa `BottomNav`).
 - [ ] Eliminar `src/components/Filters/FilterDrawer.jsx` (incluye el
       export `FilterFAB`).
-- [ ] Verificación manual: en cada página de gráfica, cambiar un
-      filtro dispara una única petición nueva, persiste en
-      `localStorage` y se refleja en `/` al volver — probar tanto
-      desde `DesktopFilterSidebar` (desktop) como desde `MobileFilterSheet` (móvil).
+- [ ] Verificación manual: en cada una de las 5 páginas de gráfica,
+      cambiar un filtro dispara una única petición nueva, persiste en
+      `localStorage` y se refleja en las demás páginas al navegar entre
+      ellas — probar tanto desde `DesktopFilterSidebar` (desktop) como
+      desde `MobileFilterSheet` (móvil). (`/` ya no tiene gráfica que
+      refleje el filtro, solo KPIs globales — no aplica aquí.)
 - [ ] `npx vitest run` en verde (`DesktopFilterSidebar.test.jsx` nuevo;
       `FilterDrawer.test.jsx` se retira con el componente;
       `FilterSection.test.jsx` sin cambios).
