@@ -159,7 +159,7 @@ function SummaryStats() {
       {/* Fase 015 (ronda 2, reconciliación de totales): estas 5 cards
           nunca reaccionan a los filtros del sidebar (getSummaryStats() no
           recibe `filters` — decisión de la fase 014, ver comentario de
-          MainContent.jsx). Verificado en vivo: son la única sección del
+          HomePage.jsx). Verificado en vivo: son la única sección del
           dashboard que no se mueve al filtrar, mientras el mapa y las
           gráficas de abajo sí lo hacen — sin este texto, un usuario que
           filtre por un país podría leer "23.248 empresas" sin cambiar

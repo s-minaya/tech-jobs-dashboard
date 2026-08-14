@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react";
+import { Routes, Route } from "react-router-dom";
 import { useFilters } from "@/hooks/useFilters";
 import { useTheme } from "@/hooks/useTheme";
 import { useSummaryStats } from "@/hooks/useSummaryStats";
-import MainContent from "@/components/layout/MainContent";
+import HomePage from "@/pages/HomePage";
+import TrendsPage from "@/pages/TrendsPage";
+import SalaryPage from "@/pages/SalaryPage";
+import MapPage from "@/pages/MapPage";
+import SkillsPage from "@/pages/SkillsPage";
 import BottomNav from "@/components/layout/BottomNav";
 import FilterSheet from "@/components/Filters/FilterSheet";
 import FilterDrawer, { FilterFAB } from "@/components/Filters/FilterDrawer";
@@ -33,8 +38,6 @@ const MAX_LOADER_MS = 10000;
 //   Móvil (<768px):   bottom nav + FilterSheet (bottom sheet desde abajo)
 //   Tablet/Desktop (≥768px): FilterFAB flotante + FilterDrawer (desde la izquierda)
 //
-// El Sidebar lateral ha sido eliminado — en todos los tamaños los filtros
-// se acceden mediante el FAB para no robar espacio a las gráficas.
 //
 // La LandingPage bloquea el acceso al dashboard hasta que el usuario
 // pulsa "Comenzar". Se persiste en sessionStorage para no mostrarla
@@ -119,7 +122,8 @@ function App() {
 
   return (
     // bg-white en light, bg-black en dark — fondo base de toda la página.
-    // El DarkVeil vive ahora solo dentro del hero en MainContent.
+    // El DarkVeil vive ahora solo dentro del hero en HomePage (antes
+    // MainContent.jsx, movido en la fase 016).
     <div className="relative min-h-screen bg-white dark:bg-black">
       <div className="relative z-10">
         {/* Loader de transición — visible hasta que pasa MIN_LOADER_MS
@@ -144,12 +148,36 @@ function App() {
               onReset={resetFilters}
             />
 
-            {/* Contenido principal — ahora ocupa todo el ancho sin sidebar */}
-            <MainContent
-              filters={filters}
-              isDark={isDark}
-              toggleTheme={toggleTheme}
-            />
+            {/* Rutas del dashboard (fase 016) — cada gráfica vive en su
+                propia página; el grid único de MainContent.jsx desaparece.
+                Sin lazy/Suspense todavía (bloque B) ni sidebar de filtros
+                en las 4 páginas de gráfica (bloque D) — este bloque solo
+                monta el esqueleto navegable. */}
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <HomePage
+                    filters={filters}
+                    isDark={isDark}
+                    toggleTheme={toggleTheme}
+                  />
+                }
+              />
+              <Route
+                path="/tendencias"
+                element={<TrendsPage filters={filters} />}
+              />
+              <Route
+                path="/salarios"
+                element={<SalaryPage filters={filters} />}
+              />
+              <Route path="/mapa" element={<MapPage filters={filters} />} />
+              <Route
+                path="/skills"
+                element={<SkillsPage filters={filters} />}
+              />
+            </Routes>
 
             {/* Bottom nav: solo visible en móvil (md:hidden interno al componente) */}
             <BottomNav

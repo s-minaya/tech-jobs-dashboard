@@ -484,8 +484,9 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    HERO BACKGROUNDS
    TODO: rediseñar/aplicar en fase 006 (Halo Hero). Definidas ya para que esa
-   fase no tenga que inventar la nomenclatura — MainContent.jsx sigue usando
-   Aurora/DarkVeil como fondo animado del hero; estas clases quedan listas
+   fase no tenga que inventar la nomenclatura — HomePage.jsx (antes
+   MainContent.jsx, movido en la fase 016) sigue usando Aurora/DarkVeil
+   como fondo animado del hero; estas clases quedan listas
    para cuando se integre el fondo estático detrás de ambos efectos.
 ═══════════════════════════════════════════════════════════════════════════ */
 .hero-bg-dark {

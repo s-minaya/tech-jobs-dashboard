@@ -159,10 +159,36 @@ _(anterior al rediseño Halo)_
 
 ## En curso 🔜
 
-_(ninguna)_
+17. **016 · Setup de rutas por gráfica + header de navegación** —
+    primera feature de la fase 3 del roadmap general (rediseño total de
+    la página para optimizar velocidad y experiencia de usuario);
+    ataca dos problemas reales ya documentados, no solo "rendimiento" en
+    abstracto: el bundle sin dividir (920.84 kB en un único chunk,
+    verificado con `npm run build`) y las 5 gráficas disparando su
+    fetch a la vez al montar, el mismo patrón que agotó el pool de
+    conexiones de Postgres en la fase 010. `react-router-dom` (nueva
+    dependencia, aprobada explícitamente) + `React.lazy()`/`Suspense`
+    por gráfica + header nuevo; `filters`/`useSummaryStats` se quedan
+    por encima del árbol de rutas. `SalaryChart` gana su propia ruta
+    (`/salarios`, separada de `/tendencias`); el `FilterFAB` desaparece
+    y se sustituye por un sidebar de filtros reutilizable en las 4
+    páginas de gráfica (no en `/`). Spec + plan + tasks creados —
+    pendiente de confirmación explícita del usuario antes de tocar
+    código. Ver `spec/features/016-router-setup/`.
 
 ## Backlog 💡
 
-17. **016 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
+- **Resto de la fase 3** (rediseño visual/UX del contenido de cada
+  ruta) — se numera a medida que se planifica, a partir de que la 016
+  cierre.
+- **Halo Responsive y Pulido** (backlog; llevaba provisionalmente el
+  número 016 hasta esta ronda) — se mueve al final de todo el
+  proyecto: revisión final de breakpoints, espaciados y componentes
+  menores, ejecutada después de que toda la fase 3 (rediseño) esté
+  cerrada, para no pulir responsive/espaciados sobre una estructura que
+  todavía va a cambiar de raíz. Número definitivo pendiente de asignar
+  cuando se sepa cuántas features suma la fase 3 completa — no se fija
+  ahora para no tener que reescribirlo cada vez que se añada una
+  feature nueva antes.
 
 > Una sola feature activa a la vez. No se empieza la siguiente hasta que la anterior pasa todos los criterios de aceptación.

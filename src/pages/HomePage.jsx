@@ -1,32 +1,38 @@
 import TopSkillsChart from "@/components/Charts/TopSkillsChart";
-import DemandByRoleChart from "@/components/Charts/DemandByRoleChart";
-import SalaryChart from "@/components/Charts/SalaryChart";
-import EuropeMap from "@/components/Charts/EuropeMap";
-import SkillHeatmap from "@/components/Charts/SkillHeatmap";
 import SummaryStats from "@/components/layout/SummaryStats";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import DarkVeil from "@/components/ui/DarkVeil";
 import Aurora from "@/components/ui/Aurora";
 
-// MainContent
-// Área principal del dashboard.
+// HomePage
+// Ruta "/" — hero + KPIs + Top Skills. Sin sidebar de filtros (fase 016):
+// el usuario ajusta filtros desde cualquier página de gráfica; como
+// `filters` es estado compartido por encima del router, el efecto se ve
+// también aquí al volver.
+//
 // El hero tiene fondo animado distinto según el tema:
 //   dark  → DarkVeil (CPPN, hueShift=0 para morado de la marca)
 //   light → Aurora (simplex noise, degradado blanco-morado)
 // overflow-hidden en el div del hero confina ambos canvas a esa área.
-// El título usa font-sans (Inter, tamaño display) y tokens Halo de color
-// en ambos temas: --color-text-primary para "Tech Jobs", --color-primary
-// para "Dashboard", --color-text-secondary para el subtítulo — ya no hay
-// lógica isDark en los estilos del texto (isDark solo decide qué fondo
-// animado renderizar, DarkVeil o Aurora).
-// Las cards usan bg-card/60 backdrop-blur para glassmorphism sobre el fondo.
-// Cada sección tiene un id para que BottomNav pueda hacer scroll hasta ella.
-// pb-20 en el wrapper evita que el bottom nav tape el contenido al llegar al final.
-function MainContent({ filters, isDark, toggleTheme }) {
+//
+// NOTA (fase 016, bloque A): el `ThemeToggle` de aquí todavía es el
+// mismo montaje "hardcodeado dentro del hero" de siempre — se retira en
+// el bloque C, cuando pasa a vivir en `Header` (md+) y como montaje
+// flotante independiente en móvil. No tocarlo antes de tiempo para no
+// mezclar cambios de bloques distintos.
+//
+// Los `id="inicio"`/`id="inicio-skills"` que tenía `MainContent.jsx`
+// (anclas para el `scrollIntoView` de `BottomNav` + el
+// `IntersectionObserver` de `App.jsx`) no se trasladan aquí: ambos
+// mecanismos se sustituyen por navegación real (`NavLink`) en el
+// bloque C, así que mantenerlos un bloque más solo para borrarlos
+// después no aporta nada. Ningún selector CSS depende de ellos
+// (verificado con grep).
+function HomePage({ filters, isDark, toggleTheme }) {
   return (
     <main className="w-full min-w-0 flex-1 pb-20 md:pb-0">
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <div id="inicio">
+      <div>
         {/* Hero más alto para dar más presencia al título.
             pt-20 pb-48 en móvil, pt-28 pb-56 en desktop. */}
         <div className="relative w-full overflow-hidden px-6 pt-20 pb-48 md:pt-28 md:pb-56">
@@ -77,31 +83,12 @@ function MainContent({ filters, isDark, toggleTheme }) {
         </div>
       </div>
 
-      {/* ── Gráficas ─────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 gap-4 px-6 pt-2 pb-6">
-        {/* Sección Inicio: Top Skills */}
-        <div id="inicio-skills" className="scroll-mt-16">
-          <TopSkillsChart filters={filters} />
-        </div>
-        {/* Sección Tendencias: evolución mensual + salario */}
-        <section
-          id="tendencias"
-          className="grid scroll-mt-16 grid-cols-1 gap-4"
-        >
-          <DemandByRoleChart filters={filters} />
-          <SalaryChart filters={filters} />
-        </section>
-        {/* Sección Mapa */}
-        <section id="mapa" className="scroll-mt-16">
-          <EuropeMap filters={filters} />
-        </section>
-        {/* Sección Skills: heatmap */}
-        <section id="skills" className="scroll-mt-16">
-          <SkillHeatmap filters={filters} />
-        </section>
+      {/* ── Top Skills ───────────────────────────────────────────────────── */}
+      <div className="px-6 pt-2 pb-6">
+        <TopSkillsChart filters={filters} />
       </div>
     </main>
   );
 }
 
-export default MainContent;
+export default HomePage;
