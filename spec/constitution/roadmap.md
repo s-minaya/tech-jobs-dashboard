@@ -169,12 +169,12 @@ _(anterior al rediseño Halo)_
     conexiones de Postgres en la fase 010. `react-router-dom` (nueva
     dependencia, aprobada explícitamente) + `React.lazy()`/`Suspense`
     por gráfica + header nuevo; `filters`/`useSummaryStats` se quedan
-    por encima del árbol de rutas. `SalaryChart` gana su propia ruta
-    (`/salarios`, separada de `/tendencias`); el `FilterFAB` desaparece
-    y se sustituye por un sidebar de filtros reutilizable en las 4
-    páginas de gráfica (no en `/`). Spec + plan + tasks creados —
-    pendiente de confirmación explícita del usuario antes de tocar
-    código. Ver `spec/features/016-router-setup/`.
+    por encima del árbol de rutas. `SalaryChart` y `TopSkillsChart`
+    ganan cada una su propia ruta (`/salarios`, `/top-skills`); `/` es
+    portada pura (hero + KPIs, sin gráficas); el `FilterFAB` desaparece
+    y se sustituye por un sidebar de filtros reutilizable en las 5
+    páginas de gráfica (no en `/`). En curso — bloques A, B y C
+    completados. Ver `spec/features/016-router-setup/`.
 
 ## Backlog 💡
 

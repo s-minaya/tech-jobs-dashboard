@@ -9,11 +9,13 @@ import TrendsPage from "@/pages/TrendsPage";
 import SalaryPage from "@/pages/SalaryPage";
 import MapPage from "@/pages/MapPage";
 import SkillsPage from "@/pages/SkillsPage";
+import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import FilterSheet from "@/components/Filters/FilterSheet";
 import FilterDrawer, { FilterFAB } from "@/components/Filters/FilterDrawer";
 import LandingPage from "@/components/landing/LandingPage";
 import PageLoader from "@/components/ui/PageLoader";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 // Duración del loader de transición landing→dashboard (fase 014):
 // antes era un setTimeout fijo de 800ms sin ninguna relación con si los
@@ -33,11 +35,12 @@ const MIN_LOADER_MS = 500;
 const MAX_LOADER_MS = 10000;
 
 // App
-// Componente raíz. Gestiona filtros, tema, sección activa y visibilidad
-// de los paneles de filtros según el tamaño de pantalla:
+// Componente raíz. Gestiona filtros, tema y visibilidad de los paneles
+// de filtros/navegación según el tamaño de pantalla. La ruta activa la
+// resuelve `NavLink` a partir de la URL, sin estado propio para eso:
 //
-//   Móvil (<768px):   bottom nav + FilterSheet (bottom sheet desde abajo)
-//   Tablet/Desktop (≥768px): FilterFAB flotante + FilterDrawer (desde la izquierda)
+//   Móvil (<768px):   BottomNav + FilterSheet (bottom sheet desde abajo) + ThemeToggle flotante
+//   Tablet/Desktop (≥768px): Header (arriba) + FilterFAB flotante + FilterDrawer (desde la izquierda)
 //
 //
 // La LandingPage bloquea el acceso al dashboard hasta que el usuario
@@ -48,7 +51,6 @@ const MAX_LOADER_MS = 10000;
 function App() {
   const { filters, handleFilterChange, resetFilters } = useFilters();
   const { isDark, toggleTheme } = useTheme();
-  const [activeSection, setActiveSection] = useState("inicio");
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   // showLanding: true mientras el usuario no ha pulsado "Comenzar".
@@ -98,33 +100,9 @@ function App() {
     if (isLoading && minElapsed && !statsLoading) setIsLoading(false);
   }, [isLoading, minElapsed, statsLoading]);
 
-  // IntersectionObserver: detecta qué sección ocupa más espacio en el viewport
-  // y actualiza activeSection.
-  // threshold: 0.1 — se activa cuando el 10% de la sección es visible.
-  // rootMargin: "-50% 0px -40% 0px" — la zona activa es la franja central
-  // del viewport, evitando que secciones largas activen el observer demasiado pronto.
-  useEffect(() => {
-    const sectionIds = ["inicio", "tendencias", "mapa", "skills"];
-    const observers = [];
-    sectionIds.forEach((id) => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) setActiveSection(id);
-        },
-        { threshold: 0.1, rootMargin: "-10% 0px -60% 0px" },
-      );
-      observer.observe(el);
-      observers.push(observer);
-    });
-    return () => observers.forEach((o) => o.disconnect());
-  }, []);
-
   return (
     // bg-white en light, bg-black en dark — fondo base de toda la página.
-    // El DarkVeil vive ahora solo dentro del hero en HomePage (antes
-    // MainContent.jsx, movido en la fase 016).
+    // El DarkVeil vive dentro del hero en HomePage.
     <div className="relative min-h-screen bg-white dark:bg-black">
       <div className="relative z-10">
         {/* Loader de transición — visible hasta que pasa MIN_LOADER_MS
@@ -137,6 +115,18 @@ function App() {
           <LandingPage onEnter={handleEnter} />
         ) : (
           <>
+            {/* Header: solo visible en tablet/desktop (hidden md:flex
+                interno al componente) — navegación por rutas + ThemeToggle */}
+            <Header isDark={isDark} toggleTheme={toggleTheme} />
+
+            {/* ThemeToggle flotante — solo móvil (md:hidden), position
+                fixed para verse en cualquier ruta y con cualquier
+                scroll. En md+ ya lo aloja Header, de ahí md:hidden
+                aquí. */}
+            <div className="fixed top-6 right-6 z-30 md:hidden">
+              <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
+            </div>
+
             {/* FAB de filtros — visible solo en md+, oculto en móvil */}
             <FilterFAB filters={filters} onClick={() => setFiltersOpen(true)} />
 
@@ -149,19 +139,12 @@ function App() {
               onReset={resetFilters}
             />
 
-            {/* Rutas del dashboard (fase 016) — cada gráfica vive en su
-                propia página; el grid único de MainContent.jsx desaparece.
-                Code-splitting ya aplicado (bloque B, incluida la
-                corrección que movió TopSkillsChart de "/" a
-                "/top-skills"); sidebar de filtros en las 5 páginas de
+            {/* Rutas del dashboard — cada gráfica vive en su propia
+                página, con code-splitting por ruta (`React.lazy` +
+                `Suspense`). Sidebar de filtros en las 5 páginas de
                 gráfica todavía pendiente (bloque D). */}
             <Routes>
-              <Route
-                path="/"
-                element={
-                  <HomePage isDark={isDark} toggleTheme={toggleTheme} />
-                }
-              />
+              <Route path="/" element={<HomePage isDark={isDark} />} />
               <Route
                 path="/top-skills"
                 element={<TopSkillsPage filters={filters} />}
@@ -181,9 +164,10 @@ function App() {
               />
             </Routes>
 
-            {/* Bottom nav: solo visible en móvil (md:hidden interno al componente) */}
+            {/* Bottom nav: solo visible en móvil (md:hidden interno al
+                componente). NavLink resuelve el ítem activo a partir de
+                la URL. */}
             <BottomNav
-              activeSection={activeSection}
               onOpenFilters={() => setFiltersOpen(true)}
               filters={filters}
             />

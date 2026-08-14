@@ -2,15 +2,6 @@
 
 ## Mapa de rutas → contenido → componentes
 
-> **Enmienda (tras bloque B):** en el diseño original de esta feature,
-> `TopSkillsChart` vivía en `/` y `/` no llevaba sidebar de filtros —
-> quedaba entonces como la única gráfica sin control de filtro propio
-> en tablet/desktop. El usuario pidió corregirlo: `TopSkillsChart` pasa
-> a su propia ruta (`/top-skills`), con el mismo tratamiento que el
-> resto (chunk `lazy` + `DesktopFilterSidebar` en el bloque D); `/`
-> queda como portada sin ninguna gráfica. La tabla de abajo ya refleja
-> las 6 rutas finales.
-
 | Ruta | Contenido | Chunk lazy | Sidebar de filtros (md+) |
 |---|---|---|---|
 | `/` | Hero (DarkVeil/Aurora + título) + KPIs (`SummaryStats`) | — | No |
@@ -50,7 +41,7 @@ siguiente:
    navegable.
 3. `Header` (solo md+) + adaptación de `BottomNav` (solo móvil) +
    reubicación de `ThemeToggle`.
-4. `DesktopFilterSidebar` nuevo (solo md+, en las 4 páginas de gráfica);
+4. `DesktopFilterSidebar` nuevo (solo md+, en las 5 páginas de gráfica);
    `MobileFilterSheet` se mantiene intacto para móvil; `FilterFAB` y
    `FilterDrawer.jsx` se retiran (nada los usa ya: el FAB desaparece y
    ningún breakpoint necesita ya un panel oculto-por-defecto disparado
@@ -70,11 +61,8 @@ siguiente:
    beneficio aquí).
 2. Crear `src/pages/` (carpeta nueva) con un componente por ruta:
    - `HomePage.jsx` — contenido movido de `MainContent.jsx` (hero +
-     `SummaryStats`), **sin** sidebar. *(Enmienda tras bloque B:
-     `TopSkillsChart` se movió de aquí a `TopSkillsPage.jsx` — ver
-     abajo — `HomePage.jsx` se queda sin ninguna gráfica.)*
+     `SummaryStats`), sin ninguna gráfica y **sin** sidebar.
    - `TopSkillsPage.jsx` — `TopSkillsChart` + `DesktopFilterSidebar`.
-     *(Añadida tras bloque B, no en el plan original de este bloque.)*
    - `TrendsPage.jsx` — `DemandByRoleChart` + `DesktopFilterSidebar`.
    - `SalaryPage.jsx` — `SalaryChart` + `DesktopFilterSidebar`.
    - `MapPage.jsx` — `EuropeMap` + `DesktopFilterSidebar`.
@@ -88,8 +76,8 @@ siguiente:
    se mantiene todo lo demás igual (landing gate, `FilterFAB`/`Drawer`/
    `Sheet` **todavía presentes** en este bloque, se retiran/adaptan en
    el bloque D).
-5. Verificar: navegar manualmente entre las 5 rutas en `npm run dev`,
-   cada página muestra su gráfica, `npx vitest run` sigue en verde.
+5. Verificar: navegar manualmente entre las 6 rutas en `npm run dev`,
+   cada página muestra su contenido, `npx vitest run` sigue en verde.
 
 ### Bloque B — Code-splitting real
 
@@ -268,28 +256,25 @@ look), y `FilterDrawer.jsx` se borra una vez `DesktopFilterSidebar` cubre las
   cuántas veces se monta — cumple `AGENTS.md` ("no eliminar
   ThemeToggle").
 - **Mecánica fina del colapso de `DesktopFilterSidebar`** (ancho exacto,
-  posición del icono, curva de animación) — con margen para que el
-  usuario la ajuste; lo fijo a nivel funcional es "columna izquierda,
-  abierta por defecto, colapsable, sin overlay". El **estilo visual**
-  (color, borde, radios, tipografía) **sí se intenta en serio desde
-  ahora** — reutilizando los tokens Halo que `FilterDrawer.jsx`/
-  `FilterSection.jsx` ya usan (fase 004), en dark y light, en vez de
-  dejarlo sin estilizar a la espera de un diseño desde cero. Distinto
-  de "no te comas la cabeza con el sidebar" (mensaje anterior del
-  usuario) — aquello era sobre inventar una mecánica de interacción
-  nueva; esto es aplicar un sistema que ya existe y ya está aprobado.
-- **`ChartPageLayout` como wrapper compartido** — las 4 páginas de
+  posición del icono, curva de animación) — con margen para ajustarla
+  después; lo fijo a nivel funcional es "columna izquierda, abierta por
+  defecto, colapsable, sin overlay" — la mecánica concreta de
+  interacción queda abierta. El **estilo visual** (color, borde,
+  radios, tipografía) **sí se intenta en serio desde ahora** —
+  reutilizando los tokens Halo que `FilterDrawer.jsx`/`FilterSection.jsx`
+  ya usan (fase 004), en dark y light, en vez de dejarlo sin estilizar
+  a la espera de un diseño desde cero: es un sistema ya existente y ya
+  aprobado, no una mecánica de interacción nueva.
+- **`ChartPageLayout` como wrapper compartido** — las 5 páginas de
   gráfica repetirían el mismo grid `sidebar + contenido` si no se
   extrae; un componente compartido respeta "un componente, una
   responsabilidad" (`tech-stack.md`).
 - **`/` sin sidebar ni acceso a filtros propio en md+** — consecuencia
-  explícita y aceptada de "no habrá sidebar en la home". Tras la
-  enmienda del bloque B (`TopSkillsChart` → `/top-skills`), `/` no
-  tiene ninguna gráfica que filtrar, así que esto deja de ser una
-  limitación real: no hace falta sidebar donde no hay nada que
-  filtrar. En desktop/tablet el usuario ajusta filtros desde cualquier
-  página de gráfica (las 5, `filters` es estado compartido por encima
-  del router). En móvil esto no aplica — `BottomNav`/`MobileFilterSheet`
+  explícita y aceptada de "no habrá sidebar en la home". `/` no tiene
+  ninguna gráfica que filtrar, así que no hace falta sidebar ahí. En
+  desktop/tablet el usuario ajusta filtros desde cualquier página de
+  gráfica (las 5, `filters` es estado compartido por encima del
+  router). En móvil esto no aplica — `BottomNav`/`MobileFilterSheet`
   siguen disponibles en `/` igual que hoy, es un mecanismo global, no
   por página.
 - **Filtros no se sincronizan con la URL en esta feature** — se quedan
@@ -311,8 +296,7 @@ look), y `FilterDrawer.jsx` se borra una vez `DesktopFilterSidebar` cubre las
   documenta el tamaño real de cada chunk tras el bloque B en
   `016-tasks.md`, no se fija un umbral arbitrario de antemano.
 - **`BottomNav` con 7 elementos en pantallas muy estrechas** (6 rutas +
-  Filtros) — puede quedar apretado, más aún tras sumar "Top Skills" a
-  la corrección de este bloque; el ajuste fino de tamaños/iconos es
+  Filtros) — puede quedar apretado; el ajuste fino de tamaños/iconos es
   parte del diseño visual que hace el usuario aparte, no bloquea la
   funcionalidad.
 - **Tests E2E son los que más cambian** (interactúan hoy directamente

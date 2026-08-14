@@ -10,13 +10,9 @@ const TopSkillsChart = lazy(
 );
 
 // TopSkillsPage
-// Ruta "/top-skills" — skills más demandadas. Vivía en "/" en el
-// diseño original de esta feature; se movió aquí porque "/" no lleva
-// sidebar de filtros en tablet/desktop (decisión ya tomada, ver
-// 016-spec.md), así que se quedaba como la única gráfica sin ningún
-// control de filtro propio ahí. Con ruta propia recibe el mismo
-// tratamiento que el resto: `DesktopFilterSidebar` llega en el
-// bloque D.
+// Ruta "/top-skills" — skills más demandadas.
+// Sidebar de filtros (desktop/tablet) llega en el bloque D de la fase
+// 016 (`DesktopFilterSidebar`) — de momento solo la gráfica.
 function TopSkillsPage({ filters }) {
   return (
     <main className="w-full min-w-0 flex-1 pb-20 md:pb-0">

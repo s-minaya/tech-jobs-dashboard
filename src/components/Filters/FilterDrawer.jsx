@@ -11,6 +11,12 @@ import GlowButton from "@/components/ui/GlowButton";
 // Usa GlowButton con el mismo efecto aurora que el botón de la landing.
 // Muestra un badge con el número de filtros activos.
 // Cuando hay filtros activos, el anillo exterior pulsa para llamar la atención.
+//
+// z-40, misma esquina que la marca de Header — a propósito por encima:
+// FilterFAB es la única forma de abrir filtros en desktop hasta que
+// DesktopFilterSidebar lo sustituya (bloque D), así que tiene que
+// quedar clicable por delante de cualquier otro chrome que comparta esa
+// zona.
 function FilterFAB({ filters, onClick }) {
   const count = activeFilterCount(filters);
 

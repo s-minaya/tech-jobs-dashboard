@@ -1,12 +1,7 @@
 # 016 · Setup de rutas por gráfica + header de navegación
 
-**Estado:** en curso — implementación en progreso (bloques A y B
-completados). El bloque B incorporó una ruta nueva, `/top-skills`, tras
-feedback del usuario: `TopSkillsChart` sale de `/` y pasa a tener
-página propia con `DesktopFilterSidebar` (bloque D), igual que las
-demás gráficas — `/` se queda como portada sin ninguna gráfica (hero +
-KPIs). Este documento ya refleja las 6 rutas finales, no las 5
-originales.
+**Estado:** en curso — implementación en progreso (bloques A, B y C
+completados).
 
 > Primera feature de la **fase 3** del roadmap general (rediseño total
 > de la página para optimizar velocidad y experiencia de usuario). La
@@ -92,13 +87,11 @@ ya existe y no necesita cambios para cubrir este caso nuevo.
    - `/mapa` → `EuropeMap`
    - `/skills` → `SkillHeatmap`
 
-   `TopSkillsChart` vivía en `/` en el diseño original de esta feature;
-   se movió a su propia ruta porque `/` no lleva sidebar de filtros en
-   tablet/desktop (ver más abajo) — dejarla en `/` la habría dejado sin
-   ningún control de filtro propio ahí. Con ruta propia, participa del
-   mismo patrón que el resto de gráficas: `DesktopFilterSidebar` en
-   tablet/desktop (bloque D), filtros vía `BottomNav`/`MobileFilterSheet`
-   en móvil.
+   `TopSkillsChart` tiene ruta propia, no vive en `/`: `/` no lleva
+   sidebar de filtros en tablet/desktop (ver más abajo), así que
+   `TopSkillsChart` participa del mismo patrón que el resto de
+   gráficas — `DesktopFilterSidebar` en tablet/desktop (bloque D),
+   filtros vía `BottomNav`/`MobileFilterSheet` en móvil.
 
    La landing (`LandingPage.jsx`, congelada) se queda **fuera** del
    router, exactamente como hoy (gateada por `sessionStorage` en
@@ -159,9 +152,8 @@ aviso de build.
 - Cada grupo de gráficas = su propia ruta + su propio chunk `lazy`.
 - Las 6 rutas (`/`, `/top-skills`, `/tendencias`, `/salarios`, `/mapa`,
   `/skills`) cubren los mismos grupos de contenido que las 4 secciones
-  actuales, con `SalaryChart` separado de `DemandByRoleChart` y
-  `TopSkillsChart` separado de `/` en su propia ruta cada una. `/` se
-  queda como portada sin ninguna gráfica (hero + KPIs).
+  actuales, con `SalaryChart` y `TopSkillsChart` cada una en su propia
+  ruta. `/` se queda como portada sin ninguna gráfica (hero + KPIs).
 - La landing se queda fuera del árbol de rutas, exactamente como hoy.
 - **Móvil no lleva `Header` ni el sidebar nuevo** — `BottomNav`
   (adaptado, +Salarios) y `MobileFilterSheet` (intacto) siguen resolviendo
@@ -183,7 +175,7 @@ aviso de build.
   features posteriores de la fase 3, a definir después de cerrar esta.
 - El diseño pixel a pixel del `Header` y de `DesktopFilterSidebar` — esta
   feature fija su función (navegación por rutas, code-splitting,
-  prefetch en hover, filtros funcionando en las 4 páginas de gráfica),
+  prefetch en hover, filtros funcionando en las 5 páginas de gráfica),
   el detalle visual final lo hace el usuario aparte, dentro de Halo.
 - Sincronizar filtros con query params de la URL — se queda en
   `localStorage` como hoy; queda como candidato futuro, no bloqueante

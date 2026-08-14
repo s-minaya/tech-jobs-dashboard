@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
 import BottomNav from "@/components/layout/BottomNav";
 import { PERIODO_DEFAULT } from "@/lib/filterUtils";
@@ -13,42 +14,53 @@ const filtersNeutros = {
   skillCategoria: "Todas",
 };
 
-function renderNav(props = {}) {
+// BottomNav ya no recibe `activeSection` (fase 016, bloque C): ahora usa
+// <NavLink> real, que resuelve el ítem activo a partir de la URL. Los
+// tests controlan la "ruta activa" con `initialEntries` de MemoryRouter
+// en vez de una prop.
+function renderNav({ route = "/", ...props } = {}) {
   const onOpenFilters = vi.fn();
   render(
-    <BottomNav
-      activeSection="inicio"
-      onOpenFilters={onOpenFilters}
-      filters={filtersNeutros}
-      {...props}
-    />,
+    <MemoryRouter initialEntries={[route]}>
+      <BottomNav onOpenFilters={onOpenFilters} filters={filtersNeutros} {...props} />
+    </MemoryRouter>,
   );
   return { onOpenFilters };
 }
 
 describe("BottomNav", () => {
   describe("estructura", () => {
-    it("renderiza los 5 botones de navegación", () => {
+    it("renderiza los 7 botones de navegación", () => {
       renderNav();
       expect(screen.getByText("Inicio")).toBeInTheDocument();
       expect(screen.getByText("Tendencias")).toBeInTheDocument();
+      expect(screen.getByText("Salarios")).toBeInTheDocument();
       expect(screen.getByText("Mapa")).toBeInTheDocument();
       expect(screen.getByText("Skills")).toBeInTheDocument();
+      expect(screen.getByText("Top Skills")).toBeInTheDocument();
       expect(screen.getByText("Filtros")).toBeInTheDocument();
     });
   });
 
-  describe("sección activa", () => {
-    it("aplica aurora-text al label de la sección activa", () => {
-      renderNav({ activeSection: "tendencias" });
-      const label = screen.getByText("Tendencias");
-      expect(label).toHaveClass("aurora-text");
+  describe("ruta activa", () => {
+    it("aplica aurora-text al label de la ruta activa", () => {
+      renderNav({ route: "/tendencias" });
+      expect(screen.getByText("Tendencias")).toHaveClass("aurora-text");
     });
 
-    it("no aplica aurora-text a las secciones inactivas", () => {
-      renderNav({ activeSection: "inicio" });
+    it("no aplica aurora-text a las rutas inactivas", () => {
+      renderNav({ route: "/" });
       expect(screen.getByText("Tendencias")).not.toHaveClass("aurora-text");
       expect(screen.getByText("Mapa")).not.toHaveClass("aurora-text");
+    });
+
+    it('"Inicio" no queda activo en otra ruta (NavLink "end")', () => {
+      // Sin `end`, NavLink marcaría "/" como activo en cualquier ruta,
+      // porque por defecto compara con startsWith y todo path empieza
+      // por "/" — regresión fácil de reintroducir sin darse cuenta.
+      renderNav({ route: "/mapa" });
+      expect(screen.getByText("Inicio")).not.toHaveClass("aurora-text");
+      expect(screen.getByText("Mapa")).toHaveClass("aurora-text");
     });
   });
 
@@ -74,35 +86,35 @@ describe("BottomNav", () => {
       renderNav({ filters: { ...filtersNeutros, pais: "FR" } });
       expect(screen.getByText("1")).toBeInTheDocument();
     });
+
+    it("Filtros es un botón, no un enlace de ruta", () => {
+      renderNav();
+      expect(screen.getByText("Filtros").closest("button")).toBeInTheDocument();
+      expect(screen.getByText("Filtros").closest("a")).not.toBeInTheDocument();
+    });
   });
 
-  describe("navegación por scroll", () => {
-    it("llama a scrollIntoView al pulsar una sección", async () => {
-      const user = userEvent.setup();
-      const mockEl = { scrollIntoView: vi.fn() };
-      vi.spyOn(document, "getElementById").mockReturnValue(mockEl);
-
+  describe("navegación por ruta (NavLink)", () => {
+    it("cada ítem de ruta enlaza a su URL correspondiente", () => {
       renderNav();
-      await user.click(screen.getByText("Mapa"));
-
-      expect(document.getElementById).toHaveBeenCalledWith("mapa");
-      expect(mockEl.scrollIntoView).toHaveBeenCalledWith({
-        behavior: "smooth",
-        block: "start",
-      });
-
-      vi.restoreAllMocks();
-    });
-
-    it("no llama a scrollIntoView al pulsar Filtros", async () => {
-      const user = userEvent.setup();
-      const spy = vi.spyOn(document, "getElementById");
-
-      renderNav();
-      await user.click(screen.getByText("Filtros"));
-
-      expect(spy).not.toHaveBeenCalled();
-      vi.restoreAllMocks();
+      expect(screen.getByText("Inicio").closest("a")).toHaveAttribute("href", "/");
+      expect(screen.getByText("Tendencias").closest("a")).toHaveAttribute(
+        "href",
+        "/tendencias",
+      );
+      expect(screen.getByText("Salarios").closest("a")).toHaveAttribute(
+        "href",
+        "/salarios",
+      );
+      expect(screen.getByText("Mapa").closest("a")).toHaveAttribute("href", "/mapa");
+      expect(screen.getByText("Skills").closest("a")).toHaveAttribute(
+        "href",
+        "/skills",
+      );
+      expect(screen.getByText("Top Skills").closest("a")).toHaveAttribute(
+        "href",
+        "/top-skills",
+      );
     });
   });
 });
