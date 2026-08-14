@@ -55,12 +55,9 @@ describe("Header", () => {
       expect(screen.getByText("Inicio")).not.toHaveClass("aurora-text");
     });
 
-    it("la marca enlaza a \"/\"", () => {
-      renderHeader({ route: "/salarios" });
-      expect(screen.getByText(/tech jobs/i).closest("a")).toHaveAttribute(
-        "href",
-        "/",
-      );
+    it("no muestra ningún texto de marca (los enlaces flotan solos sobre el fondo)", () => {
+      renderHeader();
+      expect(screen.queryByText(/tech jobs/i)).not.toBeInTheDocument();
     });
   });
 

@@ -48,7 +48,7 @@
   --color-background: var(--color-background);
   /* radios: bridge directo a los tokens Halo definidos abajo — nada de calc().
      2xl/3xl/4xl no están en la escala Halo: se dejan caer a los valores por
-     defecto de Tailwind (afecta solo a rounded-t-2xl del FilterSheet, un
+     defecto de Tailwind (afecta solo a rounded-t-2xl del MobileFilterSheet, un
      cambio de 18px→16px imperceptible). */
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);

@@ -12,10 +12,17 @@ const linkActive = "border-primary/30 bg-primary/10";
 
 // Header
 // Barra superior de navegación, solo visible en tablet/desktop
-// (hidden md:flex — en móvil la navegación es BottomNav). `sticky
-// top-0` en vez de `fixed`: al ser flujo normal, el navegador reserva
-// su espacio solo, sin tener que añadir padding-top a cada página como
-// sí hace falta con el `fixed bottom-0` de BottomNav.
+// (hidden md:flex — en móvil la navegación es BottomNav). Sin fondo
+// propio, a propósito: los enlaces flotan directamente sobre lo que
+// haya detrás (el fondo animado del hero en "/", el fondo normal de la
+// página en el resto de rutas) — sigue siendo semánticamente un
+// <header>, pero no se comporta como una barra opaca.
+//
+// `sticky top-0` en vez de `fixed`: al ser flujo normal, el navegador
+// reserva su espacio solo, sin tener que añadir padding-top a cada
+// página como sí hace falta con el `fixed bottom-0` de BottomNav.
+// `sticky` también sirve de referencia de posición para el
+// `ThemeToggle` (`absolute` dentro de este `header`).
 //
 // Reutiliza `ROUTE_ITEMS` de `src/config/navigation.js`, la misma
 // fuente que usa `BottomNav` — un solo sitio donde añadir/quitar una
@@ -27,16 +34,8 @@ const linkActive = "border-primary/30 bg-primary/10";
 // dentro de cada página de gráfica, no en este chrome global.
 function Header({ isDark, toggleTheme }) {
   return (
-    <header className="sticky top-0 z-40 hidden border-b border-border bg-elevated/95 backdrop-blur-md md:flex md:items-center md:justify-between md:gap-6 md:px-8 md:py-3">
-      <NavLink
-        to="/"
-        end
-        className="shrink-0 font-heading text-base font-bold tracking-tight text-foreground"
-      >
-        Tech Jobs <span className="text-primary">Dashboard</span>
-      </NavLink>
-
-      <nav className="flex flex-1 items-center justify-center gap-1">
+    <header className="sticky top-0 z-40 hidden md:flex md:items-center md:justify-center md:px-8 md:py-3">
+      <nav className="flex items-center gap-1">
         {ROUTE_ITEMS.map((item) => (
           <NavLink
             key={item.path}
@@ -63,7 +62,7 @@ function Header({ isDark, toggleTheme }) {
         ))}
       </nav>
 
-      <div className="shrink-0">
+      <div className="absolute top-1/2 right-8 -translate-y-1/2">
         <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
       </div>
     </header>

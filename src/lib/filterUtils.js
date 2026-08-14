@@ -153,7 +153,7 @@ const NEUTRAL_FILTERS = {
 
 // activeFilterCount
 // Cuenta cuántos filtros están en un valor distinto al neutro.
-// Usado por los badges del FAB, el FilterDrawer y el BottomNav para
+// Usado por los badges de DesktopFilterSidebar y BottomNav para
 // mostrar cuántos filtros tiene activos el usuario.
 export function activeFilterCount(filters) {
   if (!filters) return 0;

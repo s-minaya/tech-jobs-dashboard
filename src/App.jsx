@@ -11,8 +11,7 @@ import MapPage from "@/pages/MapPage";
 import SkillsPage from "@/pages/SkillsPage";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
-import FilterSheet from "@/components/Filters/FilterSheet";
-import FilterDrawer, { FilterFAB } from "@/components/Filters/FilterDrawer";
+import MobileFilterSheet from "@/components/Filters/MobileFilterSheet";
 import LandingPage from "@/components/landing/LandingPage";
 import PageLoader from "@/components/ui/PageLoader";
 import ThemeToggle from "@/components/ui/ThemeToggle";
@@ -39,8 +38,8 @@ const MAX_LOADER_MS = 10000;
 // de filtros/navegación según el tamaño de pantalla. La ruta activa la
 // resuelve `NavLink` a partir de la URL, sin estado propio para eso:
 //
-//   Móvil (<768px):   BottomNav + FilterSheet (bottom sheet desde abajo) + ThemeToggle flotante
-//   Tablet/Desktop (≥768px): Header (arriba) + FilterFAB flotante + FilterDrawer (desde la izquierda)
+//   Móvil (<768px):   BottomNav + MobileFilterSheet (bottom sheet desde abajo) + ThemeToggle flotante
+//   Tablet/Desktop (≥768px): Header (arriba) + DesktopFilterSidebar (dentro de cada página de gráfica)
 //
 //
 // La LandingPage bloquea el acceso al dashboard hasta que el usuario
@@ -58,11 +57,18 @@ function App() {
   const [showLanding, setShowLanding] = useState(
     () => sessionStorage.getItem("landed") !== "1",
   );
-  // isLoading: true durante la transición landing → dashboard.
-  // Se activa al pulsar Comenzar y se desactiva cuando el dashboard
-  // está montado y listo — evita mostrar el dashboard a medio renderizar.
-  const [isLoading, setIsLoading] = useState(false);
-  // true una vez transcurrido MIN_LOADER_MS desde que isLoading se activó.
+  // transitioning: true durante la transición landing → dashboard, desde
+  // que se pulsa "Comenzar" hasta que el temporizador techo (MAX_LOADER_MS)
+  // lo apaga como red de seguridad. `isLoading` (más abajo) es la
+  // condición real para mostrar el loader — se deriva de este flag +
+  // minElapsed + statsLoading en cada render, no se sincroniza aparte
+  // con un efecto: antes había un segundo useEffect que llamaba
+  // setIsLoading(false) al cumplirse esas condiciones (detectado por
+  // eslint como "setState síncrono dentro de un efecto", con el coste
+  // real de forzar un render extra en cada actualización) — innecesario
+  // aquí porque isLoading siempre pudo calcularse en el propio render.
+  const [transitioning, setTransitioning] = useState(false);
+  // true una vez transcurrido MIN_LOADER_MS desde que empezó la transición.
   const [minElapsed, setMinElapsed] = useState(false);
 
   // useSummaryStats aquí también (fase 014): gracias a la deduplicación
@@ -72,9 +78,14 @@ function App() {
   // ocultar el loader de transición.
   const { loading: statsLoading } = useSummaryStats();
 
+  // Se oculta en cuanto se cumplen las dos condiciones: pasó el mínimo Y
+  // los datos reales ya están listos (o transitioning se apagó por el
+  // techo de seguridad).
+  const isLoading = transitioning && !(minElapsed && !statsLoading);
+
   function handleEnter() {
     sessionStorage.setItem("landed", "1");
-    setIsLoading(true);
+    setTransitioning(true);
     setMinElapsed(false);
     // Damos un frame para que el loader se pinte antes de montar el dashboard
     requestAnimationFrame(() => setShowLanding(false));
@@ -85,20 +96,14 @@ function App() {
   // tarda de verdad). No dependen de statsLoading — si dependieran,
   // cada cambio de statsLoading los reiniciaría.
   useEffect(() => {
-    if (!isLoading) return;
+    if (!transitioning) return;
     const minTimer = setTimeout(() => setMinElapsed(true), MIN_LOADER_MS);
-    const maxTimer = setTimeout(() => setIsLoading(false), MAX_LOADER_MS);
+    const maxTimer = setTimeout(() => setTransitioning(false), MAX_LOADER_MS);
     return () => {
       clearTimeout(minTimer);
       clearTimeout(maxTimer);
     };
-  }, [isLoading]);
-
-  // Oculta el loader en cuanto se cumplen las dos condiciones: pasó el
-  // mínimo Y los datos reales ya están listos.
-  useEffect(() => {
-    if (isLoading && minElapsed && !statsLoading) setIsLoading(false);
-  }, [isLoading, minElapsed, statsLoading]);
+  }, [transitioning]);
 
   return (
     // bg-white en light, bg-black en dark — fondo base de toda la página.
@@ -127,40 +132,63 @@ function App() {
               <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
             </div>
 
-            {/* FAB de filtros — visible solo en md+, oculto en móvil */}
-            <FilterFAB filters={filters} onClick={() => setFiltersOpen(true)} />
-
-            {/* Drawer de filtros — tablet y desktop */}
-            <FilterDrawer
-              isOpen={filtersOpen}
-              onClose={() => setFiltersOpen(false)}
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              onReset={resetFilters}
-            />
-
             {/* Rutas del dashboard — cada gráfica vive en su propia
                 página, con code-splitting por ruta (`React.lazy` +
-                `Suspense`). Sidebar de filtros en las 5 páginas de
-                gráfica todavía pendiente (bloque D). */}
+                `Suspense`). Las 5 páginas de gráfica reciben también
+                onFilterChange/onReset para su propio
+                DesktopFilterSidebar (md+, vive dentro de cada página
+                vía ChartPageLayout, no aquí). */}
             <Routes>
               <Route path="/" element={<HomePage isDark={isDark} />} />
               <Route
                 path="/top-skills"
-                element={<TopSkillsPage filters={filters} />}
+                element={
+                  <TopSkillsPage
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    onReset={resetFilters}
+                  />
+                }
               />
               <Route
                 path="/tendencias"
-                element={<TrendsPage filters={filters} />}
+                element={
+                  <TrendsPage
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    onReset={resetFilters}
+                  />
+                }
               />
               <Route
                 path="/salarios"
-                element={<SalaryPage filters={filters} />}
+                element={
+                  <SalaryPage
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    onReset={resetFilters}
+                  />
+                }
               />
-              <Route path="/mapa" element={<MapPage filters={filters} />} />
+              <Route
+                path="/mapa"
+                element={
+                  <MapPage
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    onReset={resetFilters}
+                  />
+                }
+              />
               <Route
                 path="/skills"
-                element={<SkillsPage filters={filters} />}
+                element={
+                  <SkillsPage
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    onReset={resetFilters}
+                  />
+                }
               />
             </Routes>
 
@@ -173,7 +201,7 @@ function App() {
             />
 
             {/* Panel de filtros móvil: bottom sheet desde abajo */}
-            <FilterSheet
+            <MobileFilterSheet
               isOpen={filtersOpen}
               onClose={() => setFiltersOpen(false)}
               filters={filters}

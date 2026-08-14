@@ -4,7 +4,7 @@ import { FILTERS } from "@/config/filters";
 import { RiCloseLine } from "react-icons/ri";
 import GlowButton from "@/components/ui/GlowButton";
 
-// FilterSheet
+// MobileFilterSheet
 // Panel de filtros móvil que se desliza desde la parte inferior.
 // Solo visible en móvil (md:hidden en el overlay y el panel).
 //
@@ -21,7 +21,7 @@ import GlowButton from "@/components/ui/GlowButton";
 //   - Durante el drag se registra un touchmove en document con passive:false
 //     para poder llamar preventDefault() y evitar el scroll de página
 //   - Sin blur en el overlay durante el drag para ver las gráficas de fondo
-function FilterSheet({ isOpen, onClose, filters, onFilterChange, onReset }) {
+function MobileFilterSheet({ isOpen, onClose, filters, onFilterChange, onReset }) {
   const panelRef = useRef(null);
   const handleRef = useRef(null);
   const dragState = useRef(null);
@@ -294,4 +294,4 @@ function FilterSheet({ isOpen, onClose, filters, onFilterChange, onReset }) {
   );
 }
 
-export default FilterSheet;
+export default MobileFilterSheet;

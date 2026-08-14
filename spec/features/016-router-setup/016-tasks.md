@@ -146,39 +146,66 @@
 > `FilterDrawer.jsx` — reutiliza su contenido pequeño (`FilterSection`
 > + cabecera) como referencia visual, no su mecánica de overlay/FAB,
 > que ya no aplica a nada. Ver razonamiento completo en `016-plan.md`
-> bloque D. `MobileFilterSheet.jsx` (móvil) no se toca.
+> bloque D.
 
-- [ ] Crear `src/components/Filters/DesktopFilterSidebar.jsx` (reutiliza
+- [x] `src/components/Filters/FilterSheet.jsx` renombrado a
+      `MobileFilterSheet.jsx` (función + import en `App.jsx`) — empareja
+      con `DesktopFilterSidebar.jsx`, cero cambio de comportamiento.
+- [x] Crear `src/components/Filters/DesktopFilterSidebar.jsx` (reutiliza
       `FilterSection.jsx`; props `filters`, `onFilterChange`,
-      `onReset`).
-- [ ] Comportamiento: columna izquierda, **abierta por defecto**,
-      colapsable con un icono, sin overlay/backdrop — mecánica exacta
-      del colapso con margen de ajuste posterior.
-- [ ] Estilo con tokens Halo ya existentes (`bg-elevated`,
-      `border-border`, `--radius-*`, mismos `FilterChip`/
-      `FilterToggleRow` de `FilterSection.jsx`) — mismo lenguaje visual
-      que `FilterDrawer.jsx`/`FilterSheet.jsx` desde la fase 004, en
-      dark y light. Intento real de acabado, no un placeholder sin
-      estilizar.
-- [ ] Crear `src/components/layout/ChartPageLayout.jsx` si conviene
-      (grid `sidebar + contenido` compartido por las 5 páginas).
-- [ ] `TopSkillsPage.jsx`/`TrendsPage.jsx`/`SalaryPage.jsx`/`MapPage.jsx`/
-      `SkillsPage.jsx`: envolver su gráfica en `ChartPageLayout` (o
-      directamente) con `DesktopFilterSidebar`.
-- [ ] `App.jsx`: eliminar `FilterFAB`, `FilterDrawer` y su montaje
-      global; `MobileFilterSheet` se queda exactamente como está (mismo
-      `filtersOpen`/`onOpenFilters` que ya usa `BottomNav`).
-- [ ] Eliminar `src/components/Filters/FilterDrawer.jsx` (incluye el
-      export `FilterFAB`).
-- [ ] Verificación manual: en cada una de las 5 páginas de gráfica,
-      cambiar un filtro dispara una única petición nueva, persiste en
-      `localStorage` y se refleja en las demás páginas al navegar entre
-      ellas — probar tanto desde `DesktopFilterSidebar` (desktop) como
-      desde `MobileFilterSheet` (móvil). (`/` ya no tiene gráfica que
-      refleje el filtro, solo KPIs globales — no aplica aquí.)
-- [ ] `npx vitest run` en verde (`DesktopFilterSidebar.test.jsx` nuevo;
-      `FilterDrawer.test.jsx` se retira con el componente;
-      `FilterSection.test.jsx` sin cambios).
+      `onReset`). Estado de colapso local (`useState`), sin `position:
+      sticky` (evita competir con el `sticky top-0` de `Header`, que no
+      tiene altura fija medible).
+- [x] Comportamiento: columna izquierda, **abierta por defecto**,
+      colapsable con un icono (`w-72` expandido / `w-16` colapsado,
+      `RiMenuFoldLine`/`RiMenuUnfoldLine`, `aria-expanded`/`aria-label`),
+      sin overlay/backdrop. El botón "Ver resultados" de `FilterDrawer.jsx`
+      no se traslada — existía para cerrar un panel que tapaba
+      contenido; este sidebar nunca tapa nada.
+- [x] Estilo con tokens Halo ya existentes (`bg-elevated`,
+      `border-border`, mismos `FilterChip`/`FilterToggleRow` de
+      `FilterSection.jsx`) — mismo lenguaje visual que tenía
+      `FilterDrawer.jsx` desde la fase 004, en dark y light. Verificado
+      visualmente en ambos temas (capturas revisadas).
+- [x] Crear `src/components/layout/ChartPageLayout.jsx` — grid `sidebar
+      + contenido` compartido por las 5 páginas.
+- [x] `TopSkillsPage.jsx`/`TrendsPage.jsx`/`SalaryPage.jsx`/`MapPage.jsx`/
+      `SkillsPage.jsx`: envueltas en `ChartPageLayout` con
+      `DesktopFilterSidebar`; ganan las props `onFilterChange`/`onReset`.
+- [x] `App.jsx`: eliminado el import y el montaje de `FilterFAB`/
+      `FilterDrawer`; las 5 rutas de gráfica pasan también
+      `onFilterChange`/`onReset`. `MobileFilterSheet` se queda igual
+      (mismo `filtersOpen`/`onOpenFilters` que ya usa `BottomNav`).
+- [x] Eliminado `src/components/Filters/FilterDrawer.jsx` (incluye el
+      export `FilterFAB`) y su test — verificado sin huérfanos
+      (`grep -rn "FilterDrawer\|FilterFAB" src/` → cero resultados fuera
+      de comentarios explicativos en `DesktopFilterSidebar.jsx`).
+- [x] Corregido de paso: `useEffect` en `App.jsx` que llamaba
+      `setIsLoading(false)` de forma síncrona al cumplirse
+      `minElapsed && !statsLoading` (patrón detectado por
+      `react-hooks/set-state-in-effect`, forzaba un render extra en
+      cada actualización). `isLoading` pasa a ser un valor derivado
+      (`transitioning && !(minElapsed && !statsLoading)`) calculado en
+      cada render en vez de sincronizado con un segundo efecto — mismo
+      comportamiento (verificado con Playwright real: el loader aparece
+      y desaparece sin quedarse atascado, cero errores de consola), un
+      render menos por transición.
+- [x] Verificación manual: en cada una de las 5 páginas de gráfica,
+      cambiar un filtro dispara una única petición nueva y persiste en
+      `localStorage` — verificado con Playwright real (`/tendencias`,
+      clic en "Alemania": exactamente 1 petición nueva a
+      `/api/jobs/demand-by-role`, `localStorage.dashboard_filters.pais`
+      = `"DE"`). Colapsar/expandir verificado en las 5 páginas. `/`
+      confirmado sin ningún `<aside>` en el DOM. En móvil, `<aside>`
+      sigue en el DOM pero oculto (`hidden md:flex`, mismo patrón que
+      el resto del chrome) — `MobileFilterSheet` sigue abriéndose desde
+      `BottomNav` exactamente igual.
+- [x] `npx vitest run` en verde — 401/401, 30/30 archivos
+      (`DesktopFilterSidebar.test.jsx` y `ChartPageLayout.test.jsx`
+      nuevos; `FilterDrawer.test.jsx` retirado con el componente;
+      `FilterSection.test.jsx` sin cambios). `npm run build`/`npm run
+      lint` sin avisos ni errores nuevos (el fix del `useEffect` bajó el
+      total de 23 a 22 errores preexistentes).
 
 ## Bloque E — Limpieza, extras opcionales, tests, documentación
 
