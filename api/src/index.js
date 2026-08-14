@@ -181,7 +181,9 @@ app.get("/api/jobs/demand-by-role", async (req, res) => {
 
 // GET /api/salary/by-role-country
 // Salario mediano por rol y país.
-// Excluye salary_mid < 1000 (datos corruptos del pipeline).
+// Excluye salary_mid < 1000 y el cluster de outliers del extremo alto
+// (ver salaryQualityConditions en salaryQuery.js) — datos corruptos del
+// pipeline en ambos casos.
 //
 // Una sola query en vez de dos (antes: Promise.all con la agregación +
 // un COUNT(DISTINCT j.id) aparte, mismo WHERE, dos escaneos de `jobs`

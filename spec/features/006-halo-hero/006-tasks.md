@@ -46,10 +46,10 @@
 - [x] `npm run build` — sin errores.
 - [x] La landing no ha sido modificada.
 
-## Hallazgos fuera de alcance (reportados por el usuario, investigados solo lectura)
+## Hallazgos fuera de alcance (investigados solo lectura)
 
-Durante la verificación se investigaron dos problemas reportados por el
-usuario, no relacionados con esta feature:
+Durante la verificación se investigaron dos problemas reportados, no
+relacionados con esta feature:
 
 1. **Título de "Top Skills más demandadas" reportado como desaparecido.**
    No se pudo reproducir: en dark y light mode el título se renderiza
@@ -67,9 +67,9 @@ usuario, no relacionados con esta feature:
    `PERCENTILE_CONT` (agregado ordenado) con `GROUP BY` sobre `country_code,
    role_category` en la tabla `jobs` — muy probablemente le falta un índice
    de soporte. Es un problema de rendimiento de base de datos, dentro de
-   `api/` (zona congelada, responsabilidad de otra persona) — **no se ha
-   tocado ningún archivo de `api/`**. Reportado al usuario para que decida
-   si se investiga como una fase/tarea aparte.
+   `api/` (zona congelada en ese momento) — **no se ha tocado ningún
+   archivo de `api/`**. Documentado como candidato a fase/tarea aparte —
+   retomado y resuelto en la fase 010.
 
 ## Cierre
 
@@ -77,5 +77,5 @@ usuario, no relacionados con esta feature:
   contraste — no hizo falta ningún ajuste.
 - [x] Validar contra todos los criterios de aceptación de `spec.md`.
 - [x] Mover la feature a "Hecho" en `spec/constitution/roadmap.md`.
-- [x] Commit (solo tras confirmación del usuario):
+- [x] Commit (solo tras confirmación explícita):
   `refactor: replace hardcoded hero colors with Halo tokens`

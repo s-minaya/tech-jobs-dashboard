@@ -118,15 +118,16 @@
     `avg_salary_eur`).
 - [ ] Aplicar `idx_jobs_salary_by_role_country` manualmente (ver
   `010-apply-index.sql`) y comparar tiempo de respuesta antes/después —
-  pendiente de que el usuario lo ejecute en el SQL editor de Supabase, o
-  de una futura sesión con la BD más disponible.
+  pendiente de ejecución manual en el SQL editor de Supabase, o de una
+  futura sesión con la BD más disponible. **Aplicado con éxito en la
+  fase 015.**
 
 ## ⚠️ Caché temporal de desarrollo — RECORDAR QUITAR
 
-No es parte de la auditoría de `SalaryChart` — se añadió a petición del
-usuario porque la BD real estuvo fallando/tardando 15-120s+ de forma
-consistente durante la verificación de esta feature, dificultando seguir
-trabajando. Ver `010-spec.md` (sección "⚠️ Añadido temporal") y
+No es parte de la auditoría de `SalaryChart` — se añadió porque la BD
+real estuvo fallando/tardando 15-120s+ de forma consistente durante la
+verificación de esta feature, dificultando seguir trabajando. Ver
+`010-spec.md` (sección "⚠️ Añadido temporal") y
 `010-plan.md` (punto 12) para el detalle completo.
 
 - [x] `api/src/devCache.js` (nuevo): middleware que cachea en disco
@@ -154,7 +155,7 @@ trabajando. Ver `010-spec.md` (sección "⚠️ Añadido temporal") y
   curso 🔜", backlog renumerado.
 - [x] `AGENTS.md` actualizado — `api/` fuera de "Zonas congeladas",
   `.env.local` como única excepción permanente.
-- [ ] Commit (solo tras confirmación explícita del usuario):
+- [ ] Commit (solo tras confirmación explícita):
   `feat: audit and fix SalaryChart data quality, UX, and query performance`
 
 ### Validación contra `010-spec.md`

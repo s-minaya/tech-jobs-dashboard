@@ -19,7 +19,11 @@ PostgreSQL real (Supabase).
 
 ## Flujo de trabajo obligatorio
 
-1. Leer `spec/constitution/mission.md` y `spec/constitution/tech-stack.md`.
+1. Leer `spec/constitution/mission.md`, `spec/constitution/tech-stack.md`
+   y `spec/constitution/business-logic.md` (semántica de negocio: qué
+   significa `is_active`, ventanas de fecha, reglas de salario, qué
+   filtro ignora cada endpoint y por qué — imprescindible antes de tocar
+   cualquier query o componente que dependa de datos reales).
 2. Leer el `spec.md`, `plan.md` y `tasks.md` de la feature activa.
 3. Implementar **solo** las tareas de la feature activa, en el orden del `tasks.md`.
 4. Confirmar cada tarea con el usuario antes de pasar a la siguiente.

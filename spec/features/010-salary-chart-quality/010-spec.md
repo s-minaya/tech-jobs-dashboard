@@ -6,9 +6,9 @@
 > autocomplete de skills). Tampoco es parte del rediseño Halo.
 >
 > **Cambio de proceso**: a partir de esta feature, `api/` deja de ser
-> zona congelada — el usuario dio acceso completo para leer y editar el
-> backend. La única excepción permanente que queda es `.env.local`
-> (nunca leerlo, ni siquiera para depurar). Ver `AGENTS.md`.
+> zona congelada — acceso completo para leer y editar el backend. La
+> única excepción permanente que queda es `.env.local` (nunca leerlo, ni
+> siquiera para depurar). Ver `AGENTS.md`.
 
 ## Qué hace
 
@@ -72,11 +72,11 @@ reenvía `signal` — ver `010-plan.md`), `api/src/index.js`,
 
 ## Por qué
 
-El usuario pidió una auditoría exhaustiva de esta gráfica concreta tras
-detectar en devtools el timeout ya documentado en la fase 006. La
-auditoría (ver `010-plan.md` para el detalle con datos reales de hoy)
-encontró problemas de lógica, datos descartados sin razón, UX y
-rendimiento que van más allá del índice ya sugerido.
+Auditoría exhaustiva de esta gráfica tras detectar en devtools el
+timeout ya documentado en la fase 006. La auditoría (ver `010-plan.md`
+para el detalle con datos reales) encontró problemas de lógica, datos
+descartados sin razón, UX y rendimiento que van más allá del índice ya
+sugerido.
 
 **Datos reales que confirman los hallazgos** (periodo=90d, hoy):
 - Los "5 roles por defecto" del gráfico en Austria (primer país
@@ -165,8 +165,8 @@ infraestructura de desarrollo, no comportamiento del producto.
 - **`DemandByRoleChart.jsx`** — mismo patrón roto de "5 roles por
   defecto" (`ORDER BY month ASC` sin relación con demanda real, pese a
   que su propio texto dice "los 5 roles más demandados"). Detectado
-  durante esta auditoría pero el usuario pidió ir "tabla por tabla" — se
-  abordará en su propia ronda futura.
+  durante esta auditoría — la metodología es "tabla por tabla", así que
+  se aborda en su propia ronda futura (fase 011).
 - **`useHeatmapData.js`** — mismo problema de falta de `AbortController`
   que tenía `useChartData`, pero es un hook independiente sin overlap con
   esta feature.

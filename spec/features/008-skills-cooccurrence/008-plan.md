@@ -7,8 +7,8 @@ Dos partes independientes pero relacionadas, en orden: primero el backend
 realidad), luego el frontend.
 
 La Parte 1 (backend) ya se implementó y se verificó contra el servidor
-real (`localhost:3000`, backend del propio usuario) durante la
-investigación previa a escribir esta spec — se documenta aquí igualmente
+real (`localhost:3000`) durante la investigación previa a escribir esta
+spec — se documenta aquí igualmente
 para que quede trazada en `tasks.md` como el resto de fases. La Parte 2
 (frontend) se diseñó y se validó con un script de reproducción contra
 datos reales ya descargados, pero el código de producción aún no se ha
@@ -172,8 +172,8 @@ datos/DevOps (para que se lean como el caso real reportado):
   reales del backend ya corregido (ver sección Riesgos/Verificación):
   elimina exactamente las filas de conexión residual (1/9, 1/14 celdas)
   y conserva las que tienen conectividad real (2/14, 3/9 celdas).
-  Incremento mínimo desde el "≥1" actual — si tras usarlo el usuario
-  sigue viendo filas que no tienen sentido, subir a `minDegree=3` es un
+  Incremento mínimo desde el "≥1" actual — si en uso real siguen
+  apareciendo filas que no tienen sentido, subir a `minDegree=3` es un
   cambio de un solo número gracias a la firma con opciones.
 - **`SMALL_SET_THRESHOLD = 4`** — con `n` candidatas el grado máximo
   posible es `n-1`. Con `n≤4`, exigir `minDegree=2` sería exigir conectar

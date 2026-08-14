@@ -82,11 +82,11 @@
 - [x] `npm run build` — sin errores.
 - [x] La landing no ha sido modificada.
 
-## Revisión post-implementación (feedback directo del usuario)
+## Revisión post-implementación
 
-Tras completar lo de arriba, el usuario pidió sustituir el accent bar de
-signal color plano (2px, un color por KPI) por el degradado aurora animado
-de `GlowButton`, más grueso y recortado a las esquinas redondeadas. Ver
+Ajuste sobre lo de arriba: el accent bar de signal color plano (2px, un
+color por KPI) se sustituye por el degradado aurora animado de
+`GlowButton`, más grueso y recortado a las esquinas redondeadas. Ver
 `003-spec.md` y `003-plan.md` (sección "Decisiones") para el detalle.
 
 - [x] CSS: `.stat-tile` pierde `border-top` de color sólido; pasa a
@@ -108,5 +108,5 @@ de `GlowButton`, más grueso y recortado a las esquinas redondeadas. Ver
 
 - [x] Validar contra todos los criterios de aceptación de `spec.md`.
 - [x] Mover la feature a "Hecho" en `spec/constitution/roadmap.md`.
-- [ ] Commit (solo tras confirmación del usuario):
+- [ ] Commit (solo tras confirmación explícita):
   `refactor: replace KPI cards with Halo stat tiles and animated aurora accent bar`

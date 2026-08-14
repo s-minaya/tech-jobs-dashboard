@@ -172,6 +172,21 @@ function SalaryChart({ filters }) {
       ? `Mostrando solo contratos "${(CONTRATO_LABELS[filters.contrato] ?? filters.contrato).toLowerCase()}". Los salarios varían entre contrato permanente y temporal.`
       : null;
 
+  // notaJornada (fase 015): jornada SÍ se aplica como filtro real aquí
+  // (a diferencia de otras gráficas, donde se ignora deliberadamente —
+  // ver FILTROS_IGNORADOS en TopSkillsChart/SkillHeatmap), pero antes no
+  // tenía ninguna nota explicativa, a diferencia de notaContrato. Sin
+  // ella, un usuario podría leer "part time paga menos" como que el rol
+  // está peor pagado, cuando en realidad es la jornada reducida.
+  // Verificado con datos reales (fase 015): mediana part_time = 25.002€
+  // vs. full_time = 50.000€ — casi exactamente la mitad, así que el
+  // salario SÍ viene pro-rateado a la jornada real, no es el mismo
+  // salario anual completo mal etiquetado.
+  const notaJornada =
+    filters.jornada !== "Todos"
+      ? "Los salarios de jornada parcial son proporcionalmente menores que los de jornada completa — no significa que el rol esté peor pagado."
+      : null;
+
   return (
     <ChartCard
       title="Salario mediano anual por rol y país"
@@ -189,6 +204,7 @@ function SalaryChart({ filters }) {
         nota={[
           "Por defecto se muestran los 5 roles con más ofertas (sumando todos los países).",
           notaContrato,
+          notaJornada,
         ]
           .filter(Boolean)
           .join(" ")}

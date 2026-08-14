@@ -188,6 +188,34 @@ describe("SalaryChart", () => {
     });
   });
 
+  describe("nota de jornada", () => {
+    // Fase 015: antes no existía ninguna nota cuando el filtro de jornada
+    // estaba activo, a diferencia de "nota de contrato" arriba. Verificado
+    // con datos reales que el salario SÍ viene pro-rateado a la jornada
+    // (mediana part_time ≈ mitad de full_time), así que la nota es
+    // necesaria para no leer "paga menos" como "peor pagado".
+    it("con el filtro de jornada activo, avisa de que no es comparable directamente", async () => {
+      render(
+        <SalaryChart filters={{ ...filtersNeutros, jornada: "Part time" }} />,
+      );
+      await waitFor(() => {
+        expect(
+          screen.getByText(/proporcionalmente menores/i),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("con jornada en su valor neutro, no aparece ninguna nota de jornada", async () => {
+      render(<SalaryChart filters={filtersNeutros} />);
+      await waitFor(() => {
+        expect(screen.getByText("Todos")).toBeInTheDocument();
+      });
+      expect(
+        screen.queryByText(/proporcionalmente menores/i),
+      ).not.toBeInTheDocument();
+    });
+  });
+
   describe("selección de roles por defecto", () => {
     it("los roles disponibles (allRoles) vienen ordenados por volumen, no por orden de llegada — cubierto a fondo en roleLabels.test.js (rankRolesByVolume); aquí solo se comprueba la integración", async () => {
       render(<SalaryChart filters={filtersNeutros} />);

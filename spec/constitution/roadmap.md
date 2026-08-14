@@ -6,340 +6,156 @@ _(anterior al rediseño Halo)_
 
 1. **000 · Dashboard v1** — visualizaciones dinámicas completas, filtros, persistencia localStorage, tests unitarios, E2E y CI.
 
-2. **001 · Halo tokens + auditoría** — variables CSS sustituidas por los tokens
-   Halo (dual dark/light), Inter + JetBrains Mono instaladas, auditoría de
-   organización/nomenclatura/duplicación aplicada. Ver
-   `spec/features/001-halo-tokens/audit.md` para el detalle y los hallazgos
-   diferidos a fases 004/005/006/007.
+2. **001 · Halo tokens + auditoría** — variables CSS sustituidas por los
+   tokens Halo (dual dark/light), Inter + JetBrains Mono instaladas,
+   auditoría de organización/nomenclatura/duplicación aplicada. Ver
+   `spec/features/001-halo-tokens/audit.md` para los hallazgos diferidos
+   a fases 004/005/006/007.
 
 3. **002 · Halo ChartCard** — borde aurora animado sustituido por hairline
    1px `--color-border` estático; fondo de card a `--color-surface`; badge
-   "Actualizando..." con tokens Halo (`--color-elevated`). El aurora queda
-   reservado a GlowButton/hero. Sin cambios en `DecryptedText`, el ⓘ de
-   filtros ni la lógica de estados.
+   "Actualizando..." con tokens Halo. El aurora queda reservado a
+   GlowButton/hero.
 
-4. **003 · Halo Stat Tiles** — KPI cards del hero pasan de wrapper/inner con
-   hover aurora a `.stat-tile` (misma superficie que `ChartCard`) con una
-   franja aurora animada de 3px en la parte superior, recortada a las
-   esquinas redondeadas (a petición del usuario, en vez del accent bar de
-   signal color plano del plan original). Valor en JetBrains Mono, label en
-   patrón eyebrow, icono de calendario eliminado. Sin cambios en el
-   fetching ni el grid responsive.
+4. **003 · Halo Stat Tiles** — KPI cards del hero pasan de wrapper/inner
+   con hover aurora a `.stat-tile` (misma superficie que `ChartCard`) con
+   una franja aurora animada de 3px en la parte superior, recortada a las
+   esquinas redondeadas. Valor en JetBrains Mono, label en patrón eyebrow.
 
 5. **004 · Halo Filtros** — `FilterDrawer`/`FilterSheet` pasan de
-   `bg-background` a `bg-elevated` (nivel de superficie propio de un panel
-   superpuesto); badge del FAB y anillo pulsante a `bg-primary`; chips
-   inactivos de `FilterSection` a `bg-surface`; label de sección sin
-   opacidad `/70`. Corregido un bug preexistente de la fase 001: `key`
-   spreadeado en `FilterSheet` (warning de React 19). `GlowButton` y la
-   lógica de drag no se tocaron. De paso se descubrió y arregló
+   `bg-background` a `bg-elevated`; badge del FAB y anillo pulsante a
+   `bg-primary`; chips inactivos a `bg-surface`. Bug corregido: `key`
+   spreadeado en `FilterSheet` (warning de React 19). De paso se arregló
    `FilterDrawer.test.jsx`, que desde su creación testeaba por error
-   `SummaryStats` (contenido duplicado) en vez de `FilterDrawer`.
+   `SummaryStats` en vez de `FilterDrawer`.
 
-6. **005 · Halo BottomNav** — última barra con valores hardcodeados:
-   `bg-background/95` → `bg-elevated/95` (mismo nivel de superficie que
-   drawer/sheet), `border-white/8` → `border-border`. Cambio mínimo, sin
-   tocar lógica ni tests.
+6. **005 · Halo BottomNav** — valores hardcodeados a tokens Halo
+   (`bg-background/95` → `bg-elevated/95`, `border-white/8` →
+   `border-border`).
 
 7. **006 · Halo Hero** — título del hero: `font-heading` (Space Mono,
    desinstalado en 001) → `font-sans` (Inter); colores hardcodeados/con
-   ternario `isDark ? ... : ...` de "Tech Jobs", "Dashboard" y el subtítulo
-   → un único token Halo por elemento en ambos temas
-   (`--color-text-primary`, `--color-primary`, `--color-text-secondary`).
-   `DarkVeil`/`Aurora`/`ThemeToggle` sin cambios. Durante la verificación se
-   investigaron (solo lectura) dos reportes del usuario ajenos a esta
-   feature: un título de gráfica no reproducible como desaparecido, y un
-   timeout de Postgres en la query de salario (confirmado lento — 5-14s —
-   probable falta de índice; es trabajo de `api/`, zona congelada, no
-   tocado). Ver `006-tasks.md` para el detalle.
+   ternario por tema → un único token Halo por elemento. Investigados
+   (solo lectura, ajenos a esta feature): un título de gráfica que
+   desaparecía sin poder reproducirse, y un timeout de Postgres en la
+   query de salario (confirmado lento, 5-14s — retomado en la fase 010).
 
 8. **007 · Halo Charts Internals** — colores hardcodeados dentro de las
-   gráficas sustituidos por tokens Halo: `TopSkillsChart` usa
-   `var(--color-primary)` en vez de `var(--chart-1)` (que sigue apuntando a
-   `--role-backend`, sin tocar — también es el fallback de
-   `roleLabels.js`); `tickColor` de `TopSkillsChart`/`DemandByRoleChart`/
-   `SalaryChart` se resuelve con `getComputedStyle` desde
-   `--color-text-primary`/`-secondary` en vez de hex hardcodeado, mediante
-   un hook `useIsDark` nuevo y compartido (extraído de la implementación
-   original de `TopSkillsChart`); tooltips de esas dos últimas pasan de
-   `bg-background border-border/50` a `bg-elevated border-border`;
-   `EuropeMap` usa `--color-border`/`--color-text-primary` para el stroke
-   de países; `HeatmapSvg`/`HeatmapLegend` usan `--color-surface` +
-   `--color-border` para la celda "sin datos". No se pudo verificar
-   visualmente con datos reales (misma limitación de red del sandbox que
-   en fases 001/003/006); verificado con 309/309 tests, build limpio y 0
-   errores de consola. Ver `007-tasks.md` para el detalle.
+   gráficas sustituidos por tokens Halo (`TopSkillsChart`, ticks de ejes
+   vía `getComputedStyle` + hook `useIsDark` nuevo y compartido, tooltips,
+   `EuropeMap`, `HeatmapSvg`/`HeatmapLegend`). Verificado con 309/309
+   tests.
 
-9. **008 · Integridad de datos en la co-ocurrencia de skills**
-   fix de datos descubierto en conversación directa con el usuario sobre
-   el heatmap. Backend:
-   `/api/skills/cooccurrence` agrupaba por `role_category` además de por
-   el par de skills, fragmentando cada par real en varias filas con
-   `co_count` parcial y desperdiciando el `LIMIT 1000` en duplicados —
-   corregido. Frontend: `filterSkillsWithCoOccurrence` pasa de exigir "al
-   menos 1" co-ocurrencia a un umbral de conectividad mínima real
-   (k-core: `minDegree`/`minEdgeCount`, con fallback para conjuntos
+9. **008 · Integridad de datos en la co-ocurrencia de skills** — fix de
+   datos en el heatmap. Backend: `/api/skills/cooccurrence` agrupaba
+   también por `role_category`, fragmentando cada par real de skills en
+   varias filas con `co_count` parcial y desperdiciando el `LIMIT 1000`
+   en duplicados — corregido. Frontend: `filterSkillsWithCoOccurrence`
+   pasa de exigir "al menos 1" co-ocurrencia a un umbral de conectividad
+   real (k-core: `minDegree`/`minEdgeCount`, con fallback para conjuntos
    pequeños), 100% dinámico con la BD. Ver
-   `spec/features/008-skills-cooccurrence/008-tasks.md` para el detalle.
+   `spec/features/008-skills-cooccurrence/008-spec.md`.
 
-9. **009 · Calidad de datos en el autocomplete de skills del mapa** —
-   fix de datos en `EuropeMap`. El autocomplete sugería miles de
-   entradas de `skills` sin ningún uso real (fragmentos de texto,
-   nombres compuestos como "React/Angular", títulos de puesto) porque
-   `GET /api/skills/list` volcaba la tabla `skills` completa (4557 filas)
-   sin filtrar. Verificado con datos reales: 34 de 35 coincidencias de
-   "react" tenían 0 ofertas activas. `GET /api/skills/list` ahora exige
-   al menos 1 oferta activa real vinculada vía `job_skills`, 100%
-   dinámico, sin parsear ni redistribuir nombres compuestos — de 4557 a
-   688 skills reales. Mismo fix aplicado al KPI "Skills rastreadas"
-   (`total_skills` en `/api/stats/summary`, visible en el hero y en la
-   landing), que tenía el mismo root cause y quedó inconsistente con el
-   autocomplete ya limpio; calculado con `COUNT(DISTINCT)` sobre un
-   `JOIN` en vez de un `EXISTS` correlacionado, más barato bajo carga
-   concurrente. De paso se investigaron dos 500 reportados por el
-   usuario en devtools: uno preexistente y ajeno (query de salario sin
-   índice, fase 006), otro confirmado como degradación general de la
-   conexión a la BD real del sandbox, no un bug. Ver
-   `spec/features/009-skills-list-quality/009-tasks.md` para el detalle.
+10. **009 · Calidad de datos en el autocomplete de skills del mapa** —
+    `GET /api/skills/list` volcaba la tabla `skills` completa (4557 filas)
+    sin filtrar, incluyendo miles de entradas sin ningún uso real
+    (fragmentos de texto, nombres compuestos). Verificado: 34 de 35
+    coincidencias de "react" tenían 0 ofertas activas. Ahora exige al
+    menos 1 oferta activa real vinculada — de 4557 a 688 skills reales.
+    Mismo fix aplicado al KPI "Skills rastreadas" (`total_skills`),
+    mismo root cause. Ver
+    `spec/features/009-skills-list-quality/009-spec.md`.
 
-10. **010 · Calidad de datos y rendimiento — Salario por rol y país** —
-    tercera ronda "tabla por tabla", primera con acceso completo a
-    `api/` (deja de ser zona congelada — ver `AGENTS.md`, única excepción
-    permanente: `.env.local`). Auditoría exhaustiva de `SalaryChart` y
-    `GET /api/salary/by-role-country`: el "top 5 de roles por defecto"
-    dejaba de ser un efecto colateral del `ORDER BY` del backend
-    (confirmado con datos reales: en Austria, `qa_testing` con 3 ofertas
-    entraba en el top 5 mientras `backend` con 62 quedaba fuera) y pasa a
-    calcularse por volumen real; `job_count`/`avg_salary_eur` (ya
-    calculados, descartados hasta ahora) se muestran en el tooltip, con
-    aviso visual para muestras con menos de 5 ofertas (13.2% de las
-    celdas reales); eje X en español (`NOMBRES_PAISES` — `country_name`
-    del backend resultó estar en inglés, hallazgo propio del diseño);
-    nota de contrato sin mezclar idiomas; mensajes de error/carga lenta
-    traducidos y genéricos en `ChartCard`; `AbortController` en
-    `useChartData` (las 4 gráficas que lo usan); backend: índice que
-    faltaba (ya sugerido en fase 006) + una sola query en vez de dos;
-    vista SQL duplicada y sin usar eliminada; `schema.sql` sincronizado
-    con los 16 `role_category` reales. El índice no se pudo aplicar
-    contra la BD real desde este entorno (mismo bloqueo de conexión
-    directa ya visto en la fase 009) — queda documentado como script
-    standalone para aplicación manual. Verificado con 347/347 tests de
-    frontend y 28/28 de `api/`; la verificación en vivo de la query
-    combinada no fue posible por el mismo `statement_timeout`
-    preexistente que esta feature soluciona (justo la ausencia del
-    índice). Ver `spec/features/010-salary-chart-quality/010-tasks.md`
-    para el detalle completo.
+11. **010 · Calidad de datos y rendimiento — Salario por rol y país** —
+    primera ronda con acceso completo a `api/` (deja de ser zona
+    congelada desde aquí — ver `AGENTS.md`; única excepción permanente:
+    `.env.local`). El "top 5 de roles por defecto" era un efecto
+    colateral del `ORDER BY` del backend (en Austria, `qa_testing` con 3
+    ofertas entraba en el top 5 mientras `backend` con 62 quedaba fuera)
+    — pasa a calcularse por volumen real; `job_count`/`avg_salary_eur` se
+    muestran en el tooltip, con aviso visual para muestras &lt;5 ofertas;
+    eje X en español; índice nuevo + una sola query en vez de dos; vista
+    SQL duplicada eliminada. Ver
+    `spec/features/010-salary-chart-quality/010-spec.md`.
 
-10. **011 · Calidad de datos y rendimiento — Evolución mensual de ofertas
-    por rol** — cuarta ronda "tabla por tabla". Auditoría exhaustiva de
-    `DemandByRoleChart` y `GET /api/jobs/demand-by-role`: bug de
-    agregación real con el filtro de país en su valor por defecto
-    ("Todos") — el backend fragmentaba cada combinación mes+rol en una
-    fila por país, y el frontend se quedaba solo con la última que
-    llegaba de Postgres en vez de sumarlas, infrarrepresentando la
-    demanda sin ningún error visible; corregido en el origen quitando
-    `country_code` del `SELECT`/`GROUP BY` (mismo tipo de bug que la fase
-    008 con `role_category` en la co-ocurrencia de skills). El "top 5 de
-    roles por defecto" tenía el mismo bug ya arreglado en `SalaryChart`
-    (orden de llegada de la API en vez de volumen real) — corregido
-    reusando `rankRolesByVolume`. Nueva nota explicando que el último mes
-    mostrado puede estar incompleto (ingesta continua), para no leer un
-    "bajón" de demanda ficticio al final de cada línea. Backend: índice
-    nuevo (`idx_jobs_demand_by_role`, no aplicado contra la BD real por el
-    mismo bloqueo de conexión directa de fases anteriores) + una sola
-    query en vez de dos; vista SQL duplicada y desincronizada
-    (`v_demand_by_role_monthly`) eliminada; `extractRoles` eliminada de
-    `roleLabels.js` al quedarse sin consumidores. Verificado con 347/347
-    tests de frontend y 36/36 de `api/`, y contra el backend real: con
-    filtro de país (`country=de`) respondió `200 OK` en 5.3s confirmando
-    la forma de fila correcta (sin `country_code`) y que
-    `total_matching_jobs` coincide exactamente con la suma de `job_count`
-    de las filas devueltas; sin filtro de país siguió fallando por
-    `statement timeout` (esperado, es justo lo que soluciona el índice
-    pendiente de aplicar). Revisión post-implementación (mismo día):
-    `jornada` estaba excluido como filtro sin ninguna razón técnica real
-    (reutilizaba una nota genérica pensada para el heatmap de
-    co-ocurrencia) — habilitado y verificado con datos reales
-    (`full_time`/`part_time` devuelven totales distintos; ~35.7% de las
-    ofertas de DE/90d no declaran jornada, no invalida el filtro); y con
-    "Últimos 30 días" se seguía consultando el backend aunque el gráfico
-    nunca se muestra — ahora se salta esa petición. De paso se confirmó
-    que excluir `skillCategoria` sí es correcto (ningún endpoint salvo
-    `/api/skills/top` hace `JOIN` con la tabla `skills`) y se detectó que
-    `/api/skills/top` tiene el mismo problema de `jornada` sin resolver,
-    documentado como candidato a una ronda futura. Ver
-    `spec/features/011-demand-by-role-quality/011-tasks.md` para el
-    detalle completo.
+12. **011 · Calidad de datos y rendimiento — Evolución mensual de ofertas
+    por rol** — con el filtro de país en su valor por defecto, el backend
+    fragmentaba cada combinación mes+rol en una fila por país y el
+    frontend se quedaba solo con la última que llegaba, infrarrepresentando
+    la demanda sin ningún error visible — corregido quitando `country_code`
+    del `SELECT`/`GROUP BY`. Mismo fix de "roles por volumen real" que la
+    fase 010. Filtro de `jornada` habilitado (estaba excluido sin ninguna
+    razón técnica real). Ver
+    `spec/features/011-demand-by-role-quality/011-spec.md`.
 
-11. **012 · Auditoría cruzada de filtros** — quinta ronda "tabla por
-    tabla", pero distinta: no audita una gráfica nueva, sino cómo
-    interactúan los filtros del sidebar entre sí y contra las 5 gráficas
-    ya construidas (`TopSkillsChart`, `SalaryChart`, `DemandByRoleChart`,
-    `EuropeMap`, `SkillHeatmap`)
-    Auditoría de los 7 endpoints + discusión de diseño filtro por filtro
-    con el usuario (contrastando su diseño original, nunca escrito antes,
-    contra lo implementado). Resultado: `GET /api/skills/cooccurrence` descartaba
-    `country`/`jornada` pero no `contrato`/`remote`, que se habrían
-    aplicado silenciosamente si algún caller los hubiera enviado
-    (dormido en producción porque el único caller ya los descartaba antes,
-    pero el contrato de la API estaba roto); corregido con un
-    `stripKeys`/`COOCCURRENCE_IGNORED_FILTERS` testeable en
-    `buildFilters.js`, verificado en vivo con peticiones concurrentes
-    (idénticas con y sin `contrato`/`remote`). Además, un bug de
-    UI en `EuropeMap` donde el aviso ⓘ no cubría `skillCategoria` aunque
-    la pill sí se ocultaba. El resto de la auditoría confirmó que el
-    diseño original ya estaba bien implementado, con dos correcciones
-    sobre el propio análisis inicial de esta ronda: se descartó habilitar
-    `jornada` en `TopSkillsChart` (recomendación de la fase 011 que
-    resultó ser un error de razonamiento — "sin barrera técnica" no es lo
-    mismo que "aporta una pregunta de negocio útil"), y se descubrió que
-    el filtro de categoría de skill en el heatmap de co-ocurrencia **ya
-    funcionaba** con la semántica deseada (ambas skills del par dentro de
-    la categoría), implementado client-side desde antes de esta sesión
-    (`heatmapUtils.js`) — no fue necesario construir nada nuevo, solo se
-    añadió un test que lo deja documentado. Verificación post-implementación
-    (mismo día): el heatmap no mostraba ningún aviso claro al cambiar de
-    categoría (reconectado al badge "Actualizando..." que `ChartCard` ya
-    tenía, quitando la atenuación duplicada que hacía `HeatmapSvg` por su
-    cuenta); los `NS_BINDING_ABORTED` vistos en consola resultaron ser
-    `StrictMode` duplicando efectos en desarrollo (no aparece en
-    producción), no un bug. Verificado con 353/353 tests de frontend y
-    40/40 de `api/`. Ver
-    `spec/features/012-cross-filter-audit/012-tasks.md` para el detalle
-    completo.
+13. **012 · Auditoría cruzada de filtros** — revisión de cómo interactúan
+    los filtros del sidebar entre sí y contra las 5 gráficas ya
+    construidas. Bug real: `GET /api/skills/cooccurrence` no descartaba
+    `contrato`/`remote` de la query string — el contrato de la API estaba
+    roto aunque dormido en producción — corregido con
+    `stripKeys`/`COOCCURRENCE_IGNORED_FILTERS` testeable. Bug de UI en
+    `EuropeMap`: el aviso ⓘ no cubría `skillCategoria` aunque la pill sí
+    se ocultaba. El resto del diseño de filtros ya estaba bien
+    implementado. Ver `spec/features/012-cross-filter-audit/012-spec.md`.
 
-12. **013 · Calidad de datos y rendimiento — Top Skills más demandadas** —
-    sexta ronda "tabla por tabla". `GET /api/skills/top` y
-    `GET /api/skills/cooccurrence` capaban silenciosamente "Todo el
-    histórico" a los mismos 90 días del periodo por defecto (el fallback
-    de 90 días saltaba también con `periodo === "all"`, no solo cuando
-    faltaba) — confirmado en vivo (`periodo=90d`/`all`/ausente daban un
-    `total_matching_jobs` idéntico), corregido con una nueva
-    `applyDefaultPeriodoFallback` en `buildFilters.js` compartida por los
-    dos endpoints. Auditoría de rendimiento: `/api/skills/top` era la
-    query más lenta detectada hasta ahora (28.5-77s sin índice); con
-    acceso real a la BD (a diferencia de fases 009/010/011, esta vez sí
-    fue posible conectar y aplicar DDL directamente) se diagnosticó con
-    `EXPLAIN ANALYZE` y se añadió `idx_jobs_active_posted_at`, bajando a
-    7.4s sin filtros y 4.5s con país — sin alcanzar el objetivo de &lt;2s
-    por un límite estructural confirmado con evidencia (el filtro
-    `is_active + 90 días` apenas excluye ~7% de la tabla), documentado
-    como candidato a una tabla resumen materializada en una ronda futura,
-    no construida aquí. Investigando esa misma lentitud se descubrió un
-    segundo hallazgo mayor: `total_matching_jobs` contaba solo ofertas
-    con alguna skill extraída (~30% de las ofertas activas — el 70%
-    restante no tiene ninguna skill en `job_skills`, repartido por toda
-    la ventana de 90 días, no un backlog de ingesta), mostrando un número
-    de "ofertas totales" muy distinto al de las demás gráficas para el
-    mismo estado de filtros; corregido contando directamente sobre
-    `jobs` sin `JOIN`, lo que de paso lo hizo ~15x más rápido. Resto de
-    hallazgos: `pct_of_all_jobs` (ya señalado como dato muerto y roto en
-    la fase 012) eliminado en vez de arreglado; `jornada` pasó a
-    excluirse con `stripKeys`/`TOP_SKILLS_IGNORED_FILTERS` en vez de un
-    destructure inline sin test; SQL extraída a `api/src/skillsQuery.js`
-    (mismo patrón que `salaryQuery.js`/`demandQuery.js`); dos vistas SQL
-    muertas eliminadas de `schema.sql` y de la BD real; techo de altura
-    con scroll en `TopSkillsChart` (hasta 1600px sin límite antes);
-    categorías de skill traducidas al español en la pill y la
-    descripción del chart (no en el sidebar en esta primera pasada — ver
-    revisión post-implementación). Verificado con 364/364 tests de
-    frontend y 57/57 de `api/`, y en vivo contra la BD real en cada
-    punto. Revisión post-implementación (mismo día, verificando en el
-    navegador): el usuario pidió traducir también el sidebar completo
-    (país, contrato, jornada, "Remote", categoría) — nuevo `OPTION_LABELS`
-    en `filterUtils.js` (une los 4 mapas de traducción existentes/nuevos,
-    reutilizado por `FilterSection.jsx` sin que ese componente necesite
-    saber de qué filtro se trata, mismo truco que ya usaba `OPTION_ICONS`)
-    y `JORNADA_LABELS` nuevo (jornada era el único filtro sin ningún mapa,
-    ni en las pills — su pill mostraba literalmente "full time" en
-    inglés, bug corregido de paso); de camino se detectó y arregló que
-    `CONTRATO_LABELS` guardaba sus valores en minúscula (pensado solo
-    para la pill), inconsistente con chips capitalizados como "Alemania".
-    Por último, revisado el copy del
-    heatmap de co-ocurrencia (tooltip y leyenda): "co-ocurrencias
-    absolutas"/"dataset" sustituidos por lenguaje llano ("ofertas piden
-    las dos a la vez"), consistente con el resto del propio tooltip.
-    Verificado con 372/372 tests de frontend tras estos cambios (57/57 de
-    `api/`, sin cambios — ronda 100% frontend). Ver
-    `spec/features/013-top-skills-quality/013-tasks.md` para el detalle
-    completo, incluido el resultado íntegro del `EXPLAIN ANALYZE` y de la
-    investigación del filtro de periodo.
+14. **013 · Auditoría — Top Skills más demandadas** — `GET /api/skills/top`
+    y `GET /api/skills/cooccurrence` capaban silenciosamente "Todo el
+    histórico" a los mismos 90 días del periodo por defecto — corregido
+    con `applyDefaultPeriodoFallback`. Query más lenta detectada hasta
+    ese momento (28.5-77s sin índice) — con `idx_jobs_active_posted_at`
+    baja a 7.4s sin filtros; el resto del límite es estructural (el
+    filtro `is_active + 90 días` apenas excluye ~7% de la tabla).
+    `total_matching_jobs` contaba solo ofertas con alguna skill extraída
+    (~30% de las activas) mostrando un número muy distinto al de las
+    demás gráficas — corregido contando directamente sobre `jobs`
+    (~15x más rápido de paso). Sidebar completo traducido al español
+    (país, contrato, jornada, categoría de skill). Ver
+    `spec/features/013-top-skills-quality/013-spec.md`.
 
-13. **014 · Auditoría — KPI cards y stats de la landing** — séptima ronda
-    "tabla por tabla", distinta de las anteriores: no audita una gráfica
-    del dashboard sino las 5 KPI cards del hero (`SummaryStats.jsx`) y,
-    por primera vez con permiso explícito, un fragmento de la landing
-    (`LandingPage.jsx`) — ambos consumen `GET /api/stats/summary`. 8
-    hallazgos: la query más cara detectada en el proyecto (22-88s sin
-    caché, incluso peor que `skills/top` en la fase 013), corregida con
-    una caché en memoria de 10 minutos (`statsCache.js` — los datos solo
-    cambian ~1 vez/día con la ingesta) + un índice de apoyo
-    (`idx_jobs_active_summary`, aplicado contra la BD real: 37s en frío
-    → 71-95ms en caliente); la landing y las KPI cards disparaban esa
-    misma query cara dos veces en la primera visita, corregido con un
-    hook compartido (`useSummaryStats`) que deduplica peticiones
-    simultáneas; "Ofertas activas"/"Países cubiertos" tenían texto
-    hardcodeado ("8 países") que podía desincronizarse de su propio dato
-    dinámico; "Última actualización" medía `posted_at` (dato del
-    mercado) bajo una etiqueta que prometía frescura del pipeline —
-    corregido a `last_seen_at`; la regla de negocio "salario declarado
-    ≥1.000€" estaba duplicada como SQL crudo en 3 sitios, centralizada en
-    `salaryQualityConditions()`. Revisión post-plan (mismo día): el
-    usuario, tras leer `014-plan.md`, amplió el alcance para rediseñar el
-    contenido de las 3 stats de la landing (antes fuera de la excepción,
-    que solo cubría lógica) — "Ofertas activas"/"Países cubiertos"/
-    "Skills rastreadas" pasan a "Explora el mercado por país"/"Compara
-    salarios en Europa"/"Descubre dónde está la demanda", cada una con
-    su icono, varias métricas reales y contadores animados (`useCountUp`,
-    sin librería nueva); badge superior eliminado; investigado un loader
-    percibido como roto (`PageLoader`/`App.jsx`) — su desaparición era un
-    `setTimeout` fijo de 800ms sin relación con si los datos habían
-    cargado, ahora espera un mínimo más `!statsLoading`, con techo de
-    seguridad. Corrección de semántica de negocio durante la
-    implementación: la card de salario se pidió con ventana de "6 meses",
-    pero verificado en vivo que una oferta activa nunca supera ~90 días
-    (mismo límite estructural ya documentado en la fase 013) — la ventana
-    de 6 meses habría sido idéntica a no poner ninguna, ajustada a 90
-    días. Al probar esa primera ronda, el usuario aclaró que el loader
-    debía tapar la carga *inicial* de la landing (Lightfall + stats), no
-    solo la transición hacia el dashboard — confirmado leyendo
-    `Lightfall.jsx` que no tiene ninguna carga asíncrona propia (shader
-    inline, sin texturas), así que `LandingPage` pasa a mostrar
-    `PageLoader` desde el primer render hasta que `useSummaryStats()`
-    resuelve, con un techo de seguridad de 8s. De paso tomó las
-    decisiones pendientes de las KPI cards del dashboard: "Ofertas
-    activas"/"Países cubiertos" (ya mostradas en la nueva card de la
-    landing) se sustituyen por "Empresas analizadas"/"Roles analizados"
-    — este último a propósito incluye la categoría `'other'`, real y
-    seleccionable en `SalaryChart`; el primero documentado como conteo de
-    strings de empresa distintos, no de empresas deduplicadas (hay
-    variantes reales de razón social, ej. "Sii"/"Sii Sp. z o.o."). Todos
-    los valores numéricos animan al montar (`useCountUp`, ajustado para
-    terminar en el valor decimal exacto en vez de redondeado). Verificado
-    con 393/393 tests de frontend, 74/74 de `api/`, servidor real (66,9s
-    en frío sin el índice ampliado — no se pudo aplicar contra la BD real,
-    `statement timeout` en 3 intentos — 8,6ms en caliente), y 11/11 E2E
-    reales con Playwright/Chromium (incluida la landing, que no se puede
-    testear con RTL/jsdom por depender de WebGL) — al ejecutar el E2E
-    completo se descubrió y corrigió, de paso, un bug pre-existente y sin
-    relación con esta feature: 2 tests buscaban los chips de país del
-    sidebar por su código crudo ("DE"/"FR"), desactualizados desde que la
-    fase 013 tradujo el sidebar a nombres en español. Tercera ronda,
-    tras probar en Firefox/Chrome reales: el loader de la landing
-    seguía sin funcionar — diagnosticado que su techo de seguridad
-    (8s) era muchísimo más corto que el tiempo real en frío de
-    `/api/stats/summary` (37-90s), así que cualquier visita tras un
-    reinicio del servidor revelaba la página sin datos. Corregido
-    calentando la caché al arrancar el servidor + subiendo el TTL a 30
-    min + techos más generosos (20s landing, 10s dashboard). Al
-    verificar el calentamiento contra el servidor real se encontró un
-    bug genuino: `getCached()` no deduplicaba llamadas concurrentes —
-    el propio calentamiento y una petición real en curso a la vez
-    lanzaban la query pesada dos veces en paralelo — corregido con el
-    mismo patrón de promesa compartida que ya usaba el frontend
-    (`useSummaryStats.js`). Ver
-    `spec/features/014-summary-stats-quality/014-tasks.md` para el
-    detalle completo, incluidos los resultados de `EXPLAIN ANALYZE`.
+15. **014 · Auditoría — KPI cards y stats de la landing** — primera vez
+    con permiso explícito y acotado sobre un fragmento de la landing
+    (bloque de 3 stats, `LandingPage.jsx`). Query más cara detectada en
+    el proyecto (22-88s sin caché) — corregida con caché en memoria
+    (`statsCache.js`) + índice de apoyo (37s en frío → 71-95ms en
+    caliente); landing y KPI cards disparaban la misma query dos veces en
+    la primera visita — corregido con un hook compartido
+    (`useSummaryStats`) que deduplica peticiones simultáneas; "Última
+    actualización" medía `posted_at` bajo una etiqueta que prometía
+    frescura del pipeline — corregida a `last_seen_at`; regla de negocio
+    "salario declarado ≥1.000€" centralizada en `salaryQualityConditions()`
+    (antes duplicada como SQL crudo en 3 sitios). Rediseño de contenido de
+    las 3 stats de la landing (país/salario/demanda, con contadores
+    animados) y de las KPI cards del dashboard ("Empresas analizadas"/
+    "Roles analizados" nuevas). Loader de la landing corregido en 2
+    rondas: primero para esperar a los datos reales en vez de un
+    `setTimeout` fijo; después porque su techo de seguridad (8s) era muy
+    inferior al tiempo real en frío de la query (37-90s) — resuelto
+    calentando la caché al arrancar el servidor + TTL más largo, lo que
+    destapó un bug genuino de concurrencia en `getCached()` (dos llamadas
+    simultáneas lanzaban la query dos veces en paralelo). Ver
+    `spec/features/014-summary-stats-quality/014-spec.md`.
+
+16. **015 · Auditoría de semántica de negocio y cierre de deuda técnica**
+    — cierre de la fase de auditorías "tabla por tabla": semántica
+    temporal y de salario verificadas con medición directa contra la BD
+    real (no solo inferencia), más una comprobación de que los "totales"
+    que muestran las distintas gráficas/KPIs son coherentes entre sí bajo
+    el mismo estado de filtros. Hallazgo nuevo no anticipado: 32 ofertas
+    con salario corrupto en el extremo alto (31 valores idénticos de
+    500.000€ + 1 de 1.904.448€) — corregido con un techo dirigido en
+    `salaryQualityConditions()`. `SalaryChart` gana una nota cuando el
+    filtro de jornada está activo (el salario viene pro-rateado). Deuda
+    técnica cerrada: los 3 índices pendientes desde las fases 010/011/014
+    se aplicaron con éxito contra la BD real; 8 vistas SQL muertas
+    eliminadas de `schema.sql` y de la BD real; `useHeatmapData.js` gana
+    `AbortController`. Único hallazgo de la reconciliación de totales:
+    las KPI cards del hero no reaccionan a ningún filtro (decisión ya
+    tomada en la fase 014) sin que ningún texto en pantalla lo aclarase
+    — corregido con una nota en `SummaryStats.jsx`. Toda la semántica de
+    negocio resuelta en esta fase vive ahora en
+    `spec/constitution/business-logic.md`, no repetida aquí. Ver
+    `spec/features/015-business-logic-audit/015-spec.md` para la
+    evidencia completa de cada verificación.
 
 ## En curso 🔜
 
@@ -347,6 +163,6 @@ _(ninguna)_
 
 ## Backlog 💡
 
-14. **015 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
+17. **016 · Halo Responsive y Pulido** — revisión final de breakpoints, espaciados y componentes menores.
 
 > Una sola feature activa a la vez. No se empieza la siguiente hasta que la anterior pasa todos los criterios de aceptación.

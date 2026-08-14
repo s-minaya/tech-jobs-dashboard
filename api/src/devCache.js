@@ -17,6 +17,14 @@
 // Para quitarlo cuando ya no haga falta: borrar este archivo, la línea
 // `app.use(devCacheMiddleware)` en index.js, y la carpeta `.dev-cache/`
 // (ya está en .gitignore).
+//
+// Re-confirmado en la fase 015 (Business Logic Audit): la condición de
+// retirada ("cuando ya no haga falta") todavía no se cumple — varias
+// queries de diagnóstico de esa misma fase, ejecutadas directamente
+// contra la BD real, tardaron entre 15s y 45s incluso para conteos
+// simples. Se mantiene, con esta fecha como punto de referencia para la
+// próxima revisión (candidato natural: la fase de rediseño, si aborda el
+// rendimiento del backend de raíz).
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";

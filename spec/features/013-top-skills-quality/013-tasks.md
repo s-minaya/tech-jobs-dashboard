@@ -2,7 +2,7 @@
 
 ## Preparación
 
-- [x] Confirmado con el usuario antes de empezar la implementación
+- [x] Plan aprobado antes de empezar la implementación.
 - [x] `.env.local` no se lee en ningún paso (solo se usa internamente por
       `dotenv.config()`/el pool de `pg` para conectar, nunca se imprime ni
       se lee su contenido con las herramientas de este agente).
@@ -204,7 +204,7 @@ el filtro de periodo).
 
 ### 1. Traducción completa del sidebar de filtros
 
-El usuario pidió traducir también el sidebar (país, contrato, jornada,
+Se traduce también el sidebar completo (país, contrato, jornada,
 "Remote", categoría de skill) — hasta ahora solo se traducían las pills/
 descripciones (decisión explícita de esta misma fase, ver más arriba).
 
@@ -245,9 +245,9 @@ descripciones (decisión explícita de esta misma fase, ver más arriba).
       toda la lógica de datos: `useHeatmapData`, `selectSkills`,
       comparaciones `=== "todas"`) no se toca — se añade `categoriaLabel`
       solo para el texto mostrado.
-- [x] Decisión confirmada por el usuario: Framework/Cloud se quedan sin
-      traducir (en el sidebar y en todas partes) — mismo criterio que el
-      diseño original de esta fase.
+- [x] Decisión confirmada: Framework/Cloud se quedan sin traducir (en el
+      sidebar y en todas partes) — mismo criterio que el diseño original
+      de esta fase.
 - [x] Tests actualizados: `FilterSection.test.jsx` (chips ahora esperan
       "Alemania"/"España"/"Francia" en vez de "DE"/"ES"/"FR"; nuevo test
       del fallback `?? option` con "Framework"), `FilterDrawer.test.jsx`
@@ -302,4 +302,4 @@ explica en llano — mismo patrón que `SalaryChart`).
 - [x] Validado contra todos los criterios de `013-spec.md`.
 - [x] `spec/README.md` actualizado.
 - [x] `spec/constitution/roadmap.md` actualizado.
-- [ ] Commit (solo tras confirmación explícita del usuario).
+- [ ] Commit (solo tras confirmación explícita).

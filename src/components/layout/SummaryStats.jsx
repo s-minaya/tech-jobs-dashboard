@@ -124,36 +124,50 @@ function SummaryStats() {
   if (error || !stats) return null;
 
   return (
-    <div className="mb-6 grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 lg:grid-cols-5">
-      <KpiCard
-        label="Empresas analizadas"
-        value={formatNumber(companiesCount)}
-        description="con ofertas activas"
-      />
-      <KpiCard
-        label="Roles analizados"
-        value={formatNumber(roleCategoriesCount)}
-        description="categorías en Salario por rol"
-      />
-      <KpiCard
-        label="Skills rastreadas"
-        value={formatNumber(skillsCount)}
-        description="tecnologías y habilidades"
-      />
-      <KpiCard
-        label="Con salario declarado"
-        value={`${salaryPctCount.toFixed(1)}%`}
-        description="de las ofertas activas"
-      />
-      {/* Última actualización ocupa 2 columnas en móvil (fila propia),
-          1 columna en sm y lg donde hay espacio suficiente. No anima:
-          es una fecha, no un conteo. */}
-      <KpiCard
-        label="Última actualización"
-        value={formatDate(stats.last_updated)}
-        description="última sincronización con la fuente"
-        fullWidth
-      />
+    <div className="mb-6">
+      <div className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <KpiCard
+          label="Empresas analizadas"
+          value={formatNumber(companiesCount)}
+          description="con ofertas activas"
+        />
+        <KpiCard
+          label="Roles analizados"
+          value={formatNumber(roleCategoriesCount)}
+          description="categorías en Salario por rol"
+        />
+        <KpiCard
+          label="Skills rastreadas"
+          value={formatNumber(skillsCount)}
+          description="tecnologías y habilidades"
+        />
+        <KpiCard
+          label="Con salario declarado"
+          value={`${salaryPctCount.toFixed(1)}%`}
+          description="de las ofertas activas"
+        />
+        {/* Última actualización ocupa 2 columnas en móvil (fila propia),
+            1 columna en sm y lg donde hay espacio suficiente. No anima:
+            es una fecha, no un conteo. */}
+        <KpiCard
+          label="Última actualización"
+          value={formatDate(stats.last_updated)}
+          description="última sincronización con la fuente"
+          fullWidth
+        />
+      </div>
+      {/* Fase 015 (ronda 2, reconciliación de totales): estas 5 cards
+          nunca reaccionan a los filtros del sidebar (getSummaryStats() no
+          recibe `filters` — decisión de la fase 014, ver comentario de
+          MainContent.jsx). Verificado en vivo: son la única sección del
+          dashboard que no se mueve al filtrar, mientras el mapa y las
+          gráficas de abajo sí lo hacen — sin este texto, un usuario que
+          filtre por un país podría leer "23.248 empresas" sin cambiar
+          como si el filtro no funcionara, en vez de la lectura correcta
+          ("esto es el mercado global, tu filtro se aplica más abajo"). */}
+      <p className="mt-2 text-center text-xs text-muted-foreground/70">
+        Datos globales del mercado — no varían con los filtros.
+      </p>
     </div>
   );
 }

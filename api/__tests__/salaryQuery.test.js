@@ -75,12 +75,19 @@ describe("shapeSalaryRows", () => {
 // Fase 014: extraída de 3 copias independientes de la misma regla SQL
 // (aquí, /api/stats/summary y el índice idx_jobs_salary_by_role_country
 // en schema.sql) a un único punto de verdad.
+//
+// Fase 015: se añade una 4ª condición — techo dirigido contra 32 ofertas
+// activas confirmadas como corruptas en vivo (31 duplicados exactos de
+// 500.000€ en NL + 1 de 1.904.448€ en FR, todas con salary_min =
+// salary_max y contract_time nulo). Ver el comentario de cabecera de
+// salaryQualityConditions en salaryQuery.js para la evidencia completa.
 describe("salaryQualityConditions", () => {
-  it("con alias por defecto ('j'), devuelve las 3 condiciones de calidad", () => {
+  it("con alias por defecto ('j'), devuelve las 4 condiciones de calidad", () => {
     expect(salaryQualityConditions()).toEqual([
       "j.salary_mid IS NOT NULL",
       "j.salary_is_predicted = FALSE",
       "j.salary_mid >= 1000",
+      "NOT (j.salary_min = j.salary_max AND j.contract_time IS NULL AND j.salary_mid >= 500000)",
     ]);
   });
 
@@ -89,12 +96,23 @@ describe("salaryQualityConditions", () => {
       "j2.salary_mid IS NOT NULL",
       "j2.salary_is_predicted = FALSE",
       "j2.salary_mid >= 1000",
+      "NOT (j2.salary_min = j2.salary_max AND j2.contract_time IS NULL AND j2.salary_mid >= 500000)",
     ]);
   });
 
   it("el resultado es directamente usable en un WHERE vía join(\" AND \")", () => {
     expect(salaryQualityConditions("j").join(" AND ")).toBe(
-      "j.salary_mid IS NOT NULL AND j.salary_is_predicted = FALSE AND j.salary_mid >= 1000",
+      "j.salary_mid IS NOT NULL AND j.salary_is_predicted = FALSE AND j.salary_mid >= 1000 AND NOT (j.salary_min = j.salary_max AND j.contract_time IS NULL AND j.salary_mid >= 500000)",
     );
+  });
+
+  it("el techo dirigido no excluye una oferta con rango real (salary_min != salary_max) aunque sea muy alta", () => {
+    // Confirma que la condición es quirúrgica: solo actúa cuando SE
+    // COMBINAN los 3 factores (min=max, sin jornada, >=500k), no solo por
+    // ser una cifra alta — un salario alto con un rango real declarado
+    // (ej. 480.000-520.000) no debe excluirse.
+    const conditions = salaryQualityConditions("j");
+    const techo = conditions[3];
+    expect(techo).toContain("j.salary_min = j.salary_max");
   });
 });

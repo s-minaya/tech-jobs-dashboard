@@ -1,6 +1,14 @@
 -- =============================================================================
 -- Feature 010 — índice para GET /api/salary/by-role-country
 -- =============================================================================
+-- ✅ APLICADO — fase 015 (Business Logic Audit) reintentó este índice
+-- contra la BD real con éxito (117.6s, sin timeout). Se deja este
+-- archivo como registro histórico; ya no hace falta ejecutarlo de nuevo
+-- (CREATE INDEX ... IF NOT EXISTS lo haría un no-op igualmente).
+--
+-- Instrucciones originales (fase 010, cuando seguía pendiente), sin
+-- modificar por debajo de esta línea:
+--
 -- Aplicar manualmente en el SQL editor de Supabase si el agente no pudo
 -- ejecutarlo directamente (conexiones salientes directas a Postgres con
 -- credenciales embebidas están bloqueadas en el entorno de desarrollo).

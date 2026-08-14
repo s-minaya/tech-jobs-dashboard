@@ -2,7 +2,7 @@
 
 ## Preparación
 
-- [x] Confirmado con el usuario antes de empezar la implementación
+- [x] Plan aprobado antes de empezar la implementación.
 - [x] `.env.local` no se lee en ningún paso (solo se usa internamente por
       `dotenv.config()`/el pool de `pg` para conectar, nunca se imprime ni
       se lee su contenido con las herramientas de este agente).
@@ -118,9 +118,8 @@ mismo número que ya usa el selector de periodo del sidebar.
       descripción de "Última actualización" → "última sincronización con
       la fuente" (hallazgo 5).
 - [x] `src/components/landing/LandingPage.jsx` — **ampliación de
-      alcance, ver más abajo**: no se quedó en "solo lógica" — el usuario
-      pidió además un rediseño visual del bloque de stats tras leer
-      `014-plan.md` (ver esa sección).
+      alcance, ver más abajo**: no se quedó en "solo lógica", se amplió
+      a un rediseño visual del bloque de stats (ver esa sección).
 - [x] `src/mocks/handlers.js`: `last_updated` se mantiene igual (sigue
       siendo un ISO string, el consumidor no distingue de dónde viene) —
       se añaden `median_salary_90d`/`top_skills_30d` (ver ampliación).
@@ -169,12 +168,11 @@ mismo número que ya usa el selector de periodo del sidebar.
 
 ## Ampliación de alcance — rediseño del bloque de stats de la landing
 
-Tras leer `014-plan.md`, el usuario pidió ir más allá del fix de lógica:
-rediseñar el contenido de las 3 stats de la landing, quitar el badge
-superior, animar los contadores, y que investigue un loader percibido
-como roto. Ver `014-spec.md`, "Ampliación de alcance", para el permiso
-explícito ampliado sobre la zona congelada (solo este bloque, nunca el
-resto de la landing).
+Más allá del fix de lógica: rediseñar el contenido de las 3 stats de la
+landing, quitar el badge superior, animar los contadores, e investigar
+un loader percibido como roto. Ver `014-spec.md`, "Excepción a la zona
+congelada", para el permiso explícito ampliado (solo este bloque, nunca
+el resto de la landing).
 
 - [x] `api/src/statsQuery.js`: `median_salary_90d` (no 6 meses, ver
       "Resultado del EXPLAIN" arriba) y `top_skills_30d` nuevos en la
@@ -243,9 +241,9 @@ haber sido la primera en ejecutar el E2E completo tras la 013.
 ## Segunda ampliación de alcance — loader de la landing y KPI cards del dashboard
 
 Ver `014-plan.md`, "Segunda ampliación de alcance", para el diseño
-completo. El usuario probó la primera ronda, aclaró que el loader debía
-tapar la carga *inicial* de la landing (no solo la transición), y tomó
-las decisiones pendientes de las KPI cards del dashboard.
+completo. Tras probar la primera ronda, se aclaró que el loader debía
+tapar la carga *inicial* de la landing (no solo la transición), y se
+tomaron las decisiones pendientes de las KPI cards del dashboard.
 
 ### Backend
 
@@ -314,13 +312,12 @@ ejercite el caso que un usuario real vería.
 
 ## Ronda 3 — el loader seguía sin funcionar bien en pruebas reales
 
-Tras la ronda 2, el usuario probó en Firefox y Chrome: en Firefox el
+Tras la ronda 2, pruebas reales en Firefox y Chrome: en Firefox el
 loader dejó de aparecer del todo tras el primer éxito (incluso
 reiniciando todo); en Chrome aparecía un instante y la página quedaba
 "mal cargada". Un subagente de exploración se cortó por límite de
-sesión; se investigó directamente (lectura de código) + 2 preguntas de
-diagnóstico al usuario (Network tab en Chrome, ventana privada en
-Firefox).
+sesión; se investigó directamente (lectura de código) + 2 comprobaciones
+de diagnóstico (Network tab en Chrome, ventana privada en Firefox).
 
 ### Diagnóstico
 
@@ -330,8 +327,8 @@ Ambos síntomas encajaban con una sola causa: `LANDING_LOADER_MAX_MS`
 `EXPLAIN ANALYZE`). Cualquier visita tras un reinicio del servidor
 (`node --watch` reinicia en cada guardado) o tras >10 min de
 inactividad golpeaba el camino frío: el loader se rendía a los 8s y
-revelaba la landing con `stats` todavía `null` (los "…" que el usuario
-describió como "no cargó bien"/"el skeleton"). Una vez esa primera
+revelaba la landing con `stats` todavía `null` (los "…" percibidos como
+"no cargó bien"/"el skeleton"). Una vez esa primera
 petición lenta terminaba en segundo plano, la caché quedaba caliente y
 todas las visitas siguientes eran instantáneas — de ahí "ya nunca vuelve
 a salir el loader" tras el primer intento.
@@ -357,7 +354,7 @@ tardó **87s** — más lento que el peor caso ya medido (66-88s), no
 menos. Investigado: `getCached()` no deduplicaba llamadas
 **concurrentes** — solo evitaba recomputar si ya había un valor
 cacheado, pero mientras `computeFn()` estaba en curso (el propio
-calentamiento), una segunda llamada (mi petición de verificación) veía
+calentamiento), una segunda llamada (la petición de verificación) veía
 `cachedValue === null` igual y lanzaba **una segunda ejecución completa
 de la misma query pesada en paralelo**, compitiendo por los mismos
 recursos de la BD — exactamente el mismo tipo de problema que
@@ -403,4 +400,4 @@ desacoplar el arranque del servidor de la disponibilidad de la ruta.
 - [x] Validado contra todos los criterios de `014-spec.md`.
 - [x] `spec/README.md` actualizado.
 - [x] `spec/constitution/roadmap.md` actualizado.
-- [ ] Commit (solo tras confirmación explícita del usuario).
+- [ ] Commit (solo tras confirmación explícita).

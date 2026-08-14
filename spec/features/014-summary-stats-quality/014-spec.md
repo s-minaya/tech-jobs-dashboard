@@ -148,119 +148,79 @@ resto se decide en `014-plan.md`.
 ## Excepción a la zona congelada (landing)
 
 `src/components/landing/` está permanentemente congelada por
-`AGENTS.md` ("Ninguna modificación"). El permiso original de esta
-feature (solo lógica/origen de datos, cero visual) queda **ampliado
-explícitamente por el usuario** tras revisar `014-plan.md` — ver
-"Ampliación de alcance" más abajo para el detalle completo. Estado
-actual del permiso:
+`AGENTS.md` ("Ninguna modificación"). Esta feature amplía el permiso
+puntualmente:
 
 - **Sí se puede tocar**: lógica/origen de datos de todo `LandingPage.jsx`
-  (igual que antes) **y además**, ahora sí, el contenido y aspecto visual
-  del bloque de 3 stats (nuevos títulos, iconos, varias métricas por
-  card, animación de contadores) y el badge superior ("Mercado tech
-  europeo · 8 países · Datos en tiempo real", se elimina).
+  y, además, el contenido y aspecto visual del bloque de 3 stats (nuevos
+  títulos, iconos, varias métricas por card, animación de contadores) y
+  el badge superior ("Mercado tech europeo · 8 países · Datos en tiempo
+  real", se elimina).
 - **Sigue sin poder tocarse**: el resto de `LandingPage.jsx` — hero
   (título, gradiente, descripción), CTA ("Explorar el dashboard"),
-  Lightfall (fondo WebGL) y su configuración. Nada de esto se audita ni
-  se toca.
-- Las **KPI cards del dashboard** (`SummaryStats.jsx`) — **actualizado**:
-  el usuario decidió su rediseño en la misma sesión (ver "Segunda
-  ampliación de alcance" más abajo), no quedó para una ronda futura.
-  `SummaryStats.jsx` nunca estuvo en la zona congelada (vive en
-  `layout/`, no en `landing/`), así que su rediseño no necesita ninguna
-  excepción — siempre tuvo permiso completo.
+  Lightfall (fondo WebGL) y su configuración.
+- Las **KPI cards del dashboard** (`SummaryStats.jsx`) nunca estuvieron
+  en la zona congelada (vive en `layout/`, no en `landing/`) — su
+  rediseño no necesita ninguna excepción, siempre tuvo permiso completo.
 
-## Ampliación de alcance — rediseño del bloque de stats de la landing
-
-Tras leer `014-plan.md`/`014-tasks.md` iniciales, el usuario pidió además
-un rediseño de contenido (no solo el fix de lógica ya planeado) para las
-3 stats de la landing, más una investigación de un loader que percibe
-roto. Detalle completo del diseño en `014-plan.md`. Resumen:
+## Rediseño del bloque de stats de la landing
 
 - **Card 1** — de "Ofertas activas" (número suelto) a **"Explora el
   mercado por país"**: nº de países + nº de ofertas activas + "actualizado
-  hace X tiempo" (tiempo relativo, reutiliza el mismo dato que el
-  hallazgo 5 ya centraliza en el backend).
+  hace X tiempo" (tiempo relativo, mismo dato que el hallazgo 5
+  centraliza en el backend).
 - **Card 2** — de "Países cubiertos" a **"Compara salarios en Europa"**:
-  salario mediano (dato nuevo en el backend). Ventana ajustada a 90 días,
-  no los 6 meses pedidos originalmente — ver "semántica de negocio" en
-  `014-plan.md`: con `is_active = TRUE`, una ventana de 6 meses habría
-  sido idéntica a no poner ninguna (evidencia real de la fase 013).
+  salario mediano, ventana de 90 días (no 6 meses — ver
+  `spec/constitution/business-logic.md`, con `is_active = TRUE` una
+  ventana de 6 meses habría sido idéntica a no poner ninguna).
 - **Card 3** — de "Skills rastreadas" a **"Descubre dónde está la
-  demanda"**: top 3 skills más demandadas de los últimos 30 días (dato
-  nuevo en el backend).
+  demanda"**: top 3 skills más demandadas de los últimos 30 días.
 - Cada card con su icono correspondiente; contadores numéricos animados
-  (cuentan hacia arriba al montar, sin librería nueva — `AGENTS.md`
-  prohíbe añadir dependencias sin confirmación).
-- Badge superior ("Mercado tech europeo · 8 países...") eliminado — no
-  aportaba información nueva sobre lo que ya dicen las cards.
+  al montar, sin librería nueva.
+- Badge superior eliminado — no aportaba información nueva sobre lo que
+  ya dicen las cards.
 
-**Loader investigado** (`src/components/ui/PageLoader.jsx` +
-`src/App.jsx`): confirmado que su desaparición es un `setTimeout` fijo de
-800ms, **sin ninguna relación con si los datos reales ya cargaron** — ni
-`AbortController`, ni promesa, ni estado de `SummaryStats`. En la
-práctica esto significa lo contrario de lo que parece percibirse: el
-loader (bonito, con el logo) desaparece demasiado pronto y el usuario cae
-sobre un dashboard con las KPI cards todavía en skeleton durante muchos
-segundos (hallazgo 1) — de ahí la sensación de "algo se queda cargado".
-No está en la zona congelada (`App.jsx`/`PageLoader.jsx` son de pleno
-acceso). Fix propuesto en `014-plan.md` — **redefinido en la segunda
-ampliación de alcance, ver abajo**: el usuario probó el fix del
-transición landing→dashboard y no lo percibió, porque su idea era otra —
-usar el loader para tapar la carga *inicial* de la propia landing, no
-(solo) la transición hacia el dashboard.
+## Loader de la landing y del dashboard
 
-## Segunda ampliación de alcance — loader de la landing y KPI cards del dashboard
+**Diagnóstico**: la desaparición del loader (`PageLoader.jsx`) era un
+`setTimeout` fijo de 800ms, sin ninguna relación con si los datos reales
+ya habían cargado — el loader desaparecía antes de tiempo y el dashboard
+quedaba con las KPI cards en skeleton durante segundos (hallazgo 1).
 
-Tras probar la primera ronda de cambios, el usuario aclaró su intención
-real del loader y tomó las decisiones pendientes sobre las KPI cards del
-dashboard (antes diferidas). Detalle completo del diseño en
-`014-plan.md`. Resumen:
+**Fix**: `LandingPage` muestra `PageLoader` desde el primer render
+mientras `useSummaryStats()` carga — Lightfall no se monta hasta
+entonces (no tiene ninguna carga asíncrona propia, la única espera real
+es la de los datos) — y solo revela el hero/cards/CTA una vez todo está
+listo, con los contadores animando desde ese instante. Techo de
+seguridad (`LANDING_LOADER_MAX_MS`) para no dejar la página atrapada si
+la petición fallara del todo.
 
-- **Loader de la landing**: en vez de (solo) gobernar la transición
-  landing→dashboard, `LandingPage` ahora se queda mostrando `PageLoader`
-  desde el primer render mientras `useSummaryStats()` sigue cargando —
-  Lightfall ni siquiera se monta hasta entonces (confirmado leyendo
-  `Lightfall.jsx`: no tiene ninguna carga asíncrona propia, solo
-  `useSummaryStats()` es la espera real) — y solo revela el hero/cards/CTA
-  una vez todo está listo, con los contadores animando desde ese mismo
-  instante. Techo de seguridad (`LANDING_LOADER_MAX_MS`, 8s) para no
-  dejar al usuario atrapado si la petición fallara del todo.
-- **KPI cards del dashboard** — decisión del usuario: "Ofertas activas"/
-  "Países cubiertos" se sustituyen por **"Empresas analizadas"**
-  (`total_companies`, nuevo) y **"Roles analizados"** (`total_role_categories`,
-  nuevo) — los dos números que quitan ya se muestran en la card "Explora
-  el mercado por país" de la landing, así que repetirlos aquí no aportaba
-  nada distinto; las 2 cards nuevas orientan sobre amplitud (empresas) y
-  granularidad (categorías de rol, antes de entrar en `SalaryChart`).
-  "Con salario declarado", "Última actualización" y "Skills rastreadas"
-  se mantienen sin cambios, a petición explícita. Todas las cards
-  numéricas (no la fecha) animan con `useCountUp`, mismo hook que la
-  landing.
-- **Semántica de negocio revisada** (a petición explícita del usuario):
-  `total_companies` cuenta strings de `company` distintos, no empresas
-  reales deduplicadas — verificado en vivo que existen variantes de la
-  misma empresa ("Sii" / "Sii Sp. z o.o.", ~3.400 y ~1.700 ofertas
-  respectivamente) — documentado como limitación conocida, mismo
-  criterio ya aceptado para `total_skills` (fase 009). `total_role_categories`
-  incluye `'other'` a propósito: es una categoría real y seleccionable en
-  `SalaryChart` (no se excluye del roster, solo del top-5 por defecto),
-  así que excluirla aquí subestimaría la granularidad real que se le está
-  previniendo al usuario.
+## KPI cards del dashboard
+
+"Ofertas activas"/"Países cubiertos" se sustituyen por **"Empresas
+analizadas"** (`total_companies`) y **"Roles analizados"**
+(`total_role_categories`) — los dos números que quitan ya se muestran en
+la card "Explora el mercado por país" de la landing; las 2 cards nuevas
+orientan sobre amplitud (empresas) y granularidad (categorías de rol,
+antes de entrar en `SalaryChart`). "Con salario declarado", "Última
+actualización" y "Skills rastreadas" se mantienen sin cambios. Todas las
+cards numéricas (no la fecha) animan con `useCountUp`.
+
+Semántica de `total_companies`/`total_role_categories` (qué cuentan
+exactamente y por qué) — ver `spec/constitution/business-logic.md`.
 
 ## Por qué
 
 Mismo motivo que las rondas anteriores: verificar que los datos
 mostrados son correctos y fiables a la BD real, que las queries no son
 más costosas de lo necesario, y que la lógica de negocio tiene sentido
-para el propósito del dashboard. Esta vez el foco es distinto a
-propósito: las KPI cards y el bloque de stats de la landing son lo
-**primero** que ve cualquier usuario — su calidad de datos y su
-rendimiento pesan más que los de una gráfica a la que hay que hacer
-scroll para llegar. `SummaryStats.jsx` no ha tenido una auditoría de
-datos/rendimiento propia desde su paso visual en la fase 003 (Halo Stat
-Tiles) y el fix puntual de `total_skills` en la fase 009; el bloque de
-la landing nunca se había auditado, al estar la carpeta congelada.
+para el propósito del dashboard. Las KPI cards y el bloque de stats de
+la landing son lo **primero** que ve cualquier visitante — su calidad de
+datos y su rendimiento pesan más que los de una gráfica a la que hay que
+hacer scroll para llegar. `SummaryStats.jsx` no había tenido una
+auditoría de datos/rendimiento propia desde su paso visual en la fase
+003 y el fix puntual de `total_skills` en la fase 009; el bloque de la
+landing nunca se había auditado, al estar la carpeta congelada.
 
 ## Criterios de aceptación
 
@@ -327,8 +287,8 @@ la landing nunca se había auditado, al estar la carpeta congelada.
   CTA, Lightfall) — la ampliación de excepción de esta feature cubre
   solo el bloque de 3 stats y el badge superior, ver más arriba.
 - ~~Rediseño de las KPI cards del dashboard diferido~~ — **ya no aplica**:
-  el usuario tomó la decisión en esta misma sesión, ver "Segunda
-  ampliación de alcance".
+  resuelto en esta misma feature, ver "KPI cards del dashboard" más
+  arriba.
 - **Cambiar el umbral de negocio de "salario declarado"** (hoy
   1.000€) — este hallazgo (6) propone centralizarlo, no modificarlo.
 - **Tabla resumen materializada / job de refresco programado** — una

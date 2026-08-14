@@ -400,90 +400,24 @@ CHECK (role_category IS NULL OR role_category IN (
   excepción permanente de este proyecto. Solo lectura de
   `.env.example`, que no contiene valores reales.
 
-> `api/` dejó de estar congelado a partir de la feature 010: el usuario
-> dio acceso completo para leer y editar el backend (`api/src/`,
-> `api/schema.sql`, tests). Sigue aplicando el resto de reglas del
-> flujo de trabajo (spec → plan → tasks, una feature activa a la vez).
+> `api/` dejó de estar congelado a partir de la feature 010: acceso
+> completo para leer y editar el backend (`api/src/`, `api/schema.sql`,
+> tests). Sigue aplicando el resto de reglas del flujo de trabajo
+> (spec → plan → tasks, una feature activa a la vez).
 ```
 
 ### 12. ⚠️ `api/src/devCache.js` — caché temporal de desarrollo (RECORDAR QUITAR)
 
-Añadida a petición del usuario tras la verificación en vivo de esta
-feature, cuando la BD real estuvo fallando/tardando 15-120s+ de forma
-consistente y se volvió difícil seguir trabajando. No es parte de la
-auditoría de `SalaryChart` — es infraestructura de desarrollo.
-
-Caché en **disco**, no en memoria — `node --watch` reinicia el proceso
-en cada guardado durante el propio desarrollo, lo que borraría una caché
-en memoria constantemente justo cuando más se necesita:
-
-```js
-// devCache.js
-import fs from "fs";
-import path from "path";
-import crypto from "crypto";
-
-const CACHE_DIR = path.join(process.cwd(), ".dev-cache");
-const TTL_MS = 5 * 60 * 1000; // 5 minutos
-
-if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
-
-function keyToFile(key) {
-  const hash = crypto.createHash("md5").update(key).digest("hex");
-  return path.join(CACHE_DIR, `${hash}.json`);
-}
-
-export function devCacheMiddleware(req, res, next) {
-  if (req.method !== "GET") return next();
-  const file = keyToFile(req.originalUrl);
-
-  if (fs.existsSync(file)) {
-    try {
-      const { time, body } = JSON.parse(fs.readFileSync(file, "utf8"));
-      if (Date.now() - time < TTL_MS) {
-        res.setHeader("X-Dev-Cache", "HIT");
-        return res.json(body);
-      }
-    } catch {
-      // archivo corrupto o a medio escribir — se trata como miss
-    }
-  }
-
-  res.setHeader("X-Dev-Cache", "MISS");
-  const originalJson = res.json.bind(res);
-  res.json = (body) => {
-    if (res.statusCode === 200) {
-      fs.writeFileSync(file, JSON.stringify({ time: Date.now(), body }));
-    }
-    return originalJson(body);
-  };
-  next();
-}
-```
-
-`index.js` (una línea, después de `express.json()` y antes de las
-rutas):
-```js
-import { devCacheMiddleware } from "./devCache.js";
-// ⚠️ TEMPORAL — quitar esta línea (y devCache.js) cuando ya no haga falta.
-app.use(devCacheMiddleware);
-```
-
-`.gitignore`: `api/.dev-cache/`.
+Añadida durante la verificación en vivo de esta feature, cuando la BD
+real estuvo fallando/tardando 15-120s+ de forma consistente. No es parte
+de la auditoría de `SalaryChart` — es infraestructura de desarrollo, ver
+el propio archivo (`api/src/devCache.js`) para la implementación y las
+instrucciones de cómo retirarla cuando ya no haga falta (re-confirmado
+en la fase 015 que sigue haciendo falta).
 
 **Verificado con datos reales**: `/api/skills/list` pasó de 40.3s (MISS)
 a 14.8ms (HIT) en la segunda petición idéntica, y sigue en `HIT` incluso
-después de reiniciar el servidor (`touch src/index.js` para forzar el
-reinicio de `node --watch`, comprobado que el PID cambió y la caché
-seguía sirviendo).
-
-**Cómo quitarlo cuando ya no haga falta:**
-1. Borrar `api/src/devCache.js`.
-2. Quitar el import y la línea `app.use(devCacheMiddleware)` de
-   `api/src/index.js`.
-3. Quitar la entrada `api/.dev-cache/` de `.gitignore`.
-4. Borrar la carpeta `api/.dev-cache/` si existe localmente (no se sube
-   a git, pero conviene limpiarla).
+después de reiniciar el servidor.
 
 ## Decisiones (descartes explícitos, con razón)
 

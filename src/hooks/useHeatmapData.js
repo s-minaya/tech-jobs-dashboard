@@ -18,6 +18,13 @@ export const FILTERED_MAX = 50;
 // para que ambos usen el mismo periodo y los porcentajes sean coherentes.
 // Si usaran periodos distintos, co_count podría superar job_count y los
 // porcentajes resultarían mayores del 100%.
+//
+// AbortController (fase 015): mismo patrón que useChartData.js (fase
+// 010) — este hook se quedó fuera en su momento por no tener overlap
+// directo con esa auditoría de SalaryChart, pero el problema es
+// idéntico: cambiar de periodo o de categoría rápido antes de que la
+// petición anterior resuelva dejaba varias queries vivas en paralelo
+// contra la misma BD.
 export function useHeatmapData(categoria, filters = {}) {
   const [pairs, setPairs] = useState([]);
   const [totalJobs, setTotalJobs] = useState(null);
@@ -32,12 +39,16 @@ export function useHeatmapData(categoria, filters = {}) {
   const filterKey = filters.periodo ?? "";
 
   useEffect(() => {
+    const controller = new AbortController();
     setLoadingPairs(true);
     // Pasamos filters a getTopSkills para que use el mismo periodo
     // que getSkillCoOccurrence, garantizando porcentajes <= 100%.
     // getSkillCoOccurrence internamente descarta todo menos el periodo.
     // getTopSkills internamente descarta jornada.
-    Promise.all([getSkillCoOccurrence(filters), getTopSkills(filters)])
+    Promise.all([
+      getSkillCoOccurrence(filters, controller.signal),
+      getTopSkills(filters, controller.signal),
+    ])
       .then(([coData, skillsResponse]) => {
         setPairs(coData.pairs);
         setTotalJobs(coData.total_matching_jobs);
@@ -45,8 +56,17 @@ export function useHeatmapData(categoria, filters = {}) {
         setAllSkillsData(globalSkills);
         setSkillsData(globalSkills);
       })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoadingPairs(false));
+      .catch((err) => {
+        // AbortError es la cancelación esperada, no un error real — el
+        // próximo efecto ya dispara la petición nueva.
+        if (err.name === "AbortError") return;
+        setError(err.message);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoadingPairs(false);
+      });
+
+    return () => controller.abort();
   }, [filterKey]);
 
   // Recarga de skills al cambiar categoría.
@@ -54,13 +74,24 @@ export function useHeatmapData(categoria, filters = {}) {
     if (loadingPairs) return;
     if (categoria === "todas") {
       setSkillsData(allSkillsData);
-    } else {
-      setLoadingSkills(true);
-      getTopSkills({ skillCategoria: categoria, periodo: filters.periodo })
-        .then((response) => setSkillsData(response?.rows ?? []))
-        .catch((err) => setError(err.message))
-        .finally(() => setLoadingSkills(false));
+      return;
     }
+    const controller = new AbortController();
+    setLoadingSkills(true);
+    getTopSkills(
+      { skillCategoria: categoria, periodo: filters.periodo },
+      controller.signal,
+    )
+      .then((response) => setSkillsData(response?.rows ?? []))
+      .catch((err) => {
+        if (err.name === "AbortError") return;
+        setError(err.message);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoadingSkills(false);
+      });
+
+    return () => controller.abort();
   }, [categoria, loadingPairs]);
 
   return {

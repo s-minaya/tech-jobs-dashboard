@@ -53,6 +53,12 @@
 - `ChartDescription` — props: `description`, `filters`, `totalJobs`, `excludeFilters`, `contexto`, `nota`
 - `useChartData(endpoint, params)` — devuelve `{ data, loading, isInitialLoad, error }`
 
+**Semántica de negocio y del dominio de datos** (qué significa `is_active`,
+ventanas de fecha, reglas de calidad de salario, qué filtro ignora cada
+endpoint y por qué, invariantes entre gráficas...) — ver
+`spec/constitution/business-logic.md`. Léela antes de tocar cualquier
+query o componente que dependa de `jobs`/`skills`/`countries`.
+
 ## Convenciones
 
 ### Código

@@ -61,10 +61,9 @@
   en el listado de estructura, `halo-responsive-pulido` renumerado a 009.
 - [x] `spec/constitution/roadmap.md` actualizado — feature 008 en
   "En curso 🔜" con resumen, backlog renumerado (Halo Responsive y
-  Pulido pasa a 009). Se deja en "En curso" en vez de "Hecho" hasta que
-  el usuario confirme el commit, siguiendo el mismo patrón que el resto
-  de fases de esta sesión.
-- [ ] Commit (solo tras confirmación del usuario). Dos commits separados,
+  Pulido pasa a 009). Se deja en "En curso" en vez de "Hecho" hasta el
+  commit, mismo patrón que el resto de fases.
+- [ ] Commit (solo tras confirmación explícita). Dos commits separados,
   ya que son cambios independientes:
   - `fix: aggregate skill co-occurrence counts without role_category fragmentation`
   - `feat: require minimum connectivity threshold in skill co-occurrence heatmap`

@@ -68,9 +68,9 @@ todo lo encontrado en una sola feature:
 
 ## Por qué
 
-El usuario pidió el mismo tipo de auditoría exhaustiva ya aplicada a
-`SalaryChart` (fase 010), esta vez para la gráfica de evolución mensual de
-ofertas por rol: lógica incorrecta o inconsistente, aspectos sin sentido
+Mismo tipo de auditoría exhaustiva ya aplicada a `SalaryChart` (fase
+010), esta vez para la gráfica de evolución mensual de ofertas por rol:
+lógica incorrecta o inconsistente, aspectos sin sentido
 de negocio, mejoras de UX, buenas prácticas, queries más eficientes.
 
 La auditoría (ver `011-plan.md` para el detalle) encontró un bug de

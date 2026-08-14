@@ -17,8 +17,8 @@ ruido acumulado en la tabla `skills`. Solo se muestran skills con al
 menos una oferta activa real detrás.
 
 De paso, tras un análisis exhaustivo de todo lo que depende de este
-mismo dato (pedido explícitamente por el usuario), se corrige también el
-KPI "Skills rastreadas" (`GET /api/stats/summary`, campo `total_skills`),
+mismo dato, se corrige también el KPI "Skills rastreadas"
+(`GET /api/stats/summary`, campo `total_skills`),
 que tenía exactamente el mismo problema con la misma causa raíz — ver
 "Análisis de impacto" más abajo.
 
@@ -55,8 +55,8 @@ comentario de documentación desactualizado en `SkillAutocomplete.jsx`
 
 ### Análisis de impacto — qué más depende de este dato
 
-A petición del usuario, análisis exhaustivo de todo lo que pudiera
-quedar desactualizado por este cambio:
+Análisis exhaustivo de todo lo que pudiera quedar desactualizado por
+este cambio:
 
 - **KPI "Skills rastreadas"** (`GET /api/stats/summary`, campo
   `total_skills`) — mismo root cause exacto: `(SELECT COUNT(*) FROM
@@ -82,10 +82,10 @@ quedar desactualizado por este cambio:
 
 ## Por qué
 
-El usuario reportó que buscar cualquier skill en el mapa (ej. "React")
-devuelve un aluvión de entradas sin sentido ("React/Angular",
-"WEB(React)", "React Typescript CSS"). Se investigó con datos reales del
-backend (no simulados) antes de proponer el fix.
+Buscar cualquier skill en el mapa (ej. "React") devuelve un aluvión de
+entradas sin sentido ("React/Angular", "WEB(React)", "React Typescript
+CSS"). Se investigó con datos reales del backend (no simulados) antes de
+proponer el fix.
 
 ## Criterios de aceptación
 
@@ -114,8 +114,8 @@ backend (no simulados) antes de proponer el fix.
 ## Fuera de alcance
 
 - Cualquier limpieza de la tabla `skills` en sí (borrar filas, añadir
-  tabla de alias/normalización) — no es competencia de este repo, es la
-  BD de la compañera del usuario; el fix vive enteramente en la query
-  del endpoint, sin tocar el esquema ni los datos.
+  tabla de alias/normalización) — no es competencia de este repo, la BD
+  es de un proyecto externo; el fix vive enteramente en la query del
+  endpoint, sin tocar el esquema ni los datos.
 - Cambios en `SkillAutocomplete.jsx`/`EuropeMap.jsx` — su lógica ya es
   correcta, el problema era puramente la calidad de los datos recibidos.

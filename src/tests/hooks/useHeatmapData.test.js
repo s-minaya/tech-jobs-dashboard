@@ -1,6 +1,30 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { useHeatmapData } from "@/hooks/useHeatmapData";
+import { getSkillCoOccurrence, getTopSkills } from "@/services/jobServices";
+
+// Envolvemos las implementaciones reales en vi.fn(actual) en vez de un
+// auto-mock: así todos los tests de "carga inicial"/"cambio de
+// categoría"/"error handling" de abajo siguen pasando por el fetch real
+// contra MSW sin cambios, y solo los tests de AbortController (que
+// necesitan inspeccionar la señal o forzar una promesa que nunca
+// resuelve) sobreescriben la implementación puntualmente.
+vi.mock("@/services/jobServices", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    getSkillCoOccurrence: vi.fn(actual.getSkillCoOccurrence),
+    getTopSkills: vi.fn(actual.getTopSkills),
+  };
+});
+
+// Referencia estable a las implementaciones reales, para poder
+// restaurar el pass-through tras los tests de AbortController que
+// sobreescriben mockImplementation con una promesa que nunca resuelve
+// — sin este reset, esa implementación se queda "pegada" en el mock
+// (vi.fn no tiene autoUnmock) y contamina cualquier test posterior que
+// dependa de una respuesta real.
+const actualJobServices = await vi.importActual("@/services/jobServices");
 
 describe("useHeatmapData", () => {
   describe("carga inicial", () => {
@@ -108,6 +132,83 @@ describe("useHeatmapData", () => {
       const { result } = renderHook(() => useHeatmapData("todas", {}));
       await waitFor(() => expect(result.current.loadingPairs).toBe(false));
       expect(result.current.error).not.toBeNull();
+    });
+  });
+
+  // Fase 015: useHeatmapData se quedó fuera cuando useChartData.js ganó
+  // AbortController en la fase 010 — mismo problema real (cambiar de
+  // periodo o de categoría rápido dejaba varias queries vivas en
+  // paralelo contra la misma BD), mismo fix.
+  describe("AbortController (fase 015)", () => {
+    afterEach(() => {
+      getSkillCoOccurrence.mockImplementation(
+        actualJobServices.getSkillCoOccurrence,
+      );
+      getTopSkills.mockImplementation(actualJobServices.getTopSkills);
+    });
+
+    it("pasa un AbortSignal a getSkillCoOccurrence y getTopSkills en la carga de pares", async () => {
+      renderHook(() => useHeatmapData("todas", { periodo: "90d" }));
+      await waitFor(() => expect(getSkillCoOccurrence).toHaveBeenCalled());
+      expect(getSkillCoOccurrence.mock.calls[0][1]).toBeInstanceOf(
+        AbortSignal,
+      );
+      expect(getTopSkills.mock.calls[0][1]).toBeInstanceOf(AbortSignal);
+    });
+
+    it("aborta la petición de pares anterior cuando cambia el periodo", async () => {
+      const signals = [];
+      getSkillCoOccurrence.mockImplementation((_filters, signal) => {
+        signals.push(signal);
+        return new Promise(() => {}); // nunca resuelve — solo interesa el abort
+      });
+
+      const { rerender } = renderHook(
+        ({ periodo }) => useHeatmapData("todas", { periodo }),
+        { initialProps: { periodo: "30d" } },
+      );
+      await waitFor(() => expect(signals).toHaveLength(1));
+      expect(signals[0].aborted).toBe(false);
+
+      rerender({ periodo: "90d" });
+      await waitFor(() => expect(signals).toHaveLength(2));
+      expect(signals[0].aborted).toBe(true);
+      expect(signals[1].aborted).toBe(false);
+    });
+
+    it("aborta la petición de skills por categoría cuando la categoría cambia antes de resolver", async () => {
+      const { result, rerender } = renderHook(
+        ({ cat }) => useHeatmapData(cat, {}),
+        { initialProps: { cat: "todas" } },
+      );
+      await waitFor(() => expect(result.current.loadingPairs).toBe(false));
+
+      const signals = [];
+      getTopSkills.mockImplementation((_filters, signal) => {
+        signals.push(signal);
+        return new Promise(() => {});
+      });
+
+      rerender({ cat: "language" });
+      await waitFor(() => expect(signals).toHaveLength(1));
+      expect(signals[0].aborted).toBe(false);
+
+      rerender({ cat: "framework" });
+      await waitFor(() => expect(signals).toHaveLength(2));
+      expect(signals[0].aborted).toBe(true);
+      expect(signals[1].aborted).toBe(false);
+    });
+
+    it("un rechazo con name='AbortError' no se expone como error", async () => {
+      const abortError = new Error("The user aborted a request.");
+      abortError.name = "AbortError";
+      getSkillCoOccurrence.mockRejectedValue(abortError);
+      getTopSkills.mockResolvedValue({ rows: [] });
+
+      const { result } = renderHook(() => useHeatmapData("todas", {}));
+      await waitFor(() => expect(getSkillCoOccurrence).toHaveBeenCalled());
+      await new Promise((r) => setTimeout(r, 0));
+      expect(result.current.error).toBeNull();
     });
   });
 });

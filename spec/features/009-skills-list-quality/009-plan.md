@@ -43,8 +43,8 @@ cambios.
 
 ### `api/src/index.js` — endpoint `GET /api/stats/summary` (`total_skills`)
 
-Análisis de impacto exhaustivo (pedido explícito del usuario) tras el
-primer fix: mismo root cause exacto en el KPI "Skills rastreadas", que
+Análisis de impacto exhaustivo tras el primer fix: mismo root cause
+exacto en el KPI "Skills rastreadas", que
 lee `total_skills` de este endpoint y se muestra tanto en
 `SummaryStats.jsx` (hero del dashboard) como en `LandingPage.jsx` (zona
 congelada). Mismo patrón de fix, en la misma subquery:
@@ -92,12 +92,11 @@ cambio de comportamiento ni de lógica.
   una fila, no contarlas), y evita agrupar 4557 filas para luego
   filtrar por HAVING.
 - **`/api/stats/summary` sí se toca, tras análisis de impacto** — se
-  había documentado inicialmente como fuera de alcance, pero el usuario
-  pidió explícitamente un análisis exhaustivo de todo lo afectado por
-  este cambio, y esto salió como la inconsistencia más visible (mismo
-  root cause exacto, mismo endpoint que ya se estaba tocando, cambio de
-  2 líneas). Se decidió corregirlo en la misma feature en vez de
-  diferirlo.
+  había documentado inicialmente como fuera de alcance, pero un análisis
+  exhaustivo de todo lo afectado por este cambio reveló la inconsistencia
+  más visible del dataset (mismo root cause exacto, mismo endpoint que
+  ya se estaba tocando, cambio de 2 líneas). Se corrige en la misma
+  feature en vez de diferirlo.
 
 ## Riesgos
 

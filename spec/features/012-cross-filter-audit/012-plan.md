@@ -16,20 +16,19 @@ Dos auditorías de solo lectura en paralelo:
   (columna ya en el `FROM`/`JOIN`) que no se aplican.
 - **Frontend**: los 5 componentes de gráfica — comprobando que lo que
   `jobServices.js` envía al backend coincide exactamente con lo que la UI
-  (`getWarningNodes`/`excludeFilters`) le promete al usuario que se
-  ignora.
+  (`getWarningNodes`/`excludeFilters`) promete que se ignora.
 
-Después, discusión filtro por filtro y gráfica por gráfica contrastando
-el diseño original del usuario (nunca escrito antes en el repo) contra lo
-implementado hoy.
+Después, revisión filtro por filtro y gráfica por gráfica contrastando el
+diseño original del sistema de filtros (nunca escrito antes en el repo)
+contra lo implementado hoy.
 
 ## Decisiones de diseño confirmadas (sin cambio de código)
 
 ### `TopSkillsChart` — jornada se queda EXCLUIDA
 
-Coincide con el diseño original del usuario y con el código actual. Se
-descarta la recomendación inicial de esta IA (dentro de esta misma
-feature) de habilitarla — era un error de razonamiento: "no hay barrera
+Coincide con el diseño original y con el código actual. Se descarta la
+recomendación inicial de esta misma feature de habilitarla — era un
+error de razonamiento: "no hay barrera
 técnica" (`contract_time` es una columna de `jobs`, ya disponible en la
 query) no es lo mismo que "aporta una pregunta de negocio útil". Jornada
 no cambia qué tecnologías pide un puesto — un backend pide Python/AWS sea
@@ -43,8 +42,7 @@ no tiene ese mecanismo.
 Ya implementado y verificado en la fase 011 con datos reales
 (`periodo=90d&country=de`): 38.175 `full_time` / 2.741 `part_time` /
 63.675 sin filtro — confirma que el filtro afecta realmente a los datos.
-Confirmado explícitamente por el usuario tras reconsiderarlo, no se
-revierte.
+Decisión reconsiderada y confirmada: no se revierte.
 
 **Idea relacionada, diferida** (surgida en esta discusión, no se
 planifica aquí): un "chart de tendencias" estilo Halo para explorar
@@ -59,7 +57,7 @@ co-ocurrencias para que los porcentajes sean estadísticamente fiables —
 mismo razonamiento para los cuatro (ya documentado en el código antes de
 esta feature para país/contrato/remote; confirmado que también aplica a
 jornada, que compartía un texto genérico con `TopSkillsChart` sin haberse
-verificado individualmente hasta ahora). Confirmado por el usuario.
+verificado individualmente hasta ahora).
 
 ### `SkillHeatmap` — filtro de categoría de skill YA FUNCIONA, sin cambios
 

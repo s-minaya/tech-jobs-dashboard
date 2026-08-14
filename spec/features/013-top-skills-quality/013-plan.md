@@ -24,9 +24,9 @@ vistas de skills están realmente sin usar (confirmado por grep sobre
 "VISTAS PARA EL DASHBOARD" se usa, no solo las 2 de skills — documentado
 como fuera de alcance en `013-spec.md`).
 
-Tras un primer borrador de este plan, el usuario solicitó una segunda pasada
-centrada en semántica (no solo filtros/rendimiento) que encontró el hallazgo 
-1 de abajo — el más importante de esta ronda.
+Tras un primer borrador de este plan, una segunda pasada centrada en
+semántica (no solo filtros/rendimiento) encontró el hallazgo 1 de abajo
+— el más importante de esta ronda.
 
 ## 1. "Todo el histórico" no es todo el histórico — bug de coherencia semántica
 

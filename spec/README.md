@@ -10,6 +10,7 @@ spec/
 ├── constitution/                      ← reglas estables del proyecto (cambian poco)
 │   ├── mission.md                     ← qué construimos y para quién
 │   ├── tech-stack.md                  ← tecnologías, convenciones y límites
+│   ├── business-logic.md              ← semántica de negocio y modelo de dominio (is_active, salario, filtros por endpoint...)
 │   └── roadmap.md                     ← orden de las features
 └── features/                          ← una carpeta por feature
     ├── 001-halo-tokens/               ← Fase 1: design tokens y tipografía
@@ -26,7 +27,8 @@ spec/
     ├── 012-cross-filter-audit/        ← Fase 12: auditoría cruzada de filtros entre gráficas
     ├── 013-top-skills-quality/        ← Fase 13: calidad de datos y rendimiento de Top Skills más demandadas
     ├── 014-summary-stats-quality/     ← Fase 14: auditoría de KPI cards y stats de la landing
-    └── 015-halo-responsive-pulido/    ← Fase 15: responsive y pulido final
+    ├── 015-business-logic-audit/      ← Fase 15: semántica de negocio cruzada y cierre de deuda técnica
+    └── 016-halo-responsive-pulido/    ← Fase 16: responsive y pulido final
 ```
 
 ## Flujo para cada feature

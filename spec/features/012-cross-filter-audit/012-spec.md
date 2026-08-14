@@ -11,13 +11,13 @@
 
 ## Qué hace
 
-Tras habilitar `jornada` en `DemandByRoleChart` (fase 011), el usuario
-pidió comprobar que combinar filtros no corrompe los datos en ninguna de
-las gráficas ya repasadas, y si falta algún filtro por aplicar en alguna
-de ellas. Se investigó a fondo (backend: los 7 endpoints de
-`api/src/index.js` + `buildFilters.js`; frontend: los 5 componentes) y se
-discutió, filtro por filtro y gráfica por gráfica, el diseño original del
-usuario contra lo implementado. Resultado:
+Tras habilitar `jornada` en `DemandByRoleChart` (fase 011), se revisó si
+combinar filtros corrompe los datos en alguna de las gráficas ya
+repasadas, y si falta algún filtro por aplicar en alguna de ellas. Se
+investigó a fondo (backend: los 7 endpoints de `api/src/index.js` +
+`buildFilters.js`; frontend: los 5 componentes), contrastando filtro por
+filtro y gráfica por gráfica el diseño de filtros documentado contra lo
+implementado. Resultado:
 
 1. **Bug real corregido**: `GET /api/skills/cooccurrence` no descartaba
    `contrato`/`remote` de la query string antes de pasarla a
@@ -51,17 +51,17 @@ usuario contra lo implementado. Resultado:
 
 ## Por qué
 
-El usuario, tras ver que `jornada` estaba mal excluida en dos gráficas
-(fase 011), se preocupó de que el mismo tipo de problema —filtros que se
-combinan mal, o que faltan sin razón— pudiera estar ocurriendo en el
-resto del dashboard sin que se hubiera detectado. 
+Tras detectar que `jornada` estaba mal excluida en dos gráficas (fase
+011), existía la preocupación de que el mismo tipo de problema —filtros
+que se combinan mal, o que faltan sin razón— pudiera estar ocurriendo en
+el resto del dashboard sin haberse detectado.
 
 La auditoría confirma que esa preocupación tenía fundamento real en un
 caso (el bug de `/api/skills/cooccurrence`), y no en los demás — el resto
 del dashboard ya aplicaba los filtros correctos según el diseño original
-del usuario, con dos correcciones sobre el propio análisis inicial de esta
-IA durante la discusión (documentadas en `012-plan.md` para que quede
-constancia de qué se propuso primero y por qué se descartó).
+documentado, con dos correcciones sobre el análisis inicial de esta
+ronda (documentadas en `012-plan.md`: qué se propuso primero y por qué
+se descartó).
 
 ## Criterios de aceptación
 

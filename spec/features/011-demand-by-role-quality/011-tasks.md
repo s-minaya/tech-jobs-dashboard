@@ -109,7 +109,7 @@
   insertado, `halo-responsive-pulido` renumerado a 012.
 - [x] `spec/constitution/roadmap.md` actualizado — feature 011 a "Hecho",
   backlog renumerado.
-- [ ] Commit (solo tras confirmación explícita del usuario):
+- [ ] Commit (solo tras confirmación explícita):
   `feat: audit and fix DemandByRoleChart data quality, UX, and query performance`
 
 ### Validación contra `011-spec.md`
@@ -137,12 +137,13 @@
 **Pendiente** (no bloqueante, mismo patrón que fases 009/010): aplicar
 `idx_jobs_demand_by_role` manualmente contra la BD real (ver
 `011-apply-index.sql`) — el entorno bloquea conexiones directas con
-credenciales embebidas; queda para que el usuario lo ejecute en el SQL
-editor de Supabase, o una futura sesión con la BD más disponible.
+credenciales embebidas; queda para ejecución manual en el SQL editor de
+Supabase, o una futura sesión con la BD más disponible. **Aplicado con
+éxito en la fase 015.**
 
 ## Hallazgos post-implementación
 
-Tras cerrar la feature, se pidió una segunda revisión.
+Tras cerrar la feature, segunda revisión.
 Dos hallazgos accionables, ambos implementados en esta misma feature:
 
 ### 1. Filtro de `jornada` estaba mal excluido — habilitado
@@ -232,8 +233,7 @@ una columna de `jobs`, ya unida en esa query (`FROM job_skills js JOIN
 jobs j ...`) — no hay barrera técnica, igual que en `demand-by-role`. No
 se implementa aquí: es una gráfica distinta (`TopSkillsChart`), ya cerrada
 en una fase anterior, fuera del alcance de esta feature — se documenta
-como candidato a su propia ronda "tabla por tabla" futura, pendiente de
-que el usuario lo confirme.
+como candidato a su propia ronda "tabla por tabla" futura.
 
 **Actualización**: resuelto en la fase 012 (Auditoría cruzada de
 filtros) — tras discutirlo, se decidió NO habilitarlo. Ver

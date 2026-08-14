@@ -86,5 +86,5 @@
 
 - [x] Validar contra todos los criterios de aceptación de `spec.md`.
 - [x] Mover la feature a "Hecho" en `spec/constitution/roadmap.md`.
-- [ ] Commit (solo tras confirmación del usuario):
+- [ ] Commit (solo tras confirmación explícita):
   `refactor: replace aurora border with Halo hairline in ChartCard`

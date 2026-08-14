@@ -93,7 +93,7 @@ el fix del bug de `key` se verificó por consola con Playwright.
 
 - [x] Validar contra todos los criterios de aceptación de `spec.md`.
 - [x] Mover la feature a "Hecho" en `spec/constitution/roadmap.md`.
-- [ ] Commit (solo tras confirmación del usuario):
+- [ ] Commit (solo tras confirmación explícita):
   `refactor: apply Halo tokens to filter panels and fix key spread warning`
   Nota: hay además un segundo cambio de documentación ya presente en el
   árbol de trabajo antes de empezar esta feature (`005-plan.md`/`006-spec.md`

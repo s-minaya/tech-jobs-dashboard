@@ -95,7 +95,7 @@ el resto de la tarjeta (0.4 × 0.4).
 
 ### 2. `NS_BINDING_ABORTED` en consola — no es un bug, no se toca
 
-El usuario vio estos mensajes en la consola de Firefox tras probar varias
+Estos mensajes aparecen en la consola de Firefox tras probar varias
 gráficas seguidas. Investigado a fondo:
 - `src/main.jsx` envuelve la app en `<StrictMode>`, que en desarrollo
   duplica intencionadamente los efectos al montar (monta → limpia →
@@ -121,5 +121,5 @@ No requiere ningún cambio de código.
   `halo-responsive-pulido` renumerado a 013.
 - [x] `spec/constitution/roadmap.md` actualizado — feature 012 a "Hecho",
   backlog renumerado.
-- [ ] Commit (solo tras confirmación explícita del usuario):
+- [ ] Commit (solo tras confirmación explícita):
   `fix: close filter leak in skills co-occurrence endpoint and audit cross-chart filter design`

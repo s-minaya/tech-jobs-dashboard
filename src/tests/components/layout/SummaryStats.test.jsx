@@ -72,6 +72,20 @@ describe("SummaryStats", () => {
       expect(screen.queryByText("Países cubiertos")).not.toBeInTheDocument();
     });
 
+    it("avisa de que los datos son globales y no varían con los filtros (fase 015, ronda 2)", async () => {
+      // Reconciliación de totales: SummaryStats no recibe `filters` (a
+      // diferencia de las gráficas) — sin este aviso, un usuario que
+      // filtre el dashboard podría leer estas cards sin cambiar como un
+      // fallo en vez de una decisión de diseño (son el estado global del
+      // mercado, no una vista filtrada).
+      render(<SummaryStats />);
+      await waitFor(() => {
+        expect(
+          screen.getByText(/no varían con los filtros/i),
+        ).toBeInTheDocument();
+      });
+    });
+
     it("muestra el número de empresas analizadas formateado, tras animar", async () => {
       render(<SummaryStats />);
       // El mock devuelve total_companies: 23248
@@ -146,12 +160,19 @@ describe("SummaryStats", () => {
         ),
       );
       render(<SummaryStats />);
-      await waitFor(
-        () => expect(screen.getByText("77")).toBeInTheDocument(),
-        ANIM_TIMEOUT,
-      );
-      expect(screen.getByText("3")).toBeInTheDocument();
-      expect(screen.getByText("10.0%")).toBeInTheDocument();
+      // Los 3 valores animan en paralelo (useCountUp independiente por
+      // card) — esperar solo a "77" y comprobar "3"/"10.0%" de forma
+      // síncrona a continuación asume que las 3 animaciones terminan
+      // exactamente a la vez, lo cual no es fiable bajo carga de CPU
+      // (confirmado: este test fallaba de forma reproducible al correr
+      // la suite completa, aunque pasaba siempre en aislado — hallazgo
+      // incidental de la fase 015 al verificar, sin relación con sus
+      // cambios). Fix: las 3 aserciones dentro del mismo waitFor.
+      await waitFor(() => {
+        expect(screen.getByText("77")).toBeInTheDocument();
+        expect(screen.getByText("3")).toBeInTheDocument();
+        expect(screen.getByText("10.0%")).toBeInTheDocument();
+      }, ANIM_TIMEOUT);
     });
   });
 

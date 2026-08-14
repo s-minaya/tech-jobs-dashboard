@@ -3,11 +3,10 @@
 **Estado:** en curso
 
 > A diferencia de las fases 001-007, esta feature no es parte del
-> rediseño Halo — es un fix de integridad de datos descubierto durante
-> una conversación directa con el usuario sobre el heatmap "Co-ocurrencia
-> de skills en ofertas de empleo". Se documenta con la misma rigurosidad
-> SDD porque toca `api/` (zona normalmente congelada) y cambia el
-> comportamiento observable de un componente ya existente.
+> rediseño Halo — es un fix de integridad de datos en el heatmap
+> "Co-ocurrencia de skills en ofertas de empleo". Se documenta con la
+> misma rigurosidad SDD porque toca `api/` (zona normalmente congelada) y
+> cambia el comportamiento observable de un componente ya existente.
 
 ## Qué hace
 
@@ -74,9 +73,9 @@ Lo que **no cambia**:
 
 ## Por qué
 
-El usuario reportó, en conversación directa, que el heatmap mostraba
-filas/columnas sin sentido. Se investigó con datos reales del backend 
-(no simulados) y se confirmaron ambos problemas antes de proponer el fix.
+El heatmap mostraba filas/columnas sin sentido. Se investigó con datos
+reales del backend (no simulados) y se confirmaron ambos problemas antes
+de proponer el fix.
 
 ## Criterios de aceptación
 
@@ -110,14 +109,13 @@ filas/columnas sin sentido. Se investigó con datos reales del backend
 ## Fuera de alcance
 
 - Cambiar `selectSkills` para preferir skills bien conectadas en vez de
-  las más populares (opción descartada explícitamente por el usuario —
-  más compleja y menos predecible).
+  las más populares (opción descartada — más compleja y menos
+  predecible).
 - Listas manuales/hardcodeadas de skills mutuamente excluyentes (opción
-  descartada explícitamente — rompe el requisito de que todo sea
-  dinámico con la BD).
+  descartada — rompe el requisito de que todo sea dinámico con la BD).
 - Solo aclarar en la UI que las celdas vacías son esperables, sin tocar
-  el filtrado (opción descartada explícitamente — el usuario quiere una
-  solución de datos, no de copy).
+  el filtrado (opción descartada — hace falta una solución de datos, no
+  de copy).
 - Umbral de relevancia relativa (`% mínimo respecto a job_count`) —
   diseñado como posible extensión futura pero no implementado ahora: no
   hay datos suficientes para calibrar un porcentaje sin introducir un

@@ -76,7 +76,7 @@ export async function getOffersByCountry(filters = {}, skill = null, signal) {
   return fetchJson(`/api/jobs/offers-by-country?${params}`, { signal });
 }
 
-export async function getSkillCoOccurrence(filters = {}) {
+export async function getSkillCoOccurrence(filters = {}, signal) {
   const {
     pais: _p,
     contrato: _c,
@@ -85,7 +85,9 @@ export async function getSkillCoOccurrence(filters = {}) {
     skillCategoria: _s,
     ...rest
   } = filters;
-  return fetchJson(`/api/skills/cooccurrence?${buildParams(rest)}`);
+  return fetchJson(`/api/skills/cooccurrence?${buildParams(rest)}`, {
+    signal,
+  });
 }
 
 export async function getSkillsList() {

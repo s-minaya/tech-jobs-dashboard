@@ -102,9 +102,9 @@ datos que se muestran son correctos y fiables a la BD real, que las
 queries no son más costosas de lo necesario, y que los filtros se aplican
 con la misma lógica ya acordada en las fases 011/012. Esta gráfica llevaba
 desde la fase 007 (cambios solo visuales) sin una auditoría de datos/
-rendimiento propia. El usuario solicitó una segunda pasada
-centrada en semántica, lo cual llevó directamente al hallazgo 1 
-(el filtro de periodo "miente" en dos endpoints), que no había salido en la
+rendimiento propia. Una segunda pasada centrada en semántica llevó
+directamente al hallazgo 1 (el filtro de periodo "miente" en dos
+endpoints), que no había salido en la
 primera pasada centrada en filtros/rendimiento.
 
 ## Criterios de aceptación
@@ -142,14 +142,14 @@ primera pasada centrada en filtros/rendimiento.
       enviado a la API no cambia. **Actualizado en la revisión post-
       implementación**: inicialmente el sidebar (`FilterSection.jsx`) se
       dejó sin traducir para no romper la consistencia con contrato/
-      jornada/país (que tampoco traducían sus chips) — el usuario pidió
-      explícitamente traducir también el sidebar completo, así que la
-      consistencia se resolvió en la otra dirección: ahora los 4 filtros
-      (país, contrato, jornada, categoría) se traducen tanto en pills/
-      descripción como en el propio sidebar, vía el nuevo `OPTION_LABELS`
-      (`filterUtils.js`). Framework/Cloud siguen sin traducir en todas
-      partes (decisión explícita del usuario). Ver `013-tasks.md`,
-      "Hallazgos post-implementación", punto 1.
+      jornada/país (que tampoco traducían sus chips) — se decidió
+      traducir también el sidebar completo, así que la consistencia se
+      resolvió en la otra dirección: ahora los 4 filtros (país, contrato,
+      jornada, categoría) se traducen tanto en pills/descripción como en
+      el propio sidebar, vía el nuevo `OPTION_LABELS` (`filterUtils.js`).
+      Framework/Cloud se dejan sin traducir a propósito (términos técnicos
+      de uso corriente en español). Ver `013-tasks.md`, "Hallazgos
+      post-implementación", punto 1.
 - [x] `TopSkillsChart.test.jsx` cubre: `skillCategoria` activo (pill,
       texto, forma de la petición), aviso ⓘ de `jornada` activo, altura a
       escala realista.

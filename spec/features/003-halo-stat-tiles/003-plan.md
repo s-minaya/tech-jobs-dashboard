@@ -62,12 +62,12 @@ Verificar que pasa al 100%.
 
 ## Decisiones
 
-> **Actualización tras revisión con el usuario:** el plan original usaba
-> `border-top` sólido + `--accent-color` inline (un signal color distinto
-> por KPI). El usuario pidió sustituir esos colores por el degradado
-> aurora animado de `GlowButton`, más grueso, recortado a las esquinas
-> redondeadas — ver criterios actualizados en `003-spec.md`. Los puntos de
-> abajo marcados con ~~tachado~~ quedaron obsoletos; el resto sigue vigente.
+> **Decisión final:** el plan original usaba `border-top` sólido +
+> `--accent-color` inline (un signal color distinto por KPI). Se sustituye
+> por el degradado aurora animado de `GlowButton`, más grueso, recortado a
+> las esquinas redondeadas — ver criterios actualizados en `003-spec.md`.
+> Los puntos de abajo marcados con ~~tachado~~ quedaron obsoletos; el
+> resto sigue vigente.
 
 - ~~**Custom property `--accent-color` inline** en vez de clases por color
   (`stat-tile-primary`, `stat-tile-info`...) — menos CSS, más flexible.

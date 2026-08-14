@@ -340,11 +340,11 @@ la sección 1+2+3).
 
 ## Ampliación de alcance — rediseño del bloque de stats de la landing
 
-Tras leer este plan, el usuario pidió ir más allá del fix de lógica ya
-diseñado arriba: rediseñar el contenido de las 3 stats de la landing,
-quitar el badge superior, animar los contadores, y que investigue un
-loader que percibía roto. Ver `014-spec.md`, "Ampliación de alcance",
-para el permiso explícito ampliado sobre la zona congelada.
+Más allá del fix de lógica ya diseñado arriba: rediseñar el contenido de
+las 3 stats de la landing, quitar el badge superior, animar los
+contadores, e investigar un loader percibido como roto. Ver
+`014-spec.md`, "Excepción a la zona congelada", para el permiso
+explícito ampliado.
 
 ### Backend — dos campos nuevos en `/api/stats/summary`
 
@@ -464,11 +464,10 @@ pulsando.
 
 ### Loader: de "transición" a "gate de carga inicial"
 
-El usuario probó el fix de la sección anterior (loader ligado a
-`statsLoading` durante la transición landing→dashboard) y no lo
-percibió — su intención real era otra: usar `PageLoader` para tapar la
-carga *inicial* de la propia landing (Lightfall + los stats), no solo el
-salto hacia el dashboard.
+El fix de la sección anterior (loader ligado a `statsLoading` durante la
+transición landing→dashboard) no cubría el problema real: hacía falta
+usar `PageLoader` para tapar la carga *inicial* de la propia landing
+(Lightfall + los stats), no solo el salto hacia el dashboard.
 
 **Diagnóstico de Lightfall** (`src/components/ui/Lightfall.jsx`): usa
 `ogl` con un shader GLSL definido inline (strings `vertex`/`fragment` en
@@ -521,7 +520,7 @@ para el porcentaje). Esto obligó a auditar los 3 usos ya existentes en
 explícitamente al formatear, ya que antes confiaban en que el hook lo
 hacía por ellos.
 
-### KPI cards del dashboard — decisión del usuario
+### KPI cards del dashboard
 
 Sustituye "Ofertas activas"/"Países cubiertos" (esos números ya viven en
 la card "Explora el mercado por país" de la landing) por:
