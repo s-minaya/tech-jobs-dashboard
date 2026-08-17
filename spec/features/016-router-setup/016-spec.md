@@ -1,7 +1,8 @@
 # 016 · Setup de rutas por gráfica + header de navegación
 
-**Estado:** en curso — implementación en progreso (bloques A, B y C
-completados).
+**Estado:** implementación completa (bloques A-E), todos los criterios de
+aceptación cumplidos — pendiente de mover a "Hecho" en `roadmap.md` y de
+aprobación final del usuario antes del commit/push de cierre.
 
 > Primera feature de la **fase 3** del roadmap general (rediseño total
 > de la página para optimizar velocidad y experiencia de usuario). La
@@ -192,45 +193,54 @@ aviso de build.
 
 ## Criterios de aceptación
 
-- [ ] `react-router-dom` instalado y usado para las 6 rutas del
+- [x] `react-router-dom` instalado y usado para las 6 rutas del
       dashboard (`/`, `/top-skills`, `/tendencias`, `/salarios`,
       `/mapa`, `/skills`). La landing (`LandingPage.jsx`) se queda
       fuera del árbol de rutas, sin cambios.
-- [ ] Cada gráfica (`TopSkillsChart`, `SalaryChart`,
+- [x] Cada gráfica (`TopSkillsChart`, `SalaryChart`,
       `DemandByRoleChart`, `EuropeMap`, `SkillHeatmap`) se importa con
       `React.lazy()` + `Suspense`, generando su propio chunk —
       verificado con `npm run build` (chunks separados, no un único
       bundle de +900 kB).
-- [ ] Al entrar en una ruta, solo se disparan las peticiones de datos
+- [x] Al entrar en una ruta, solo se disparan las peticiones de datos
       de las gráficas de esa ruta — verificado que ya no hay 5
       peticiones simultáneas al cargar el dashboard.
-- [ ] `filters` y `useSummaryStats` no se remontan ni vuelven a pedir
+- [x] `filters` y `useSummaryStats` no se remontan ni vuelven a pedir
       datos al cambiar de ruta.
-- [ ] `useChartData`/`useHeatmapData` cancelan (`AbortController`) la
+- [x] `useChartData`/`useHeatmapData` cancelan (`AbortController`) la
       petición en curso si el usuario cambia de ruta antes de que
       resuelva — mismo mecanismo ya existente para cambios de filtro,
-      sin duplicar lógica.
-- [ ] `Header` (nuevo, solo md+) navega entre las 6 rutas. `BottomNav`
+      sin duplicar lógica. Verificado en vivo con Playwright (no solo
+      por lectura de código): `/salarios` con su API ralentizada
+      artificialmente 3s, navegar a `/mapa` a los 500ms y esperar a que
+      la petición original "hubiera" resuelto — cero errores de
+      consola.
+- [x] `Header` (nuevo, solo md+) navega entre las 6 rutas. `BottomNav`
       (solo móvil) pasa de scroll + anclas a la misma navegación por
       ruta y gana los ítems "Salarios" y "Top Skills".
-- [ ] `FilterFAB` y `FilterDrawer.jsx` eliminados del código.
+- [x] `FilterFAB` y `FilterDrawer.jsx` eliminados del código.
       `DesktopFilterSidebar` (nuevo) se usa en las 5 páginas de gráfica en
       tablet/desktop (no en `/`), abierto por defecto, colapsable.
-- [ ] `MobileFilterSheet.jsx` sigue funcionando en móvil exactamente igual
-      que hoy, sin cambios de comportamiento.
-- [ ] `ThemeToggle` accesible desde cualquier página en cualquier
+- [x] `MobileFilterSheet.jsx` sigue funcionando en móvil exactamente igual
+      que hoy, sin cambios de comportamiento (renombrado desde
+      `FilterSheet.jsx`, cero cambio de comportamiento).
+- [x] `ThemeToggle` accesible desde cualquier página en cualquier
       tamaño de pantalla (dentro de `Header` en md+, flotante en
       móvil) — el componente en sí no se modifica.
-- [ ] `npx vitest run` al 100%, con los tests de `BottomNav.jsx`
-      actualizados y tests nuevos para `Header.jsx`/
-      `DesktopFilterSidebar.jsx`.
-- [ ] `npm run build` sin errores — el aviso de chunk >500 kB deja de
-      aplicar al bundle principal (o se documenta explícitamente por
-      qué persiste, si algún chunk individual sigue superándolo).
-- [ ] `.env.local` nunca leído ni impreso.
-- [ ] Zona congelada (`src/components/landing/`) sin cambios.
+- [x] `npx vitest run` al 100% — 401/401, 30/30 archivos, con los tests
+      de `BottomNav.jsx` actualizados y tests nuevos para `Header.jsx`/
+      `DesktopFilterSidebar.jsx`/`ChartPageLayout.jsx`.
+- [x] `npm run build` sin errores — el aviso de chunk >500 kB ya no
+      aplica a ningún chunk (el mayor, `index-*.js`, queda en ~325 kB).
+- [x] `.env.local` nunca leído ni impreso — verificado con grep sobre
+      todo lo tocado en la feature.
+- [x] Zona congelada (`src/components/landing/`) sin cambios —
+      verificado con `git log`, ningún commit de esta feature la toca.
 
 **Opcionales — no bloquean el cierre de la feature:**
-- [ ] Precarga del chunk de una ruta al hacer hover sobre su link del
-      header.
-- [ ] `startTransition` envolviendo la navegación entre rutas.
+- [x] Precarga del chunk de una ruta al hacer hover sobre su link del
+      header — implementado y verificado con Playwright.
+- [ ] `startTransition` envolviendo la navegación entre rutas —
+      evaluado y omitido deliberadamente (ver `016-tasks.md`, bloque E):
+      exige interceptar la navegación de `NavLink` a mano sin un
+      problema real medido que lo justifique.

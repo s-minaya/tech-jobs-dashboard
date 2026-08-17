@@ -32,6 +32,12 @@ const linkActive = "border-primary/30 bg-primary/10";
 //
 // No lleva filtros propios — DesktopFilterSidebar (bloque D) vive
 // dentro de cada página de gráfica, no en este chrome global.
+//
+// Prefetch en hover (bloque E, opcional): al pasar el ratón por un
+// link se dispara el mismo `import()` dinámico que usa `React.lazy()`
+// para esa gráfica (`item.prefetch`, definido en `navigation.js`), así
+// el chunk ya está descargado (o en vuelo) cuando el usuario pulsa de
+// verdad. "/" no tiene `prefetch` (sin gráfica que precargar).
 function Header({ isDark, toggleTheme }) {
   return (
     <header className="sticky top-0 z-40 hidden md:flex md:items-center md:justify-center md:px-8 md:py-3">
@@ -41,6 +47,7 @@ function Header({ isDark, toggleTheme }) {
             key={item.path}
             to={item.path}
             end={item.end}
+            onMouseEnter={item.prefetch}
             className={({ isActive }) =>
               `${linkBase} ${isActive ? linkActive : linkInactive}`
             }

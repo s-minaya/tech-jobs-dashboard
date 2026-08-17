@@ -8,8 +8,9 @@ import LandingPage from "@/components/landing/LandingPage";
 // LandingPage renderizada por completo (con Lightfall, WebGL) no se
 // puede testear con Testing Library/jsdom — jsdom no implementa un
 // contexto WebGL real y `ogl` (la librería del efecto) lo necesita para
-// inicializarse, igual que MainContent (Aurora) tampoco tiene test
-// unitario. Ver spec/features/014-summary-stats-quality/014-tasks.md.
+// inicializarse, igual que HomePage.jsx (DarkVeil/Aurora en su hero)
+// tampoco tiene test unitario. Ver
+// spec/features/014-summary-stats-quality/014-tasks.md.
 //
 // Este archivo solo cubre el estado de carga (fase 014, revisión
 // post-plan): mientras useSummaryStats().loading es true, LandingPage

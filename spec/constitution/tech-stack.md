@@ -4,6 +4,7 @@
 
 - **Lenguaje:** JavaScript (JSX) — sin TypeScript en el frontend
 - **Framework / runtime:** React 19 + Vite 7
+- **Rutas:** react-router-dom v7, modo declarativo clásico (`BrowserRouter`/`Routes`/`Route`/`NavLink`) — sin el modo "data router"
 - **Estilos:** Tailwind CSS v4 + CSS custom en `src/index.css` para tokens y clases semánticas
 - **Gráficas:** Recharts, D3, SVG manual (EuropeMap, HeatmapSvg)
 - **Efectos visuales:** Aurora (WebGL canvas), GlowButton (CSS + keyframes), DecryptedText (animación de texto)
@@ -18,18 +19,30 @@
 ## Archivos / módulos clave
 
 - `src/index.css` — tokens Halo (dark + light), keyframes aurora/glow, clases semánticas custom
-- `src/App.jsx` — orquestador: landing/dashboard, filtros, IntersectionObserver, tema
-- `src/components/layout/MainContent.jsx` — hero + grid de gráficas
+- `src/main.jsx` — envuelve `<App />` con `<BrowserRouter>` (`react-router-dom`)
+- `src/App.jsx` — orquestador: landing/dashboard, filtros, tema, `<Routes>` de las 6 páginas
+- `src/pages/` — un componente por ruta (`HomePage`, `TopSkillsPage`, `TrendsPage`,
+  `SalaryPage`, `MapPage`, `SkillsPage`); cada gráfica se importa con `React.lazy()`
+  + `Suspense` (code-splitting por ruta)
+- `src/config/navigation.js` — `ROUTE_ITEMS`: fuente única de rutas/iconos/prefetch
+  compartida por `Header.jsx` y `BottomNav.jsx`
+- `src/components/layout/Header.jsx` — navegación superior, solo tablet/desktop (md+)
+- `src/components/layout/BottomNav.jsx` — navegación inferior, solo móvil
+- `src/components/layout/ChartPageLayout.jsx` — layout compartido por las 5 páginas
+  de gráfica (`DesktopFilterSidebar` + contenido)
 - `src/components/layout/SummaryStats.jsx` — KPI cards (stat tiles)
-- `src/components/layout/BottomNav.jsx` — navegación móvil
 - `src/components/ui/ChartCard.jsx` — wrapper visual de todas las gráficas; usa DecryptedText en títulos
 - `src/components/ui/ChartDescription.jsx` — descripción + pills de filtros activos
+- `src/components/ui/ChartFallback.jsx` — fallback de `<Suspense>` mientras se descarga
+  el chunk de una gráfica; mismo shell visual que el "Cargando..." de `ChartCard`
 - `src/components/ui/GlowButton.jsx` — botón con efecto aurora iridiscente; se mantiene y se adapta a Halo
 - `src/components/ui/Aurora.jsx` — efecto WebGL aurora; se mantiene en el hero del dashboard
 - `src/components/ui/DecryptedText.jsx` — efecto de descifrado de texto en hover; se mantiene en títulos de gráficas
-- `src/components/ui/ThemeToggle.jsx` — toggle dark/light; se mantiene
-- `src/components/Filters/FilterDrawer.jsx` — panel de filtros desktop + FAB
-- `src/components/Filters/FilterSheet.jsx` — panel de filtros móvil (bottom sheet)
+- `src/components/ui/ThemeToggle.jsx` — toggle dark/light; se mantiene (montado en
+  `Header` en md+ y de forma flotante independiente en móvil, no en el hero)
+- `src/components/Filters/DesktopFilterSidebar.jsx` — columna de filtros para tablet/desktop,
+  dentro del layout de cada página de gráfica (no flota, sin overlay)
+- `src/components/Filters/MobileFilterSheet.jsx` — panel de filtros móvil (bottom sheet)
 - `src/components/Filters/FilterSection.jsx` — chips de selección por filtro
 - `src/hooks/useFilters.js` — estado de filtros + persistencia localStorage
 - `src/hooks/useChartData.js` — fetching genérico de datos de gráficas
@@ -75,16 +88,17 @@ query o componente que dependa de `jobs`/`skills`/`countries`.
 ### Organización de carpetas
 ```
 src/
+├── pages/            ← un componente por ruta (HomePage, TrendsPage, SalaryPage...)
 ├── components/
 │   ├── Charts/       ← componentes de gráficas individuales
-│   ├── Filters/      ← sistema de filtros (Drawer, Sheet, Section)
-│   ├── layout/       ← estructura de página (MainContent, BottomNav, SummaryStats)
+│   ├── Filters/      ← sistema de filtros (DesktopFilterSidebar, MobileFilterSheet, Section)
+│   ├── layout/       ← estructura de página (Header, BottomNav, ChartPageLayout, SummaryStats)
 │   ├── landing/      ← landing page (congelada)
 │   └── ui/           ← componentes reutilizables sin dominio (ChartCard, GlowButton, etc.)
 ├── hooks/            ← hooks custom (useFilters, useChartData, useTheme, useHeatmapData)
 ├── lib/              ← utilidades puras sin efectos (filterUtils, heatmapUtils, roleLabels, etc.)
 ├── services/         ← capa de acceso a la API (jobServices)
-├── config/           ← configuración estática (filters.js con definición de filtros)
+├── config/           ← configuración estática (filters.js, navigation.js)
 ├── mocks/            ← MSW handlers para tests
 └── tests/            ← tests unitarios, espejando la estructura de src/
 ```
@@ -103,7 +117,8 @@ src/
 **Tema:** dark mode y light mode — ambos definidos como tokens en `index.css`.
 - Dark mode: fondo `#0A0B0F`, superficies `#14151C` / `#1E2029`.
 - Light mode: fondo claro coherente con Halo, adaptado de los fondos actuales del proyecto (lila claro del hero).
-- El toggle dark/light se mantiene en el hero del dashboard.
+- El toggle dark/light vive en `Header` (tablet/desktop) y como montaje flotante
+  independiente en móvil — visible en cualquier página, ya no solo en el hero.
 
 **Superficie (dark):** tres niveles — `--color-background`, `--color-surface`, `--color-elevated`.
 **Borde:** siempre 1px, `--color-border` o `--color-border-strong`.

@@ -25,6 +25,13 @@ import {
 // cualquier ruta — por defecto compara con startsWith y todo path
 // empieza por "/". No es un problema de rutas anidadas, pasa igual con
 // rutas hermanas sueltas como las de este proyecto.
+//
+// `prefetch` (opcional, fase 016 bloque E): mismo `import()` dinámico
+// que usa `React.lazy()` para esa gráfica — llamarlo antes de navegar
+// (al hacer hover en Header) hace que el chunk ya esté descargado o en
+// vuelo cuando el usuario pulsa de verdad. Repetir la llamada no
+// duplica la petición: el módulo cacheado por `import()` resuelve la
+// misma promesa. `/` no tiene `prefetch` — no carga ninguna gráfica.
 export const ROUTE_ITEMS = [
   {
     path: "/",
@@ -38,24 +45,34 @@ export const ROUTE_ITEMS = [
     label: "Tendencias",
     icon: RiLineChartLine,
     iconActive: RiLineChartFill,
+    prefetch: () => import("@/components/Charts/DemandByRoleChart"),
   },
   {
     path: "/salarios",
     label: "Salarios",
     icon: RiMoneyEuroCircleLine,
     iconActive: RiMoneyEuroCircleFill,
+    prefetch: () => import("@/components/Charts/SalaryChart"),
   },
-  { path: "/mapa", label: "Mapa", icon: RiMapLine, iconActive: RiMapFill },
+  {
+    path: "/mapa",
+    label: "Mapa",
+    icon: RiMapLine,
+    iconActive: RiMapFill,
+    prefetch: () => import("@/components/Charts/EuropeMap"),
+  },
   {
     path: "/skills",
     label: "Skills",
     icon: RiGridLine,
     iconActive: RiGridFill,
+    prefetch: () => import("@/components/Charts/SkillHeatmap"),
   },
   {
     path: "/top-skills",
     label: "Top Skills",
     icon: RiBarChartLine,
     iconActive: RiBarChartFill,
+    prefetch: () => import("@/components/Charts/TopSkillsChart"),
   },
 ];

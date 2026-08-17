@@ -157,24 +157,41 @@ _(anterior al rediseño Halo)_
     `spec/features/015-business-logic-audit/015-spec.md` para la
     evidencia completa de cada verificación.
 
-## En curso 🔜
-
 17. **016 · Setup de rutas por gráfica + header de navegación** —
     primera feature de la fase 3 del roadmap general (rediseño total de
-    la página para optimizar velocidad y experiencia de usuario);
-    ataca dos problemas reales ya documentados, no solo "rendimiento" en
-    abstracto: el bundle sin dividir (920.84 kB en un único chunk,
-    verificado con `npm run build`) y las 5 gráficas disparando su
-    fetch a la vez al montar, el mismo patrón que agotó el pool de
-    conexiones de Postgres en la fase 010. `react-router-dom` (nueva
-    dependencia, aprobada explícitamente) + `React.lazy()`/`Suspense`
-    por gráfica + header nuevo; `filters`/`useSummaryStats` se quedan
-    por encima del árbol de rutas. `SalaryChart` y `TopSkillsChart`
-    ganan cada una su propia ruta (`/salarios`, `/top-skills`); `/` es
-    portada pura (hero + KPIs, sin gráficas); el `FilterFAB` desaparece
-    y se sustituye por un sidebar de filtros reutilizable en las 5
-    páginas de gráfica (no en `/`). En curso — bloques A, B y C
-    completados. Ver `spec/features/016-router-setup/`.
+    la página para optimizar velocidad y experiencia de usuario); ataca
+    dos problemas reales ya documentados, no solo "rendimiento" en
+    abstracto: el bundle sin dividir (920.84 kB en un único chunk) y las
+    5 gráficas disparando su fetch a la vez al montar, el mismo patrón
+    que agotó el pool de conexiones de Postgres en la fase 010.
+    `react-router-dom` (nueva dependencia) con 6 rutas (`/`,
+    `/top-skills`, `/tendencias`, `/salarios`, `/mapa`, `/skills`) +
+    `React.lazy()`/`Suspense` por gráfica (chunks de 2-27 kB en vez de
+    un único bundle; verificado con Playwright que solo se descarga el
+    chunk de la ruta visitada). `filters`/`useSummaryStats` se quedan
+    por encima del árbol de rutas, sin remontarse al navegar;
+    `AbortController` (ya existente desde la fase 010) resultó cubrir
+    también la cancelación al cambiar de ruta a mitad de una query
+    lenta sin tocar código, verificado en vivo ralentizando una API
+    artificialmente. `/` queda como portada pura (hero + KPIs, sin
+    gráficas) — `SalaryChart` y `TopSkillsChart` ganan cada una su
+    propia ruta. `Header` nuevo (solo md+, sin fondo propio: los
+    enlaces flotan sobre el contenido en vez de sobre una barra opaca)
+    y `BottomNav` adaptado a `NavLink` real, con dos ítems nuevos
+    ("Salarios", "Top Skills"). `FilterFAB`/`FilterDrawer.jsx`
+    retirados, sustituidos por `DesktopFilterSidebar` — columna dentro
+    del layout de cada página de gráfica (no flota, sin overlay),
+    abierta por defecto y colapsable, reutilizando los tokens Halo y
+    los subcomponentes de filtro ya aprobados desde la fase 004;
+    `FilterSheet.jsx` renombrado a `MobileFilterSheet.jsx` (cero cambio
+    de comportamiento) para emparejar. Hallazgo suelto corregido de
+    paso: un `useEffect` en `App.jsx` sincronizaba `isLoading` con un
+    segundo efecto que llamaba `setState` de forma síncrona (patrón
+    detectado por `react-hooks/set-state-in-effect`, forzaba un render
+    extra en cada transición landing→dashboard) — pasa a ser un valor
+    derivado calculado en cada render. `e2e/dashboard.spec.js`
+    reescrito para la navegación por ruta real. Ver
+    `spec/features/016-router-setup/`.
 
 ## Backlog 💡
 

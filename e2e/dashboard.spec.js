@@ -37,9 +37,9 @@ test("landing → dashboard: pulsar el botón lleva al dashboard", async ({
 // 1b. LANDING — stats rediseñadas (fase 014)
 // ─────────────────────────────────────────────────────────────────────────────
 // Lightfall (WebGL) impide testear LandingPage con Testing Library/jsdom
-// (sin contexto WebGL real) — mismo motivo por el que MainContent
-// tampoco tiene test unitario. Esta verificación vive en E2E, con un
-// navegador real, en su lugar.
+// (sin contexto WebGL real) — mismo motivo por el que HomePage.jsx
+// (DarkVeil/Aurora en su hero) tampoco tiene test unitario. Esta
+// verificación vive en E2E, con un navegador real, en su lugar.
 test("landing: las 3 cards de stats muestran datos reales, sin el badge antiguo", async ({
   page,
 }) => {
@@ -111,12 +111,13 @@ test("KPI cards: muestran datos reales de la API", async ({ page }) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 4. TOP SKILLS
+// 4. TOP SKILLS — ruta propia desde la fase 016
 // ─────────────────────────────────────────────────────────────────────────────
-test("Top Skills: la gráfica carga con el badge de ofertas", async ({
+test("Top Skills: la gráfica carga con el badge de ofertas en /top-skills", async ({
   page,
 }) => {
   await skipLanding(page);
+  await page.goto("/top-skills");
 
   await expect(page.getByRole("heading", { name: /top skills/i })).toBeVisible({
     timeout: 15_000,
@@ -129,103 +130,90 @@ test("Top Skills: la gráfica carga con el badge de ofertas", async ({
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 5. EVOLUCIÓN MENSUAL
+// 5. EVOLUCIÓN MENSUAL — ruta propia desde la fase 016
 // ─────────────────────────────────────────────────────────────────────────────
-test("Evolución mensual: la gráfica aparece al hacer scroll", async ({
+test("Evolución mensual: la gráfica carga en /tendencias", async ({
   page,
 }) => {
   await skipLanding(page);
+  await page.goto("/tendencias");
 
-  const heading = page.getByRole("heading", { name: /evolución mensual/i });
-  await heading.scrollIntoViewIfNeeded();
-  await expect(heading).toBeVisible({ timeout: 15_000 });
+  await expect(
+    page.getByRole("heading", { name: /evolución mensual/i }),
+  ).toBeVisible({ timeout: 15_000 });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 6. SALARIO
+// 6. SALARIO — ruta propia desde la fase 016
 // ─────────────────────────────────────────────────────────────────────────────
-test("Salario: la gráfica aparece al hacer scroll", async ({ page }) => {
+test("Salario: la gráfica carga en /salarios", async ({ page }) => {
   await skipLanding(page);
+  await page.goto("/salarios");
 
-  const heading = page.getByRole("heading", { name: /salario mediano/i });
-  await heading.scrollIntoViewIfNeeded();
-  await expect(heading).toBeVisible({ timeout: 15_000 });
+  await expect(
+    page.getByRole("heading", { name: /salario mediano/i }),
+  ).toBeVisible({ timeout: 15_000 });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 7. HEATMAP
+// 7. HEATMAP — ruta propia desde la fase 016
 // ─────────────────────────────────────────────────────────────────────────────
-test("Heatmap: aparece la sección de co-ocurrencia al hacer scroll", async ({
+test("Heatmap: aparece la sección de co-ocurrencia en /skills", async ({
   page,
 }) => {
   await skipLanding(page);
+  await page.goto("/skills");
 
-  const heading = page.getByRole("heading", { name: /co-ocurrencia/i });
-  await heading.scrollIntoViewIfNeeded();
-  await expect(heading).toBeVisible({ timeout: 15_000 });
+  await expect(
+    page.getByRole("heading", { name: /co-ocurrencia/i }),
+  ).toBeVisible({ timeout: 15_000 });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 8. FILTRAR POR PAÍS
+// 8. FILTRAR POR PAÍS — DesktopFilterSidebar desde la fase 016 (bloque D),
+//    sustituye al FAB + FilterDrawer que este test usaba antes
 // ─────────────────────────────────────────────────────────────────────────────
 test("Filtros: seleccionar Alemania actualiza el badge de filtros activos", async ({
   page,
 }) => {
   await skipLanding(page);
-  // "Skills rastreadas" como ancla de "las KPI cards ya cargaron": a
-  // diferencia de "Ofertas activas" (eliminada en la revisión post-plan
-  // de la fase 014), esta card no ha cambiado de nombre.
-  await expect(page.getByText("Skills rastreadas", { exact: true })).toBeVisible({
-    timeout: 15_000,
+  await page.goto("/tendencias");
+
+  // DesktopFilterSidebar vive siempre en el layout de la página, abierto
+  // por defecto — no hay FAB que pulsar ni panel que esperar a que se
+  // deslice.
+  const sidebar = page.getByLabel("Filtros de la gráfica");
+  await expect(sidebar).toBeVisible({ timeout: 15_000 });
+
+  // El chip muestra el nombre traducido ("Alemania"), no el código
+  // crudo ("DE") — OPTION_LABELS en filterUtils.js.
+  await sidebar.getByRole("button", { name: /^Alemania$/ }).click();
+
+  // El badge junto a "Filtros" muestra el nº de filtros activos.
+  await expect(sidebar.getByText("1", { exact: true })).toBeVisible({
+    timeout: 5_000,
   });
-
-  // El FAB es el div fixed top-4 left-4 — hacemos click en el wrapper del GlowButton
-  await page.locator("div.fixed.top-4.left-4 button").click();
-
-  // El drawer se desliza — esperamos al título "Filtros" dentro del drawer
-  const drawer = page.locator("div.fixed.top-0.left-0.z-50");
-  await expect(drawer).toBeVisible({ timeout: 5_000 });
-
-  // Seleccionamos Alemania dentro del drawer — el chip muestra el nombre
-  // traducido ("Alemania"), no el código crudo ("DE"), desde que la fase
-  // 013 tradujo el sidebar completo (OPTION_LABELS en FilterSection.jsx).
-  // Este test seguía buscando "DE" literal — descubierto al ejecutar el
-  // E2E completo por primera vez desde esa fase (fase 014).
-  await drawer.getByRole("button", { name: /^Alemania$/ }).click();
-  await drawer.getByRole("button", { name: /ver resultados/i }).click();
-
-  // El anillo pulsante del FAB indica filtro activo
-  await expect(page.locator(".animate-ping")).toBeVisible({ timeout: 5_000 });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 9. RESETEAR FILTROS
+// 9. RESETEAR FILTROS — DesktopFilterSidebar desde la fase 016 (bloque D)
 // ─────────────────────────────────────────────────────────────────────────────
 test("Filtros: resetear elimina el badge de filtros activos", async ({
   page,
 }) => {
   await skipLanding(page);
-  // "Skills rastreadas" como ancla de "las KPI cards ya cargaron": a
-  // diferencia de "Ofertas activas" (eliminada en la revisión post-plan
-  // de la fase 014), esta card no ha cambiado de nombre.
-  await expect(page.getByText("Skills rastreadas", { exact: true })).toBeVisible({
-    timeout: 15_000,
+  await page.goto("/tendencias");
+
+  const sidebar = page.getByLabel("Filtros de la gráfica");
+  await expect(sidebar).toBeVisible({ timeout: 15_000 });
+
+  await sidebar.getByRole("button", { name: /^Francia$/ }).click();
+  await expect(sidebar.getByText("1", { exact: true })).toBeVisible({
+    timeout: 5_000,
   });
 
-  // Abrimos el drawer
-  await page.locator("div.fixed.top-4.left-4 button").click();
-  const drawer = page.locator("div.fixed.top-0.left-0.z-50");
-  await expect(drawer).toBeVisible({ timeout: 5_000 });
-
-  // Activamos un filtro — nombre traducido, mismo motivo que el test anterior.
-  await drawer.getByRole("button", { name: /^Francia$/ }).click();
-
-  // Reseteamos desde dentro del drawer
-  await drawer.getByRole("button", { name: /resetear/i }).click();
-  await drawer.getByRole("button", { name: /ver resultados/i }).click();
-
-  // El anillo pulsante no debe aparecer
-  await expect(page.locator(".animate-ping")).not.toBeVisible({
+  await sidebar.getByRole("button", { name: /resetear/i }).click();
+  await expect(sidebar.getByText("1", { exact: true })).not.toBeVisible({
     timeout: 5_000,
   });
 });
@@ -241,10 +229,13 @@ test("Tema: el toggle cambia entre dark y light mode", async ({ page }) => {
     el.classList.contains("dark"),
   );
 
-  // ThemeToggle es un <button> con aria-label dinámico según el tema actual
-  const toggle = page.getByRole("button", {
-    name: /cambiar a modo (claro|oscuro)/i,
-  });
+  // ThemeToggle vive montado en dos sitios a la vez (Header en md+,
+  // flotante en móvil) — se escopa a Header porque este spec corre en
+  // el viewport desktop por defecto de playwright.config.js, donde el
+  // flotante existe en el DOM pero no es visible.
+  const toggle = page
+    .locator("header")
+    .getByRole("button", { name: /cambiar a modo (claro|oscuro)/i });
   await toggle.click();
 
   const isDarkAfter = await html.evaluate((el) =>

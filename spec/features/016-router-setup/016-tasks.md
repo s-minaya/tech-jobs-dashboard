@@ -209,39 +209,75 @@
 
 ## Bloque E — Limpieza, extras opcionales, tests, documentación
 
-- [ ] Confirmar que no queda código muerto: `MainContent.jsx`,
-      `FilterFAB`, `FilterDrawer.jsx`, `IntersectionObserver`/
-      `activeSection` de `App.jsx`, imports huérfanos. `MobileFilterSheet.jsx`
-      no entra aquí — se mantiene sin cambios.
-- [ ] **Opcional:** prefetch del chunk de una ruta al hacer hover sobre
-      su link del header.
-- [ ] **Opcional:** `startTransition` (React 19) envolviendo la
-      navegación del header/`BottomNav`.
-- [ ] Reescribir `e2e/dashboard.spec.js`: tests que interactúan con el
-      FAB/drawer desktop → nuevo flujo (navegar a una página de
-      gráfica, usar `DesktopFilterSidebar`); tests con
-      `scrollIntoViewIfNeeded()` sobre headings → navegación por ruta
-      real. Los flujos móviles (`MobileFilterSheet` vía `BottomNav`) deberían
-      necesitar cambios mínimos.
-- [ ] Actualizar `spec/constitution/tech-stack.md`: carpeta `pages/`,
-      `Header.jsx`, `DesktopFilterSidebar.jsx`, `ChartPageLayout.jsx` nuevos;
-      `MainContent.jsx`/`FilterFAB`/`FilterDrawer.jsx` retirados;
-      `MobileFilterSheet.jsx` sin cambios; nota de que `ThemeToggle` vive en
-      `Header` (md+) y flotante en móvil, ya no en el hero.
-- [ ] Actualizar `spec/constitution/mission.md`: la frase *"El toggle
-      dark/light se mantiene en el hero del dashboard"* queda
-      desactualizada — sustituir por la ubicación real.
-- [ ] `npx vitest run` al 100%.
-- [ ] `npm run build` sin errores.
-- [ ] `npx playwright test` en verde.
-- [ ] `.env.local` nunca leído ni impreso durante toda la feature.
+- [x] Confirmar que no queda código muerto: `grep -rn` de `MainContent`,
+      `FilterFAB`, `FilterDrawer`, `IntersectionObserver`, `activeSection`
+      en `src/` → sin resultados fuera de código no relacionado (el
+      `IntersectionObserver` que queda es el de `DecryptedText.jsx`, un
+      efecto de texto en hover sin relación con navegación) y comentarios
+      explicativos ya revisados en `DesktopFilterSidebar.jsx`. Comentarios
+      residuales que mencionaban `MainContent.jsx` en
+      `LandingPage.test.jsx` actualizados a `HomePage.jsx`.
+- [x] **Opcional:** prefetch del chunk de una ruta al hacer hover sobre
+      su link del header. `ROUTE_ITEMS` (`navigation.js`) gana un campo
+      `prefetch` por ruta (mismo `import()` dinámico que usa
+      `React.lazy()` para esa gráfica); `Header.jsx` lo dispara en
+      `onMouseEnter`. Verificado con Playwright real: hacer hover sobre
+      "Tendencias" sin hacer click dispara la request del chunk de
+      `DemandByRoleChart`, y la URL sigue en "/".
+- [x] **Opcional, omitido:** `startTransition` envolviendo la navegación.
+      `NavLink` gestiona la navegación internamente (modo declarativo,
+      sin `data router`) — envolverla en `startTransition` de verdad
+      exige interceptar el click y navegar con `useNavigate()` a mano,
+      perdiendo sin cuidado extra la semántica nativa de `<a>` (abrir en
+      pestaña nueva con click central/Ctrl, etc.). Sin un problema real
+      medido (el coste de pintar Recharts/D3 en las gráficas de este
+      proyecto no se ha observado como perceptible), no se justifica el
+      riesgo — mismo criterio que "no cambiar algo porque sí" de
+      `016-spec.md`. Queda como candidato futuro si se mide un problema real.
+- [x] Reescrito `e2e/dashboard.spec.js`: tests 5, 6 y 7 (evolución
+      mensual, salario, heatmap) pasan de `scrollIntoViewIfNeeded()` a
+      `page.goto()` a su ruta propia; test 4 (Top Skills) navega a
+      `/top-skills` antes de comprobar el heading; tests 8 y 9 (filtros)
+      reescritos por completo para `DesktopFilterSidebar`
+      (`page.getByLabel("Filtros de la gráfica")` en vez del selector
+      CSS frágil `div.fixed.top-4.left-4` del FAB, comprobando el badge
+      numérico en vez del anillo `.animate-ping`); test 10 (tema) escopa
+      el `ThemeToggle` a `header` para evitar un choque de "strict mode"
+      con el montaje flotante móvil (mismo componente montado dos veces
+      a la vez). Los tests 1-3 (landing, sessionStorage, KPIs) no
+      necesitaron cambios.
+- [x] Actualizado `spec/constitution/tech-stack.md`: `src/pages/`,
+      `Header.jsx`, `ChartPageLayout.jsx`, `DesktopFilterSidebar.jsx`,
+      `MobileFilterSheet.jsx`, `ChartFallback.jsx`, `navigation.js`
+      documentados; `MainContent.jsx`/`FilterFAB`/`FilterDrawer.jsx`
+      retirados de la lista; árbol de carpetas actualizado (`pages/`
+      nuevo); nota de que `ThemeToggle` vive en `Header` (md+) y
+      flotante en móvil, ya no en el hero; `react-router-dom` añadido a
+      "Tecnologías".
+- [x] Revisado `spec/constitution/mission.md`: la frase sobre el toggle
+      en el hero que había que actualizar en realidad vivía en
+      `tech-stack.md` (ya corregida ahí) — verificado con grep que
+      `mission.md` no menciona "toggle" ni "hero" en ningún sitio, así
+      que no necesitaba ningún cambio.
+- [x] `npx vitest run` al 100% — 401/401, 30/30 archivos.
+- [x] `npm run build` sin errores ni avisos nuevos.
+- [x] `npx playwright test` en verde — 11/11 (una primera pasada tuvo 1
+      timeout en el primer test del archivo, reproducido de forma no
+      determinista por el entorno — mismo patrón de flakiness ya visto
+      con vitest en el bloque A; la repetición inmediata pasó limpia,
+      no relacionado con los cambios de este bloque).
+- [x] `.env.local` nunca leído ni impreso — verificado con grep, sin
+      resultados.
 
 ## Cierre
 
-- [ ] Validar contra todos los criterios de aceptación de
-      `016-spec.md`.
-- [ ] Mover la feature 016 a "Hecho" en `spec/constitution/roadmap.md`,
+- [x] Validado contra todos los criterios de aceptación de
+      `016-spec.md` — todos cumplidos (incluidos los dos opcionales:
+      prefetch en hover implementado, `startTransition` evaluado y
+      omitido con su razón documentada).
+- [x] Movida la feature 016 a "Hecho" en `spec/constitution/roadmap.md`,
       con el resumen real de lo implementado (mismo formato que las
-      features anteriores).
+      features anteriores). Sección "En curso 🔜" retirada (queda
+      vacía hasta que empiece la siguiente feature de la fase 3).
 - [ ] Presentar resumen de cambios al usuario y esperar aprobación
       explícita antes de `git commit`/`git push` (`AGENTS.md`).
