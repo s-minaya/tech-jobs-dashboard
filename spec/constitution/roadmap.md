@@ -193,19 +193,27 @@ _(anterior al rediseño Halo)_
     reescrito para la navegación por ruta real. Ver
     `spec/features/016-router-setup/`.
 
+18. **017 · Rediseño landing — versión móvil** — primera feature de la
+    fase 3 que toca `src/components/landing/`, desbloqueada para esto
+    igual que `api/` en la fase 010 (`AGENTS.md`/`mission.md`/
+    `tech-stack.md` actualizados). Alcance: solo móvil (<640px). Arregla
+    el scroll roto (el fondo `Lightfall` se separa en su propia capa
+    fija; el contenido, en una capa aparte, es la que ahora hace scroll
+    de verdad). Título → "Radar del Mercado Tech", con `AuroraText`
+    (componente nuevo, `src/components/ui/AuroraText.jsx`, traducido de
+    una referencia externa). Disposición de las 3 stat cards rediseñada
+    (icono en círculo, números más grandes, indicador decorativo);
+    icono de salario cambiado a `Euro` (lucide-react). Ver
+    `spec/features/017-landing-mobile-redesign/`.
+
 ## Backlog 💡
 
-- **Resto de la fase 3** (rediseño visual/UX del contenido de cada
-  ruta) — se numera a medida que se planifica, a partir de que la 016
-  cierre.
-- **Halo Responsive y Pulido** (backlog; llevaba provisionalmente el
-  número 016 hasta esta ronda) — se mueve al final de todo el
-  proyecto: revisión final de breakpoints, espaciados y componentes
-  menores, ejecutada después de que toda la fase 3 (rediseño) esté
-  cerrada, para no pulir responsive/espaciados sobre una estructura que
-  todavía va a cambiar de raíz. Número definitivo pendiente de asignar
-  cuando se sepa cuántas features suma la fase 3 completa — no se fija
-  ahora para no tener que reescribirlo cada vez que se añada una
-  feature nueva antes.
+- **Resto de la fase 3** (landing tablet/desktop + rediseño visual/UX
+  del contenido de cada ruta del dashboard) — se numera a medida que se
+  planifica.
+- **Halo Responsive y Pulido** — última feature de todo el proyecto,
+  después de que cierre toda la fase 3 (no tiene sentido pulir
+  espaciados sobre una estructura que todavía va a cambiar de raíz).
+  Sin número fijo todavía.
 
 > Una sola feature activa a la vez. No se empieza la siguiente hasta que la anterior pasa todos los criterios de aceptación.

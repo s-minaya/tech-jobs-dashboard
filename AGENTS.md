@@ -63,7 +63,6 @@ y espera aprobación antes de ejecutar `git commit` o `git push`.
 
 ## Zonas congeladas — no tocar
 
-- `src/components/landing/` — la landing está congelada. Ninguna modificación.
 - Ningún archivo `.env*` (incluye `.env.local`) — **nunca leer ni
   imprimir su contenido**, ni siquiera para depurar. Es la única
   excepción permanente de este proyecto. Solo lectura de
@@ -73,6 +72,13 @@ y espera aprobación antes de ejecutar `git commit` o `git push`.
 > dio acceso completo para leer y editar el backend (`api/src/`,
 > `api/schema.sql`, tests). Sigue aplicando el resto de reglas del flujo
 > de trabajo (spec → plan → tasks, una feature activa a la vez).
+
+> `src/components/landing/` dejó de estar congelada a partir de la
+> feature 017 (fase 3 del roadmap general, rediseño visual): el usuario
+> dio acceso explícito para rediseñar la landing, empezando por la
+> versión móvil. Sigue aplicando el resto de reglas del flujo de
+> trabajo (spec → plan → tasks, una feature activa a la vez, no
+> hardcodear datos).
 
 ---
 

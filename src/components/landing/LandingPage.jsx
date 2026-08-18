@@ -2,15 +2,12 @@ import { useState, useEffect } from "react";
 import Lightfall from "@/components/ui/Lightfall";
 import GlowButton from "@/components/ui/GlowButton";
 import PageLoader from "@/components/ui/PageLoader";
+import AuroraText from "@/components/ui/AuroraText";
 import { useSummaryStats } from "@/hooks/useSummaryStats";
 import { useCountUp } from "@/hooks/useCountUp";
 import { formatRelativeTime } from "@/lib/formatRelativeTime";
-import {
-  RiArrowRightLine,
-  RiEarthLine,
-  RiMoneyEuroCircleLine,
-  RiFireLine,
-} from "react-icons/ri";
+import { RiArrowRightLine, RiEarthLine, RiFireLine } from "react-icons/ri";
+import { Euro } from "lucide-react";
 
 // Tope de espera del loader inicial (ver comentario de LandingPage más
 // abajo): si getSummaryStats() nunca resuelve (red caída, petición
@@ -49,11 +46,16 @@ function fmt(n) {
 // reales debajo. Reusa el mismo lenguaje visual que tenía el badge
 // superior ya eliminado (pill de cristal: border-white/20 bg-white/10
 // backdrop-blur-sm) en vez de inventar un patrón nuevo.
+//
+// Disposición interna (fase 017, imagen de referencia): icono dentro de
+// un círculo en vez de inline junto al título.
 function StatCard({ icon: Icon, title, children }) {
   return (
-    <div className="flex w-64 flex-col gap-2.5 rounded-2xl border border-white/20 bg-white/10 p-4 text-left backdrop-blur-sm">
-      <div className="flex items-center gap-1.5 text-xs font-medium text-white/85">
-        <Icon className="h-3.5 w-3.5 shrink-0" />
+    <div className="flex w-64 flex-col gap-3 rounded-2xl border border-white/20 bg-white/10 p-4 text-left backdrop-blur-sm">
+      <div className="flex items-center gap-2 text-[11px] font-medium tracking-wide text-white/70 uppercase">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10">
+          <Icon className="h-4 w-4 text-white" />
+        </span>
         {title}
       </div>
       {children}
@@ -61,14 +63,32 @@ function StatCard({ icon: Icon, title, children }) {
   );
 }
 
+// StatCardFooter
+// Línea final de cada StatCard — texto muted + punto decorativo (no es
+// un dato nuevo de la API, solo un acento visual, ver 017-spec.md).
+// --color-success vive en index.css pero no está en el puente @theme
+// (nada más en el proyecto lo necesitaba como utilidad Tailwind), así
+// que se aplica vía var() inline en vez de una clase bg-success
+// inexistente — mismo patrón que el resto del proyecto con tokens Halo.
+function StatCardFooter({ children }) {
+  return (
+    <p className="flex items-center gap-1.5 text-[10px] text-white/40">
+      {children}
+      <span
+        className="h-1.5 w-1.5 shrink-0 rounded-full"
+        style={{ backgroundColor: "var(--color-success)" }}
+        aria-hidden="true"
+      />
+    </p>
+  );
+}
+
 // LandingPage
 // Pantalla de entrada que bloquea el acceso al dashboard hasta que el
 // usuario pulsa "Comenzar". Usa el efecto Lightfall (WebGL) como fondo.
-// Los colores del efecto coinciden con la paleta del proyecto.
-//
-// Al pulsar el botón, la landing se desvanece antes de mostrar el dashboard.
-// pointer-events-none en overlay y wrapper de contenido para que el mouse
-// llegue al canvas de Lightfall y la interacción funcione.
+// Los colores del efecto coinciden con la paleta del proyecto. Al pulsar
+// el botón, la landing se desvanece antes de mostrar el dashboard (el
+// porqué de cada `pointer-events-none` vive junto a cada capa, más abajo).
 //
 // Los stats se cargan desde la API vía useSummaryStats (fase 014, hook
 // compartido con SummaryStats — antes cada uno hacía su propio fetch, ver
@@ -129,7 +149,7 @@ function LandingPage({ onEnter }) {
 
   return (
     <div
-      className={`fixed inset-0 z-100 flex items-center justify-center transition-opacity duration-600 ease-in-out ${leaving ? "pointer-events-none opacity-0" : "opacity-100"} `}
+      className={`fixed inset-0 z-100 transition-opacity duration-600 ease-in-out ${leaving ? "pointer-events-none opacity-0" : "opacity-100"} `}
     >
       {/* Fondo Lightfall — colores de la marca */}
       <div className="absolute inset-0">
@@ -155,100 +175,103 @@ function LandingPage({ onEnter }) {
       {/* Overlay — pointer-events-none para que el mouse llegue al canvas */}
       <div className="pointer-events-none absolute inset-0 bg-black/20" />
 
-      {/* Contenido — pointer-events-none en el wrapper, el botón recupera los eventos */}
-      <div className="pointer-events-none relative z-10 flex max-w-3xl flex-col items-center px-6 text-center">
-        {/* Título */}
-        <h1 className="mb-4 font-heading text-5xl leading-tight font-bold tracking-tight text-white md:text-6xl">
-          Tech Jobs
-          <span
-            className="block bg-clip-text text-transparent"
-            style={{
-              backgroundImage:
-                "linear-gradient(135deg, #c4b5fd, #a78bfa, #7860ff)",
-            }}
-          >
-            Dashboard
-          </span>
-        </h1>
+      {/* Capa de scroll — separada del fondo para que Lightfall no se
+          desplace con el contenido. En móvil (<640px, alcance de esta
+          feature) permite hacer scroll de verdad cuando el contenido no
+          cabe en pantalla (antes quedaba cortado sin ninguna forma de
+          verlo). En tablet/desktop (sm+, fuera de alcance) vuelve a
+          "overflow-visible + pointer-events-none" — exactamente el
+          comportamiento de antes, sin tocar nada ahí. */}
+      <div className="absolute inset-0 overflow-y-auto sm:overflow-visible sm:pointer-events-none">
+        {/* Contenido — pointer-events-none en el wrapper, el botón recupera los eventos */}
+        <div className="pointer-events-none mx-auto flex min-h-full max-w-3xl flex-col items-center justify-center px-6 py-12 text-center">
+          {/* Título — "Mercado Tech" con el efecto AuroraText (fase 017),
+              colores por defecto del componente de referencia. */}
+          <h1 className="mb-4 font-heading text-5xl leading-tight font-bold tracking-tight text-white md:text-6xl">
+            Radar del
+            <br />
+            <AuroraText>Mercado Tech</AuroraText>
+          </h1>
 
-        {/* Descripción */}
-        <p className="mb-8 max-w-lg text-base leading-relaxed text-white/70">
-          Explora las tendencias del mercado laboral tech en Europa. Descubre
-          qué skills se demandan, cómo evolucionan los salarios y qué roles
-          están creciendo en cada país.
-        </p>
+          {/* Descripción */}
+          <p className="mb-8 max-w-lg text-base leading-relaxed text-white/70">
+            Explora las tendencias del mercado laboral tech en Europa. Descubre
+            qué skills se demandan, cómo evolucionan los salarios y qué roles
+            están creciendo en cada país.
+          </p>
 
-        {/* Stats — datos reales de la API, cada card tira de una gráfica del dashboard */}
-        <div className="mb-10 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
-          <StatCard icon={RiEarthLine} title="Explora el mercado por país">
-            <div className="flex items-baseline gap-4">
+          {/* Stats — datos reales de la API, cada card tira de una gráfica del dashboard */}
+          <div className="mb-10 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
+            <StatCard icon={RiEarthLine} title="Explora el mercado por país">
+              <div className="flex items-baseline gap-4">
+                <div>
+                  <span className="font-mono text-2xl font-bold text-white">
+                    {stats ? fmt(countriesCount) : "…"}
+                  </span>
+                  <p className="text-[10px] tracking-wide text-white/50 uppercase">
+                    países
+                  </p>
+                </div>
+                <div>
+                  <span className="font-mono text-2xl font-bold text-white">
+                    {stats ? fmt(activeJobsCount) : "…"}
+                  </span>
+                  <p className="text-[10px] tracking-wide text-white/50 uppercase">
+                    ofertas activas
+                  </p>
+                </div>
+              </div>
+              <StatCardFooter>
+                Actualizado {stats ? formatRelativeTime(stats.last_updated) : "…"}
+              </StatCardFooter>
+            </StatCard>
+
+            <StatCard icon={Euro} title="Compara salarios en Europa">
               <div>
-                <span className="font-mono text-xl font-bold text-white">
-                  {stats ? fmt(countriesCount) : "…"}
+                <span className="font-mono text-2xl font-bold text-white">
+                  {stats ? `${fmt(salaryCount)} €` : "…"}
                 </span>
                 <p className="text-[10px] tracking-wide text-white/50 uppercase">
-                  países
+                  salario mediano
                 </p>
               </div>
-              <div>
-                <span className="font-mono text-xl font-bold text-white">
-                  {stats ? fmt(activeJobsCount) : "…"}
-                </span>
-                <p className="text-[10px] tracking-wide text-white/50 uppercase">
-                  ofertas activas
-                </p>
-              </div>
-            </div>
-            <p className="text-[10px] text-white/40">
-              Actualizado {stats ? formatRelativeTime(stats.last_updated) : "…"}
-            </p>
-          </StatCard>
+              <StatCardFooter>Últimos 90 días</StatCardFooter>
+            </StatCard>
 
-          <StatCard icon={RiMoneyEuroCircleLine} title="Compara salarios en Europa">
-            <div>
-              <span className="font-mono text-xl font-bold text-white">
-                {stats ? `${fmt(salaryCount)} €` : "…"}
-              </span>
-              <p className="text-[10px] tracking-wide text-white/50 uppercase">
-                salario mediano
-              </p>
-            </div>
-            <p className="text-[10px] text-white/40">Últimos 90 días</p>
-          </StatCard>
+            <StatCard icon={RiFireLine} title="Descubre dónde está la demanda">
+              <ol className="flex flex-col gap-1">
+                {stats?.top_skills_30d ? (
+                  stats.top_skills_30d.map((skill, i) => (
+                    <li
+                      key={skill.name}
+                      className="flex items-center gap-2 text-sm text-white"
+                    >
+                      <span className="font-mono text-[10px] text-white/40">
+                        {i + 1}
+                      </span>
+                      {skill.name}
+                    </li>
+                  ))
+                ) : (
+                  <li className="text-sm text-white/50">…</li>
+                )}
+              </ol>
+              <StatCardFooter>Últimos 30 días</StatCardFooter>
+            </StatCard>
+          </div>
 
-          <StatCard icon={RiFireLine} title="Descubre dónde está la demanda">
-            <ol className="flex flex-col gap-1">
-              {stats?.top_skills_30d ? (
-                stats.top_skills_30d.map((skill, i) => (
-                  <li
-                    key={skill.name}
-                    className="flex items-center gap-2 text-sm text-white"
-                  >
-                    <span className="font-mono text-[10px] text-white/40">
-                      {i + 1}
-                    </span>
-                    {skill.name}
-                  </li>
-                ))
-              ) : (
-                <li className="text-sm text-white/50">…</li>
-              )}
-            </ol>
-            <p className="text-[10px] text-white/40">Últimos 30 días</p>
-          </StatCard>
-        </div>
-
-        {/* CTA — GlowButton con borde aurora animado.
-            pointer-events-auto recupera los eventos sobre el wrapper pointer-events-none. */}
-        <div className="pointer-events-auto">
-          <GlowButton
-            onClick={handleEnter}
-            variant="solid"
-            className="group shadow-lg shadow-black/20"
-          >
-            Explorar el dashboard
-            <RiArrowRightLine className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
-          </GlowButton>
+          {/* CTA — GlowButton con borde aurora animado.
+              pointer-events-auto recupera los eventos sobre el wrapper pointer-events-none. */}
+          <div className="pointer-events-auto">
+            <GlowButton
+              onClick={handleEnter}
+              variant="solid"
+              className="group shadow-lg shadow-black/20"
+            >
+              Explorar dashboard
+              <RiArrowRightLine className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+            </GlowButton>
+          </div>
         </div>
       </div>
     </div>

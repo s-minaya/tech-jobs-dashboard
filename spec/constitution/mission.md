@@ -21,7 +21,7 @@ del proyecto (aurora, GlowButton, DecryptedText).
 ## Principios
 
 - **Datos primero** — ningún dato es hardcodeado; todo viene de la API y la BD real.
-- **Diseño coherente** — Halo como base estructural del dashboard, con los efectos visuales propios del proyecto integrados con criterio (aurora, GlowButton, DecryptedText). La landing tiene su propia identidad y no se toca.
+- **Diseño coherente** — Halo como base estructural del dashboard, con los efectos visuales propios del proyecto integrados con criterio (aurora, GlowButton, DecryptedText, AuroraText desde la fase 3). La landing tiene su propia identidad y entra en el rediseño desde la feature 017, empezando por la versión móvil.
 - **Dual theme** — dark mode y light mode coherentes con Halo; ambos modos son ciudadanos de primera clase.
 - **Responsive real** — la experiencia móvil es tan cuidada como la de desktop.
 - **Código limpio** — SDD, convenciones consistentes, sin malas prácticas acumuladas, tests y CI/CD.
@@ -30,5 +30,4 @@ del proyecto (aurora, GlowButton, DecryptedText).
 
 - No es una bolsa de trabajo (no hay listado ni detalle de ofertas individuales).
 - No es una app con autenticación ni perfil de usuario.
-- La landing page no forma parte del rediseño — se congela en su estado actual.
 - No se añaden nuevas secciones de datos en este ciclo de rediseño.

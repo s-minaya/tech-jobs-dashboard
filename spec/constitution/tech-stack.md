@@ -38,6 +38,7 @@
 - `src/components/ui/GlowButton.jsx` — botón con efecto aurora iridiscente; se mantiene y se adapta a Halo
 - `src/components/ui/Aurora.jsx` — efecto WebGL aurora; se mantiene en el hero del dashboard
 - `src/components/ui/DecryptedText.jsx` — efecto de descifrado de texto en hover; se mantiene en títulos de gráficas
+- `src/components/ui/AuroraText.jsx` — texto con gradiente animado (fase 017); usado en el título de la landing
 - `src/components/ui/ThemeToggle.jsx` — toggle dark/light; se mantiene (montado en
   `Header` en md+ y de forma flotante independiente en móvil, no en el hero)
 - `src/components/Filters/DesktopFilterSidebar.jsx` — columna de filtros para tablet/desktop,
@@ -48,7 +49,8 @@
 - `src/hooks/useChartData.js` — fetching genérico de datos de gráficas
 - `src/hooks/useTheme.js` — gestión del tema dark/light
 - `src/services/jobServices.js` — llamadas a la API
-- `src/components/landing/` — ZONA CONGELADA, no tocar
+- `src/components/landing/` — en rediseño desde la feature 017 (fase 3),
+  empezando por la versión móvil; ya no congelada
 
 ## Comandos
 
@@ -93,7 +95,7 @@ src/
 │   ├── Charts/       ← componentes de gráficas individuales
 │   ├── Filters/      ← sistema de filtros (DesktopFilterSidebar, MobileFilterSheet, Section)
 │   ├── layout/       ← estructura de página (Header, BottomNav, ChartPageLayout, SummaryStats)
-│   ├── landing/      ← landing page (congelada)
+│   ├── landing/      ← landing page (en rediseño desde la fase 3)
 │   └── ui/           ← componentes reutilizables sin dominio (ChartCard, GlowButton, etc.)
 ├── hooks/            ← hooks custom (useFilters, useChartData, useTheme, useHeatmapData)
 ├── lib/              ← utilidades puras sin efectos (filterUtils, heatmapUtils, roleLabels, etc.)
@@ -144,7 +146,6 @@ src/
 
 ## Límites duros
 
-- **No tocar `src/components/landing/`** — zona congelada.
 - **No hardcodear datos** — todo viene de la API.
 - **No añadir nuevas dependencias de gráficas** — usar Recharts y D3.
 - **No subir `.env*`** al repo.

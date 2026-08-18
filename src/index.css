@@ -21,6 +21,8 @@
   --font-heading: "Inter", sans-serif;
   --font-sans: "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+  /* AuroraText (fase 017) — keyframe en la sección "AURORA TEXT" más abajo. */
+  --animate-aurora: aurora 8s ease-in-out infinite alternate;
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -155,10 +157,9 @@
   --color-danger: #dc2626;
   --color-danger-soft: rgba(220, 38, 38, 0.12);
 
-  /* TODO: fase 007 (Halo Charts Internals) — paleta de colores de rol y
-     chart-N. Se mantienen intactos: no es rediseño visual, es la paleta
-     que ya usan roleLabels.js y las gráficas; solo chart-1..5 ahora
-     referencian --role-* en vez de duplicar el valor (ver audit.md #3). */
+  /* Paleta de colores de rol y chart-N — la misma que usan roleLabels.js
+     y las gráficas; chart-1..5 referencian --role-* en vez de duplicar
+     el valor (fase 007, Halo Charts Internals; ver audit.md #3). */
   --chart-1: var(--role-backend);
   --chart-2: var(--role-data-science);
   --chart-3: var(--role-devops);
@@ -218,7 +219,7 @@
   --color-danger: #ef4444;
   --color-danger-soft: rgba(239, 68, 68, 0.16);
 
-  /* TODO: fase 007 (Halo Charts Internals) — ver nota de arriba en :root */
+  /* Paleta de colores de rol — ver nota de arriba en :root */
   --chart-1: var(--role-backend);
   --chart-2: var(--role-data-science);
   --chart-3: var(--role-devops);
@@ -377,8 +378,7 @@
   }
 }
 
-/* ── Aurora icon — efecto gradiente animado en iconos activos del BottomNav ──
-   TODO: rediseñar en fase 005 (Halo BottomNav). */
+/* ── Aurora icon — efecto gradiente animado en iconos activos del BottomNav ── */
 /* Usa el mismo gradiente que GlowButton pero aplicado como filter hue-rotate */
 @keyframes auroraHue {
   0% {
@@ -398,6 +398,36 @@
 .aurora-icon {
   display: inline-flex;
   animation: auroraHue 3s linear infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AURORA TEXT (fase 017)
+   Traducido desde un componente de referencia externo (TypeScript/CSS)
+   a JSX + Tailwind del proyecto — ver AuroraText.jsx en
+   src/components/ui/. Token --animate-aurora en el bloque @theme inline
+   de arriba.
+═══════════════════════════════════════════════════════════════════════════ */
+@keyframes aurora {
+  0% {
+    background-position: 0% 50%;
+    transform: rotate(-5deg) scale(0.9);
+  }
+  25% {
+    background-position: 50% 100%;
+    transform: rotate(5deg) scale(1.1);
+  }
+  50% {
+    background-position: 100% 50%;
+    transform: rotate(-3deg) scale(0.95);
+  }
+  75% {
+    background-position: 50% 0%;
+    transform: rotate(3deg) scale(1.05);
+  }
+  100% {
+    background-position: 0% 50%;
+    transform: rotate(-5deg) scale(0.9);
+  }
 }
 
 /* ── Stat tile — KPI card con franja aurora superior ─────────────────────
@@ -468,8 +498,7 @@
   /* Fondo blanco con corte limpio contra el lila de la card — sin difuminado */
 }
 
-/* ── Aurora text — color primary en texto del BottomNav activo ─────────────
-   TODO: rediseñar en fase 005 (Halo BottomNav). */
+/* ── Aurora text — color primary en texto del BottomNav activo ───────────── */
 .aurora-text {
   color: var(--color-primary);
   font-weight: 600;
@@ -483,11 +512,10 @@
 
 /* ═══════════════════════════════════════════════════════════════════════════
    HERO BACKGROUNDS
-   TODO: rediseñar/aplicar en fase 006 (Halo Hero). Definidas ya para que esa
-   fase no tenga que inventar la nomenclatura — HomePage.jsx (antes
-   MainContent.jsx, movido en la fase 016) sigue usando Aurora/DarkVeil
-   como fondo animado del hero; estas clases quedan listas
-   para cuando se integre el fondo estático detrás de ambos efectos.
+   Sin uso todavía — HomePage.jsx sigue usando Aurora/DarkVeil como único
+   fondo animado del hero. Quedan listas para cuando se integre un fondo
+   estático detrás de esos efectos, sin tener que inventar la nomenclatura
+   en ese momento.
 ═══════════════════════════════════════════════════════════════════════════ */
 .hero-bg-dark {
   background: radial-gradient(
